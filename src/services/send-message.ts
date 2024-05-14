@@ -6,7 +6,7 @@ export const sendMessage = async (messages: string, apiKey: string) => {
   try {
     const payload = {
       messages: [{ role: 'user', content: messages }],
-      model: 'pai-001-rp',
+      model: 'pai-001-light',
       stream: false,
     };
     const { data } = await axios.post(endpoint, payload, {

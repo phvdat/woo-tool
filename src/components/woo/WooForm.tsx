@@ -1,10 +1,12 @@
 'use client';
 import { sendMessage } from '@/services/send-message';
-import { Button, Card, Flex, Form, Input, Upload } from 'antd';
+import { Button, Card, Flex, Form, Input, Typography, Upload } from 'antd';
 import { useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
 import _get from 'lodash/get';
+import Instruction from './Intruction';
+const { Title } = Typography;
 
 interface FormValue {
   apiKey: string;
@@ -21,7 +23,7 @@ const normFile = (event: unknown) => {
   }
   return event && _get(event, 'fileList');
 };
-const Home = () => {
+const WooForm = () => {
   const [processedData, setProcessedData] = useState<any[]>([]);
   const [apiKeyLocal, setApiKeyLocal] = useLocalStorage(KEY_LOCAL_STORAGE, '');
   const [promptQuestion, setPromptQuestion] = useLocalStorage(
@@ -49,8 +51,10 @@ const Home = () => {
           const keyWord: string = rowData['Name'];
           const question = promptQuestion.replaceAll('{key}', keyWord);
           const data = await sendMessage(question, apiKey);
-          const content = _get(data, 'choices[0].message.content');
-
+          const content = _get(data, 'choices[0].message.content').replaceAll(
+            '*',
+            ''
+          );
           processedData.push({ ...rowData, ChatGPTcontent: content });
         }
         setProcessedData(processedData);
@@ -94,10 +98,14 @@ const Home = () => {
       onFinish={onFinish}
       initialValues={{ apiKey: apiKeyLocal, promptQuestion: promptQuestion }}
       style={{
-        width: 600,
+        maxWidth: 600,
         margin: '20px auto',
       }}
     >
+      <Title level={4} style={{ margin: 0 }}>
+        WooCommerce ChatGPT
+      </Title>
+      <Instruction />
       <Card>
         <Form.Item<FormValue> name='apiKey'>
           <Input type='text' placeholder='API key' />
@@ -131,4 +139,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default WooForm;
