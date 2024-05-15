@@ -97,10 +97,6 @@ const WooForm = () => {
       form={form}
       onFinish={onFinish}
       initialValues={{ apiKey: apiKeyLocal, promptQuestion: promptQuestion }}
-      style={{
-        maxWidth: 600,
-        margin: '20px auto',
-      }}
     >
       <Title level={4} style={{ margin: 0 }}>
         WooCommerce ChatGPT
