@@ -5,6 +5,7 @@ import {
   Flex,
   Form,
   Input,
+  Progress,
   Select,
   Typography,
   Upload,
@@ -16,6 +17,7 @@ import Instruction from './Intruction';
 import { handleCreateFileWoo, handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { useCategories } from '@/app/hooks/useCategories';
+import TextArea from 'antd/es/input/TextArea';
 const { Title } = Typography;
 
 interface FormValue {
@@ -42,6 +44,8 @@ const WooForm = () => {
     PROMPT_QUESTION_LOCAL_STORAGE,
     ''
   );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [percent, setPercent] = useState<number>(0);
 
   const { categories } = useCategories();
 
@@ -54,19 +58,26 @@ const WooForm = () => {
   }, [categories]);
 
   const onFinish = async (value: FormValue) => {
-    const { file, apiKey, promptQuestion } = value;
+    setLoading(true);
+    const { file, apiKey, promptQuestion, category } = value;
+    const categoriesObject = categories?.find((item) => item._id === category);
+
     setApiKeyLocal(apiKey);
     setPromptQuestion(promptQuestion);
     setDataFile([]);
-    if (file) {
+    if (file && categoriesObject) {
       const data = await handleCreateFileWoo(
         _get(file[0], 'originFileObj'),
         apiKey,
-        promptQuestion
+        promptQuestion,
+        categoriesObject,
+        setPercent
       );
       setDataFile(data);
     }
+    setLoading(false);
   };
+
 
   return (
     <Form
@@ -92,10 +103,8 @@ const WooForm = () => {
           label='Prompt Question'
           rules={[{ required: true, message: 'Please input prompt question!' }]}
         >
-          <Input
-            type='text'
-            placeholder='Ex: Write a story about {key} with 100 words'
-          />
+          <TextArea rows={4}
+            placeholder='Ex: Write a story about {key} with 100 words' />
         </Form.Item>
         <Form.Item<FormValue>
           name='category'
@@ -119,9 +128,16 @@ const WooForm = () => {
             <Button>Upload file excel</Button>
           </Upload>
         </Form.Item>
+        {
+          loading ?
+            <Progress percent={percent} strokeColor={{
+              '0%': '#108ee9',
+              '100%': '#87d068',
+            }} /> : null
+        }
       </Card>
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
-        <Button htmlType='submit'>Processing</Button>
+        <Button htmlType='submit' loading={loading}>Process</Button>
         {dataFile.length > 0 && (
           <Button
             htmlType='button'

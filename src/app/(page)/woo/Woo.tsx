@@ -11,7 +11,7 @@ const Woo = () => {
       }}
     >
       <WooForm />
-      <Button type='default' href='/woo/config-categories'>
+      <Button type='default' href='/woo/config-categories' style={{ marginTop: 20 }}>
         <SettingOutlined /> Config Categories
       </Button>
     </div>

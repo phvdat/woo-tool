@@ -9,6 +9,7 @@ import { useState } from 'react';
 
 export interface CategoryFormValue extends WooFixedOption {
   templateName: string;
+  pathnameImage: string;
 }
 
 interface AddNewCategoryProps {
@@ -88,24 +89,41 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
           <Form.Item<CategoryFormValue>
             label='Template name'
             name='templateName'
+            rules={[{ required: true, message: 'Please input template name!' }]}
           >
             <Input placeholder='Recommendation: WebsiteName - Category' />
           </Form.Item>
-          <Form.Item<CategoryFormValue> label='SKU prefix' name='SKUPrefix'>
+
+          <Form.Item<CategoryFormValue> label='SKU prefix' name='SKUPrefix'
+            rules={[{ required: true, message: 'Please input SKU prefix!' }]}
+          >
             <Input placeholder='Ex: MY_WEBSITE.COM' />
           </Form.Item>
-          <Form.Item<CategoryFormValue> label='Sale price' name='salePrice'>
+
+          <Form.Item<CategoryFormValue> label='Pathname Image' name='pathnameImage'
+            rules={[{ required: true, message: 'Please input pathname image!' }]}
+          >
+            <Input placeholder='Ex: https://domain.com' />
+          </Form.Item>
+
+          <Form.Item<CategoryFormValue> label='Sale price' name='salePrice'
+            rules={[{ required: true, message: 'Please input sale price!' }]}
+          >
             <Input placeholder='Enter sale price' />
           </Form.Item>
+
           <Form.Item<CategoryFormValue>
             label='Regular price'
             name='regularPrice'
+            rules={[{ required: true, message: 'Please input regular price!' }]}
           >
             <Input placeholder='Enter regular price' />
           </Form.Item>
+
           <Form.Item<CategoryFormValue>
             label='Category (Note: accurate 100%)'
             name='category'
+            rules={[{ required: true, message: 'Please input category!' }]}
           >
             <Input placeholder='Enter accurate category' />
           </Form.Item>
@@ -116,7 +134,7 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
           </Form.Item>
           {error ? <Alert message={error} type='error' /> : null}
         </Form>
-      </Modal>
+      </Modal >
     </>
   );
 };

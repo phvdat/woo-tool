@@ -52,7 +52,6 @@ const CategoryItem = ({ category }: CategoryItem) => {
   const handleDeleteCategory = async (_id: string) => {
     setLoading(true);
     try {
-      // await axios.delete(endpoint.category);
       await axios.delete(endpoint.category, { params: { _id } });
       messageApi.open({
         type: 'success',
