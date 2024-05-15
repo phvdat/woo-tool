@@ -1,17 +1,28 @@
 'use client';
-import { sendMessage } from '@/services/send-message';
-import { Button, Card, Flex, Form, Input, Typography, Upload } from 'antd';
-import { useState } from 'react';
+import {
+  Button,
+  Card,
+  Flex,
+  Form,
+  Input,
+  Select,
+  Typography,
+  Upload,
+} from 'antd';
+import { useMemo, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
-import * as XLSX from 'xlsx';
 import _get from 'lodash/get';
 import Instruction from './Intruction';
+import { handleCreateFileWoo, handleDownloadFile } from '@/helper/woo';
+import { WooCommerce } from '@/types/woo';
+import { useCategories } from '@/app/hooks/useCategories';
 const { Title } = Typography;
 
 interface FormValue {
   apiKey: string;
   file: FileList;
   promptQuestion: string;
+  category: string;
 }
 
 const KEY_LOCAL_STORAGE = 'api-key';
@@ -24,98 +35,84 @@ const normFile = (event: unknown) => {
   return event && _get(event, 'fileList');
 };
 const WooForm = () => {
-  const [processedData, setProcessedData] = useState<any[]>([]);
+  const [form] = Form.useForm<FormValue>();
+  const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
   const [apiKeyLocal, setApiKeyLocal] = useLocalStorage(KEY_LOCAL_STORAGE, '');
   const [promptQuestion, setPromptQuestion] = useLocalStorage(
     PROMPT_QUESTION_LOCAL_STORAGE,
     ''
   );
 
-  const [form] = Form.useForm<FormValue>();
+  const { categories } = useCategories();
 
-  const processing = (file: any, apiKey: string, promptQuestion: string) => {
-    const promise = new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.readAsArrayBuffer(file);
-      fileReader.onload = async (e) => {
-        const bufferArray = e.target?.result;
-        const wb = XLSX.read(bufferArray, {
-          type: 'buffer',
-        });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
-        const processedData: any = [];
-        for (const row of data) {
-          const rowData = row as any;
-          const keyWord: string = rowData['Name'];
-          const question = promptQuestion.replaceAll('{key}', keyWord);
-          const data = await sendMessage(question, apiKey);
-          const content = _get(data, 'choices[0].message.content').replaceAll(
-            '*',
-            ''
-          );
-          processedData.push({ ...rowData, ChatGPTcontent: content });
-        }
-        setProcessedData(processedData);
-        resolve(processedData);
-      };
-      fileReader.onerror = (error) => {
-        reject(error);
-      };
-    });
-    promise.then(() => {
-      // Handle further actions if needed
-    });
-  };
+  const categoriesOptions = useMemo(() => {
+    if (!categories) return [];
+    return categories.map((category) => ({
+      label: category.templateName,
+      value: category._id,
+    }));
+  }, [categories]);
 
-  const handleDownload = () => {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(processedData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet 1');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'processed_file.xlsx';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const onFinish = (value: FormValue) => {
+  const onFinish = async (value: FormValue) => {
     const { file, apiKey, promptQuestion } = value;
     setApiKeyLocal(apiKey);
     setPromptQuestion(promptQuestion);
-    setProcessedData([]);
+    setDataFile([]);
     if (file) {
-      processing(_get(file[0], 'originFileObj'), apiKey, promptQuestion);
+      const data = await handleCreateFileWoo(
+        _get(file[0], 'originFileObj'),
+        apiKey,
+        promptQuestion
+      );
+      setDataFile(data);
     }
   };
+
   return (
     <Form
       form={form}
       onFinish={onFinish}
       initialValues={{ apiKey: apiKeyLocal, promptQuestion: promptQuestion }}
+      layout='vertical'
     >
       <Title level={4} style={{ margin: 0 }}>
         WooCommerce ChatGPT
       </Title>
       <Instruction />
       <Card>
-        <Form.Item<FormValue> name='apiKey'>
+        <Form.Item<FormValue>
+          name='apiKey'
+          label='Key ChatGPT'
+          rules={[{ required: true, message: 'Please input API key!' }]}
+        >
           <Input type='text' placeholder='API key' />
         </Form.Item>
-        <Form.Item<FormValue> name='promptQuestion'>
+        <Form.Item<FormValue>
+          name='promptQuestion'
+          label='Prompt Question'
+          rules={[{ required: true, message: 'Please input prompt question!' }]}
+        >
           <Input
             type='text'
             placeholder='Ex: Write a story about {key} with 100 words'
           />
         </Form.Item>
         <Form.Item<FormValue>
+          name='category'
+          label='Choose Category'
+          rules={[{ required: true, message: 'Please select category!' }]}
+        >
+          <Select
+            placeholder='Select Category'
+            options={categoriesOptions}
+            showSearch
+          />
+        </Form.Item>
+        <Form.Item<FormValue>
           name='file'
           required
           valuePropName='fileList'
+          label='File'
           getValueFromEvent={normFile}
         >
           <Upload maxCount={1}>
@@ -125,8 +122,12 @@ const WooForm = () => {
       </Card>
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
         <Button htmlType='submit'>Processing</Button>
-        {processedData.length > 0 && (
-          <Button htmlType='button' type='primary' onClick={handleDownload}>
+        {dataFile.length > 0 && (
+          <Button
+            htmlType='button'
+            type='primary'
+            onClick={() => handleDownloadFile(dataFile)}
+          >
             Download
           </Button>
         )}

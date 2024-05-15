@@ -2,7 +2,7 @@
 import { useCategories } from '@/app/hooks/useCategories';
 import CategoryItem from '@/components/woo/CategoryItem';
 import UpdateCategory from '@/components/woo/UpdateCategory';
-import { Row, Typography } from 'antd';
+import { Row } from 'antd';
 
 const ConfigCategories = () => {
   const { categories } = useCategories();

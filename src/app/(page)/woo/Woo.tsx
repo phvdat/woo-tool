@@ -1,4 +1,3 @@
-import Instruction from '@/components/woo/Intruction';
 import WooForm from '@/components/woo/WooForm';
 import { SettingOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
