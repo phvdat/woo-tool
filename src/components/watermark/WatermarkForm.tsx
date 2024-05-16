@@ -1,7 +1,12 @@
 'use client';
-import { Button, Card, Flex, Form, Input } from 'antd';
+import { Alert, Button, Card, Col, Flex, Form, Input, Row, Upload } from 'antd';
 import { useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+import _toString from 'lodash/toString';
+import axios from 'axios';
+import { endpoint } from '@/constant/endpoint';
+import { normFile } from '@/helper/common';
+const KEY_LOCAL_STORAGE_WATERMARK_FORM = 'watermark-form';
 
 interface FormValue {
   logoUrl: string;
@@ -12,13 +17,15 @@ interface FormValue {
   idTelegram: string;
   shopName: string;
   quality: number;
+  excelFile: File[];
 }
 
 const WatermarkForm = () => {
   const [form] = Form.useForm<FormValue>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState('');
   const [formValueLocal, setFormValueLocal] = useLocalStorage(
-    'formValueLocal',
+    KEY_LOCAL_STORAGE_WATERMARK_FORM,
     JSON.stringify({
       logoUrl: '',
       logoWidth: 1000,
@@ -33,28 +40,39 @@ const WatermarkForm = () => {
 
   const onFinish = async (value: FormValue) => {
     setLoading(true);
+    setMessage('');
+    const formData = new FormData();
+    formData.append('excelFile', value.excelFile[0]);
+    formData.append('logoUrl', value.logoUrl);
+    formData.append('logoWidth', _toString(value.logoWidth));
+    formData.append('logoHeight', _toString(value.logoHeight));
+    formData.append('imageWidth', _toString(value.imageWidth));
+    formData.append('imageHeight', _toString(value.imageHeight));
+    formData.append('quality', _toString(value.quality));
+    formData.append('idTelegram', value.idTelegram);
+    formData.append('shopName', value.shopName);
     try {
-    } catch (error) {}
+      await axios.post(endpoint.watermark, formData);
+      const { excelFile, ...formLocal } = value;
+      setFormValueLocal(JSON.stringify(formLocal));
+    } catch (error) {
+      console.error('Error uploading the Excel file:', error);
+    } finally {
+      setMessage(
+        'Processing the images, waiting about 10 min and check telegram message...'
+      );
+    }
     setLoading(false);
   };
 
   return (
-    <Form form={form} onFinish={onFinish} layout='vertical'>
+    <Form
+      form={form}
+      onFinish={onFinish}
+      layout='vertical'
+      initialValues={{ ...JSON.parse(formValueLocal) }}
+    >
       <Card>
-        <Form.Item<FormValue>
-          name='shopName'
-          label='Key ChatGPT'
-          rules={[{ required: true, message: 'Please input Shop Name!' }]}
-        >
-          <Input type='text' placeholder='Shop Name' />
-        </Form.Item>
-        <Form.Item<FormValue>
-          name='idTelegram'
-          label='Telegram ID'
-          rules={[{ required: true, message: 'Please input Telegram ID!' }]}
-        >
-          <Input type='text' placeholder='Telegram ID' />
-        </Form.Item>
         <Form.Item<FormValue>
           name='logoUrl'
           label='Logo URL'
@@ -62,41 +80,89 @@ const WatermarkForm = () => {
         >
           <Input type='text' placeholder='Logo URL' />
         </Form.Item>
-        <Form.Item<FormValue>
-          name='logoWidth'
-          label='Logo Width'
-          rules={[{ required: true, message: 'Please input Logo Width!' }]}
-        >
-          <Input type='number' placeholder='Logo Width' />
-        </Form.Item>
-        <Form.Item<FormValue>
-          name='logoHeight'
-          label='Logo Height'
-          rules={[{ required: true, message: 'Please input Logo Height!' }]}
-        >
-          <Input type='number' placeholder='Logo Height' />
-        </Form.Item>
-        <Form.Item<FormValue>
-          name='imageWidth'
-          label='Image Width'
-          rules={[{ required: true, message: 'Please input Image Width!' }]}
-        >
-          <Input type='number' placeholder='Image Width' />
-        </Form.Item>
-        <Form.Item<FormValue>
-          name='imageHeight'
-          label='Image Height'
-          rules={[{ required: true, message: 'Please input Image Height!' }]}
-        >
-          <Input type='number' placeholder='Image Height' />
-        </Form.Item>
-        <Form.Item<FormValue>
-          name='quality'
-          label='Quality'
-          rules={[{ required: true, message: 'Please input Quality!' }]}
-        >
-          <Input type='number' placeholder='Quality' />
-        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='excelFile'
+              rules={[{ required: true, message: 'Please upload file!' }]}
+              valuePropName='fileList'
+              label='File'
+              getValueFromEvent={normFile}
+            >
+              <Upload maxCount={1}>
+                <Button>Upload file excel</Button>
+              </Upload>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='idTelegram'
+              label='Telegram ID'
+              rules={[{ required: true, message: 'Please input Telegram ID!' }]}
+            >
+              <Input type='text' placeholder='Telegram ID' />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='shopName'
+              label='Shop Name'
+              rules={[{ required: true, message: 'Please input Shop Name!' }]}
+            >
+              <Input type='text' placeholder='Shop Name' />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='quality'
+              label='Quality'
+              rules={[{ required: true, message: 'Please input Quality!' }]}
+            >
+              <Input type='number' placeholder='Quality' />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='logoWidth'
+              label='Logo Width'
+              rules={[{ required: true, message: 'Please input Logo Width!' }]}
+            >
+              <Input type='number' placeholder='Logo Width' />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='logoHeight'
+              label='Logo Height'
+              rules={[{ required: true, message: 'Please input Logo Height!' }]}
+            >
+              <Input type='number' placeholder='Logo Height' />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='imageWidth'
+              label='Image Width'
+              rules={[{ required: true, message: 'Please input Image Width!' }]}
+            >
+              <Input type='number' placeholder='Image Width' />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<FormValue>
+              name='imageHeight'
+              label='Image Height'
+              rules={[
+                { required: true, message: 'Please input Image Height!' },
+              ]}
+            >
+              <Input type='number' placeholder='Image Height' />
+            </Form.Item>
+          </Col>
+        </Row>
       </Card>
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
         <Button htmlType='submit' loading={loading}>
@@ -108,6 +174,9 @@ const WatermarkForm = () => {
           </Button>
         )}
       </Flex>
+      {message ? (
+        <Alert message={message} type='info' style={{ marginTop: 24 }} />
+      ) : null}
     </Form>
   );
 };

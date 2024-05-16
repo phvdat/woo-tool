@@ -8,3 +8,10 @@ export function handleErrorMongoDB(error: unknown) {
   );
   return { errorMessage };
 }
+
+export function normFile(event: unknown) {
+  if (Array.isArray(event)) {
+    return event;
+  }
+  return event && _get(event, 'fileList');
+}

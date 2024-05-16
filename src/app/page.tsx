@@ -7,8 +7,12 @@ const toolPath = [
     path: '/woo',
   },
   {
-    label: 'Chat test',
+    label: 'Chat GPT',
     path: '/chat',
+  },
+  {
+    label: 'Watermark',
+    path: '/watermark',
   },
 ];
 
