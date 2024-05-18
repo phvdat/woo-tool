@@ -6,6 +6,8 @@ import _toString from 'lodash/toString';
 import axios from 'axios';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
+import _get from 'lodash/get';
+
 const KEY_LOCAL_STORAGE_WATERMARK_FORM = 'watermark-form';
 
 interface FormValue {
@@ -41,8 +43,13 @@ const WatermarkForm = () => {
   const onFinish = async (value: FormValue) => {
     setLoading(true);
     setMessage('');
+    const excelFile = _get(value, 'excelFile[0].originFileObj', null);
+    if (!excelFile) {
+      setLoading(false);
+      return;
+    }
     const formData = new FormData();
-    formData.append('excelFile', value.excelFile[0]);
+    formData.append('excelFile', excelFile);
     formData.append('logoUrl', value.logoUrl);
     formData.append('logoWidth', _toString(value.logoWidth));
     formData.append('logoHeight', _toString(value.logoHeight));
@@ -51,6 +58,8 @@ const WatermarkForm = () => {
     formData.append('quality', _toString(value.quality));
     formData.append('idTelegram', value.idTelegram);
     formData.append('shopName', value.shopName);
+    console.log(value.excelFile);
+
     try {
       await axios.post(endpoint.watermark, formData);
       const { excelFile, ...formLocal } = value;

@@ -65,7 +65,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
     setLoading(false);
   };
   return (
-    <Col span={12} key={category._id}>
+    <Col span={24} lg={{ span: 12 }} key={category._id}>
       {contextHolder}
       <Card>
         <Descriptions title={category.templateName} items={items} />
