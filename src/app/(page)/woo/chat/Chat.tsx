@@ -4,12 +4,14 @@ import { sendMessage } from '@/services/send-message';
 import { Button, Card, Form, Input, Spin, Typography } from 'antd';
 import { useState } from 'react';
 import _get from 'lodash/get';
+import { useLocalStorage } from 'usehooks-ts';
+import { KEY_LOCAL_STORAGE } from '@/components/woo/WooForm';
 
 const { Text } = Typography;
 
 const Chat = () => {
-  const [apiKey, setApiKey] = useState('');
-  const [message, setMessage] = useState('');
+  const [apiKeyLocal, setApiKeyLocal] = useLocalStorage(KEY_LOCAL_STORAGE, '');
+  const [message, setMessage] = useState('what is highest mountain in the world?');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -27,12 +29,16 @@ const Chat = () => {
   return (
     <div>
       <h1>Chat</h1>
+      {/* tính năng này dùng để test độ chính xác của api chat gpt */}
+      <Text type='warning'>
+        This feature is used to test the accuracy of the gpt chat api
+      </Text>
       <Card style={{ maxWidth: 500 }}>
         <Form.Item>
           <Input
             type='text'
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            value={apiKeyLocal}
+            onChange={(e) => setApiKeyLocal(e.target.value)}
             placeholder='API Key'
           />
         </Form.Item>
@@ -47,7 +53,7 @@ const Chat = () => {
         </Form.Item>
 
         <Form.Item>
-          <Button block onClick={() => handleSendMessage(message, apiKey)}>
+          <Button block onClick={() => handleSendMessage(message, apiKeyLocal)}>
             {loading ? <Spin /> : 'Send'}
           </Button>
         </Form.Item>

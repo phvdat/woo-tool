@@ -11,6 +11,7 @@ export interface WooFixedOption {
   regularPrice: string;
   category: string;
   published?: string;
+  mainDescription?: string;
 }
 export interface WooDynamicOption {
   description: string;
@@ -38,6 +39,7 @@ export function createWooRecord(
     salePrice,
     regularPrice,
     category,
+    mainDescription = ''
   }: WooFixedOption,
   { name, images, publishedDate, description }: WooDynamicOption
 ): WooCommerce {
@@ -51,7 +53,7 @@ export function createWooRecord(
     'Is featured?': '0',
     'Visibility in catalog': 'visible',
     'Short description': '',
-    Description: description,
+    Description: mainDescription + description,
     'Date sale price starts': '',
     'Date sale price ends': '',
     'Tax status': 'taxable',

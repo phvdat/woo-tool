@@ -27,7 +27,7 @@ interface FormValue {
   category: string;
 }
 
-const KEY_LOCAL_STORAGE = 'api-key';
+export const KEY_LOCAL_STORAGE = 'api-key';
 const PROMPT_QUESTION_LOCAL_STORAGE = 'prompt-question';
 
 const WooForm = () => {

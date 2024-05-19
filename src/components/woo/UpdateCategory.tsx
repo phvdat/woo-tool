@@ -4,6 +4,7 @@ import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import { WooFixedOption } from '@/helper/woo';
 import { Alert, Button, Form, Input, Modal, message } from 'antd';
+import TextArea from 'antd/es/input/TextArea';
 import axios from 'axios';
 import { useState } from 'react';
 
@@ -126,6 +127,16 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
             rules={[{ required: true, message: 'Please input category!' }]}
           >
             <Input placeholder='Enter accurate category' />
+          </Form.Item>
+          <Form.Item<CategoryFormValue>
+            name='mainDescription'
+            label='Main description for this category'
+            rules={[{ required: true, message: 'Please input prompt question!' }]}
+          >
+            <TextArea
+              rows={4}
+              placeholder='Html content'
+            />
           </Form.Item>
           <Form.Item>
             <Button type='primary' htmlType='submit' loading={loading}>

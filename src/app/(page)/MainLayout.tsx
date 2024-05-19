@@ -21,12 +21,12 @@ export default function MainLayout({
       key: '/woo',
       children: [
         {
-          label: <Link href='/config-categories'>Config Categories</Link>,
-          key: '/config-categories',
+          label: <Link href='/woo/config-categories'>Config Categories</Link>,
+          key: '/woo/config-categories',
         },
         {
-          label: <Link href='/chat'>Chat GPT</Link>,
-          key: '/chat',
+          label: <Link href='/woo/chat'>Chat GPT</Link>,
+          key: '/woo/chat',
         },
       ],
     },
