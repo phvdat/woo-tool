@@ -37,7 +37,6 @@ export default function MainLayout({
   ]
 
   const pathName = usePathname();
-  console.log(pathName);
   return (
     <div style={{ padding: '0 20px' }}>
       <Flex justify='space-between' style={{ marginBottom: 24 }} align='center'>

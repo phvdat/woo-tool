@@ -94,6 +94,8 @@ export async function POST(request: Request) {
         );
       } catch (error) {
         console.error('error sendDocument', error);
+        unlinkSync(zipFilePath);
+        deleteFolderRecursive(imagesFolderPath);
       }
     });
     archive.pipe(output);
@@ -102,7 +104,6 @@ export async function POST(request: Request) {
     return Response.json('Successfully', { status: 200 });
   } catch (error) {
     console.log('error router handler', error);
-
     return Response.json(error, { status: 500 });
   }
 }

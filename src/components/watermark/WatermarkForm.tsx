@@ -58,7 +58,6 @@ const WatermarkForm = () => {
     formData.append('quality', _toString(value.quality));
     formData.append('idTelegram', value.idTelegram);
     formData.append('shopName', value.shopName);
-    console.log(value.excelFile);
 
     try {
       await axios.post(endpoint.watermark, formData);
