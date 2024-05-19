@@ -15,7 +15,7 @@ const Instruction = () => {
       label: 'How to get id telegram',
       children: (
         <div>
-          <Text type='secondary'>
+          <Text type='success'>
             Open your telegram app
             <br />
             Search for the bot @userinfobot
@@ -31,7 +31,7 @@ const Instruction = () => {
       label: 'Excel format',
       children: (
         <div>
-          <Text type='secondary'>
+          <Text type='success'>
             The excel file should be in .xlsx format. The first row should be
             the headers and the first column should be the name of the product.
             the second column should be the images of the product.
@@ -41,6 +41,9 @@ const Instruction = () => {
             alt='Excel format'
             style={{ width: '100%' }}
           />
+          <Text type='warning'>
+            Note: The maximum file size returned is 50MB, so we recommend that the excel file should not exceed 100 rows
+          </Text>
         </div>
       ),
     }

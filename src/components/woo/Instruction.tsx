@@ -15,7 +15,7 @@ const Instruction = () => {
       label: 'How to get API key',
       children: (
         <div>
-          <Text type='secondary'>
+          <Text type='success'>
             Go to{' '}
             <a href='https://discord.pawan.krd/' target='_blank'>
               https://discord.pawan.krd/
@@ -24,7 +24,7 @@ const Instruction = () => {
             key, make sure to not share it with anyone.
             <br />
           </Text>
-          <Text type='secondary'>
+          <Text type='warning'>
             Note: API Keys are IP Locked, if you need to use it from another IP
             you need to reset your IP by doing /resetip command in ⁠🤖𝐁𝐨𝐭
           </Text>
@@ -36,7 +36,7 @@ const Instruction = () => {
       label: 'Excel format',
       children: (
         <div>
-          <Text type='secondary'>
+          <Text type='success'>
             The excel file should be in .xlsx format. The first row should be
             the headers and the first column should be the name of the product.
             the second column should be the images of the product.
