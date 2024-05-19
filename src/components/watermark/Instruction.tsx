@@ -12,21 +12,16 @@ const Instruction = () => {
   const items: CollapseProps['items'] = [
     {
       key: '1',
-      label: 'How to get API key',
+      label: 'How to get id telegram',
       children: (
         <div>
           <Text type='secondary'>
-            Go to{' '}
-            <a href='https://discord.pawan.krd/' target='_blank'>
-              https://discord.pawan.krd/
-            </a>
-            Go to ⁠🤖𝐁𝐨𝐭 Then do the /key command. It will give you your own
-            key, make sure to not share it with anyone.
+            Open your telegram app
             <br />
-          </Text>
-          <Text type='secondary'>
-            Note: API Keys are IP Locked, if you need to use it from another IP
-            you need to reset your IP by doing /resetip command in ⁠🤖𝐁𝐨𝐭
+            Search for the bot @userinfobot
+            <br />
+            Click start
+            <br />
           </Text>
         </div>
       ),
