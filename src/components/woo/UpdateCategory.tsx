@@ -95,19 +95,27 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
             <Input placeholder='Recommendation: WebsiteName - Category' />
           </Form.Item>
 
-          <Form.Item<CategoryFormValue> label='SKU prefix' name='SKUPrefix'
+          <Form.Item<CategoryFormValue>
+            label='SKU prefix'
+            name='SKUPrefix'
             rules={[{ required: true, message: 'Please input SKU prefix!' }]}
           >
             <Input placeholder='Ex: MY_WEBSITE.COM' />
           </Form.Item>
 
-          <Form.Item<CategoryFormValue> label='Pathname Image' name='pathnameImage'
-            rules={[{ required: true, message: 'Please input pathname image!' }]}
+          <Form.Item<CategoryFormValue>
+            label='Pathname Image'
+            name='pathnameImage'
+            rules={[
+              { required: true, message: 'Please input pathname image!' },
+            ]}
           >
             <Input placeholder='Ex: https://domain.com' />
           </Form.Item>
 
-          <Form.Item<CategoryFormValue> label='Sale price' name='salePrice'
+          <Form.Item<CategoryFormValue>
+            label='Sale price'
+            name='salePrice'
             rules={[{ required: true, message: 'Please input sale price!' }]}
           >
             <Input placeholder='Enter sale price' />
@@ -129,14 +137,16 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
             <Input placeholder='Enter accurate category' />
           </Form.Item>
           <Form.Item<CategoryFormValue>
-            name='mainDescription'
-            label='Main description for this category'
-            rules={[{ required: true, message: 'Please input prompt question!' }]}
+            name='startDescription'
+            label='Start description for this category'
           >
-            <TextArea
-              rows={4}
-              placeholder='Html content'
-            />
+            <TextArea rows={4} placeholder='Html content' />
+          </Form.Item>
+          <Form.Item<CategoryFormValue>
+            name='endDescription'
+            label='End description for this category'
+          >
+            <TextArea rows={4} placeholder='Html content' />
           </Form.Item>
           <Form.Item>
             <Button type='primary' htmlType='submit' loading={loading}>
@@ -145,7 +155,7 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
           </Form.Item>
           {error ? <Alert message={error} type='error' /> : null}
         </Form>
-      </Modal >
+      </Modal>
     </>
   );
 };

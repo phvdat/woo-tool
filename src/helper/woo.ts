@@ -11,7 +11,8 @@ export interface WooFixedOption {
   regularPrice: string;
   category: string;
   published?: string;
-  mainDescription?: string;
+  startDescription?: string;
+  endDescription?: string;
 }
 export interface WooDynamicOption {
   description: string;
@@ -39,7 +40,8 @@ export function createWooRecord(
     salePrice,
     regularPrice,
     category,
-    mainDescription = ''
+    startDescription = '',
+    endDescription = '',
   }: WooFixedOption,
   { name, images, publishedDate, description }: WooDynamicOption
 ): WooCommerce {
@@ -53,7 +55,7 @@ export function createWooRecord(
     'Is featured?': '0',
     'Visibility in catalog': 'visible',
     'Short description': '',
-    Description: mainDescription + description,
+    Description: startDescription + description + endDescription,
     'Date sale price starts': '',
     'Date sale price ends': '',
     'Tax status': 'taxable',
@@ -115,16 +117,29 @@ export async function handleCreateFileWoo(
           const imageUrls: string[] = rowData['images'].split(',');
           const question = promptQuestion.replaceAll('{key}', keyWord);
           const responseChatGPT = await sendMessage(question, apiKey);
-          const content = _get(responseChatGPT, 'choices[0].message.content').replaceAll(
-            '*',
-            ''
-          );
+          const content = _get(
+            responseChatGPT,
+            'choices[0].message.content'
+          ).replaceAll('*', '');
 
-          const formattedPublishedDate = publishedDate.format('YYYY-MM-DD HH:mm:ss');
+          const formattedPublishedDate = publishedDate.format(
+            'YYYY-MM-DD HH:mm:ss'
+          );
           const pathImages = imageUrls.map((_, index) => {
-            return `${categoriesObject.pathnameImage}/wp-content/uploads/${publishedDate.format('YYYY/MM')}/${keyWord.replaceAll(' ', '-')}-${index + 1}.jpg`;
+            return `${
+              categoriesObject.pathnameImage
+            }/wp-content/uploads/${publishedDate.format(
+              'YYYY/MM'
+            )}/${keyWord.replaceAll(' ', '-')}-${index + 1}.jpg`;
           });
-          processedData.push(createWooRecord(categoriesObject, { ...rowData, description: content, publishedDate: formattedPublishedDate, images: pathImages.join(',') }));
+          processedData.push(
+            createWooRecord(categoriesObject, {
+              ...rowData,
+              description: content,
+              publishedDate: formattedPublishedDate,
+              images: pathImages.join(','),
+            })
+          );
           publishedDate.add(5, 'minutes');
           setPercent((processedData.length / data.length) * 100);
         }
@@ -136,7 +151,6 @@ export async function handleCreateFileWoo(
     } catch (error) {
       console.log('Create file error', error);
     }
-
   });
   const data = await promise;
   return data;

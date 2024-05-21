@@ -1,4 +1,6 @@
+import { authOptions } from '@/lib/auth';
 import { Button, Card, Col, Flex, Row } from 'antd';
+import { getServerSession } from 'next-auth';
 import Link from 'next/link';
 
 const toolPath = [
@@ -16,7 +18,9 @@ const toolPath = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
   return (
     <Flex
       vertical
@@ -34,9 +38,11 @@ export default function Home() {
           </Col>
         ))}
       </Row>
-      <Button href='/management-users' style={{ marginTop: 24 }}>
-        Management Users
-      </Button>
+      {email === process.env.ADMIN_EMAIL ? (
+        <Button href='/management-users' style={{ marginTop: 24 }}>
+          Management Users
+        </Button>
+      ) : null}
     </Flex>
   );
 }
