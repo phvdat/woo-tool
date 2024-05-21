@@ -1,4 +1,4 @@
-import { Card, Col, Row } from 'antd';
+import { Button, Card, Col, Flex, Row } from 'antd';
 import Link from 'next/link';
 
 const toolPath = [
@@ -18,16 +18,25 @@ const toolPath = [
 
 export default function Home() {
   return (
-    <Row gutter={[16, 24]}>
-      {toolPath.map((tool) => (
-        <Col span={24} md={{ span: 12 }} key={tool.path}>
-          <Link href={tool.path}>
-            <Card>
-              <h1>{tool.label}</h1>
-            </Card>
-          </Link>
-        </Col>
-      ))}
-    </Row>
+    <Flex
+      vertical
+      justify='space-between'
+      style={{ minHeight: 'calc(100vh - 100px)' }}
+    >
+      <Row gutter={[16, 24]}>
+        {toolPath.map((tool) => (
+          <Col span={24} md={{ span: 12 }} key={tool.path}>
+            <Link href={tool.path}>
+              <Card>
+                <h1>{tool.label}</h1>
+              </Card>
+            </Link>
+          </Col>
+        ))}
+      </Row>
+      <Button href='/management-users' style={{ marginTop: 24 }}>
+        Management Users
+      </Button>
+    </Flex>
   );
 }

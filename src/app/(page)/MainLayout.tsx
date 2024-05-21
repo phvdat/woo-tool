@@ -1,23 +1,28 @@
 'use client';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { LogoutOutlined } from '@ant-design/icons';
 import { Button, Flex, Menu, Typography } from 'antd';
-import { signOut } from "next-auth/react"
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PropsWithChildren } from 'react';
 const { Title } = Typography;
 
-export default function MainLayout({
-  children,
-}: PropsWithChildren) {
-
+export default function MainLayout({ children }: PropsWithChildren) {
   const items = [
     {
-      label: <Link href='/home'><Title level={5}>Home</Title></Link>,
+      label: (
+        <Link href='/home'>
+          <Title level={5}>Home</Title>
+        </Link>
+      ),
       key: '/home',
     },
     {
-      label: <Link href='/woo'><Title level={5}>Woo tool</Title></Link>,
+      label: (
+        <Link href='/woo'>
+          <Title level={5}>Woo tool</Title>
+        </Link>
+      ),
       key: '/woo',
       children: [
         {
@@ -31,17 +36,28 @@ export default function MainLayout({
       ],
     },
     {
-      label: <Link href='/watermark'><Title level={5}>Watermark</Title></Link>,
+      label: (
+        <Link href='/watermark'>
+          <Title level={5}>Watermark</Title>
+        </Link>
+      ),
       key: '/watermark',
     },
-  ]
+  ];
 
   const pathName = usePathname();
   return (
     <div style={{ padding: '0 20px' }}>
       <Flex justify='space-between' style={{ marginBottom: 24 }} align='center'>
-        <Menu style={{ minWidth: 0, flex: "auto" }} mode="horizontal" selectedKeys={[pathName]} items={items} />
-        <Button onClick={() => signOut()}>Logout</Button>
+        <Menu
+          style={{ minWidth: 0, flex: 'auto' }}
+          mode='horizontal'
+          selectedKeys={[pathName]}
+          items={items}
+        />
+        <Button onClick={() => signOut()}>
+          <LogoutOutlined />
+        </Button>
       </Flex>
       {children}
     </div>
