@@ -1,5 +1,6 @@
 'use client';
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -13,9 +14,8 @@ import {
   Upload,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocalStorage } from 'usehooks-ts';
 import _get from 'lodash/get';
-import { handleCreateFileWoo, handleDownloadFile } from '@/helper/woo';
+import { handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { useCategories } from '@/app/hooks/useCategories';
 import TextArea from 'antd/es/input/TextArea';
@@ -42,7 +42,7 @@ const WooForm = () => {
   const { woo, isLoading } = useWoo();
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [percent, setPercent] = useState<number>(0);
+  const [error, setError] = useState<string>('');
 
   const { categories } = useCategories();
   const { watermarkWebsites } = useWatermarkWebsites();
@@ -65,7 +65,7 @@ const WooForm = () => {
 
   const createWoo = async (values: WooFormValue) => {
     try {
-      await axios.post(endpoint.woo, values);
+      await axios.post(endpoint.wooConfig, values);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       console.log('error create woo', errorMessage);
@@ -74,7 +74,7 @@ const WooForm = () => {
   };
   const updateWoo = async (id: string, values: WooFormValue) => {
     try {
-      await axios.put(endpoint.woo, { _id: id, ...values });
+      await axios.put(endpoint.wooConfig, { _id: id, ...values });
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       console.log('error update woo', errorMessage);
@@ -89,7 +89,7 @@ const WooForm = () => {
     else {
       createWoo(value)
     }
-    setPercent(0);
+    setError('');
     setLoading(true);
     const { file, apiKey, promptQuestion, category } = value;
     const categoriesObject = categories?.find((item) => item._id === category);
@@ -98,15 +98,21 @@ const WooForm = () => {
     );
     setDataFile([]);
     if (file && categoriesObject && watermarkObject) {
-      const data = await handleCreateFileWoo(
-        _get(file[0], 'originFileObj'),
-        apiKey,
-        promptQuestion,
-        categoriesObject,
-        watermarkObject,
-        setPercent
-      );
-      setDataFile(data);
+      try {
+        const formData = new FormData();
+        formData.append('file', file[0]);
+        formData.append('apiKey', apiKey);
+        formData.append('promptQuestion', promptQuestion);
+        formData.append('categoriesObject', JSON.stringify(categoriesObject));
+        formData.append('watermarkObject', JSON.stringify(watermarkObject));
+        formData.append('telegramId', value.telegramId);
+        const { data } = await axios.post<WooCommerce[]>(endpoint.wooCreate, formData, {
+        });
+        setDataFile(data);
+      } catch (error: any) {
+        setError(_get(error, 'response.data', 'Error'))
+      }
+
     }
     setLoading(false);
   };
@@ -194,20 +200,9 @@ const WooForm = () => {
             <Button block>Upload file excel</Button>
           </Upload>
         </Form.Item>
-        {loading ? (
-          <>
-            <Progress
-              percent={Number(percent.toFixed(0))}
-              strokeColor={{
-                '0%': '#108ee9',
-                '100%': '#87d068',
-              }}
-            />
-            <Text type='success'>
-              *Note: You can close this tab and check the telegram message later.
-            </Text>
-          </>
-        ) : null}
+        <Text type='success'>
+          *Note: You can close this tab and check the telegram message later.
+        </Text>
       </Card>
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
         <Button htmlType='submit' loading={loading} block type='primary'
@@ -225,6 +220,7 @@ const WooForm = () => {
           </Button>
         )}
       </Flex>
+      {error && <Alert message={error} type='error' style={{ marginTop: 24 }} />}
     </Form>
   );
 };

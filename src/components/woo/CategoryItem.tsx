@@ -1,4 +1,4 @@
-import { WooCategoryPayload } from '@/app/api/woo/categories/route';
+import { WooCategoryPayload } from '@/app/api/woo/categories-config/route';
 import {
   Alert,
   Button,
@@ -52,7 +52,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
   const handleDeleteCategory = async (_id: string) => {
     setLoading(true);
     try {
-      await axios.delete(endpoint.category, { params: { _id } });
+      await axios.delete(endpoint.categoryConfig, { params: { _id } });
       messageApi.open({
         type: 'success',
         content: 'Delete category successfully!',

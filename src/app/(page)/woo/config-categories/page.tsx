@@ -6,7 +6,7 @@ import ConfigCategories from './ConfigCategories';
 async function ConfigCategoriesPage() {
   const getListCategories = async () => {
     try {
-      const { data } = await axios.get(endpoint.category);
+      const { data } = await axios.get(endpoint.categoryConfig);
       return data;
     } catch (error) {
       console.log(error);

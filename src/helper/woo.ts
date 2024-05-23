@@ -3,8 +3,8 @@ import { WooCommerce } from '@/types/woo';
 import * as XLSX from 'xlsx';
 import _get from 'lodash/get';
 import moment from 'moment';
-import { WooCategoryPayload } from '@/app/api/woo/categories/route';
-import { WooWatermarkPayload } from '@/app/api/woo/watermark/route';
+import { WooCategoryPayload } from '@/app/api/woo/categories-config/route';
+import { WooWatermarkPayload } from '@/app/api/woo/watermark-config/route';
 import axios from 'axios';
 import { endpoint } from '@/constant/endpoint';
 
@@ -91,77 +91,6 @@ export function createWooRecord(
     Position: '0',
   };
   return record;
-}
-
-export async function handleCreateFileWoo(
-  file: any,
-  apiKey: string,
-  promptQuestion: string,
-  categoriesObject: WooCategoryPayload,
-  watermarkObject: WooWatermarkPayload,
-  setPercent: (percent: number) => void
-) {
-  const promise = new Promise<WooCommerce[]>((resolve, reject) => {
-    try {
-      const fileReader = new FileReader();
-      fileReader.readAsArrayBuffer(file);
-      fileReader.onload = async (e) => {
-        const bufferArray = e.target?.result;
-        const wb = XLSX.read(bufferArray, {
-          type: 'buffer',
-        });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
-        const processedData: WooCommerce[] = [];
-        let publishedDate = moment().add(4, 'hours');
-        for (const row of data) {
-          const rowData = row as any;
-          const keyWord: string = rowData['Name'];
-          const imageUrls: string[] = rowData['Images'].split(',');
-          const question = promptQuestion.replaceAll('{key}', keyWord);
-          const responseChatGPTPromise = sendMessage(question, apiKey);
-          const responseImagesPromise = axios.post(endpoint.watermark, {
-            ...watermarkObject,
-            images: imageUrls,
-            name: keyWord,
-          });
-          const [responseChatGPT, { data: urlImageList }] = await Promise.all([
-            responseChatGPTPromise,
-            responseImagesPromise,
-          ]);
-
-          const content = _get(
-            responseChatGPT,
-            'choices[0].message.content',
-            ''
-          ).replaceAll('*', '');
-
-          const formattedPublishedDate = publishedDate.format(
-            'YYYY-MM-DD HH:mm:ss'
-          );
-          processedData.push(
-            createWooRecord(categoriesObject, {
-              ...rowData,
-              description: content,
-              publishedDate: formattedPublishedDate,
-              images: urlImageList.join(','),
-            })
-          );
-          publishedDate.add(5, 'minutes');
-          setPercent((processedData.length / data.length) * 100);
-        }
-        resolve(processedData);
-      };
-      fileReader.onerror = (error) => {
-        reject(error);
-      };
-    } catch (error) {
-      console.log('Create file error', error);
-    }
-  });
-  const data = await promise;
-  return data;
 }
 
 export async function handleDownloadFile(dataFile: WooCommerce[]) {

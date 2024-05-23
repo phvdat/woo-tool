@@ -1,4 +1,4 @@
-import { WooWatermarkPayload } from '@/app/api/woo/watermark/route';
+import { WooWatermarkPayload } from '@/app/api/woo/watermark-config/route';
 import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
@@ -67,7 +67,7 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
   const handleDeleteCategory = async (_id: string) => {
     setLoading(true);
     try {
-      await axios.delete(endpoint.category, { params: { _id } });
+      await axios.delete(endpoint.categoryConfig, { params: { _id } });
       messageApi.open({
         type: 'success',
         content: 'Delete category successfully!',

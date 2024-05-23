@@ -28,7 +28,7 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
 
   const createCategory = async (values: CategoryFormValue) => {
     try {
-      await axios.post(endpoint.category, values);
+      await axios.post(endpoint.categoryConfig, values);
       messageApi.open({
         type: 'success',
         content: 'Create category successfully!',
@@ -43,7 +43,7 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
 
   const updateCategory = async (_id: string, values: CategoryFormValue) => {
     try {
-      await axios.put(endpoint.category, { _id, ...values });
+      await axios.put(endpoint.categoryConfig, { _id, ...values });
       messageApi.open({
         type: 'success',
         content: 'Update category successfully!',

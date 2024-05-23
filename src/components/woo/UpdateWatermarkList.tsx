@@ -54,7 +54,7 @@ const UpdateWatermarkList = ({
 
   const createWatermark = async (values: WatermarkFormValue) => {
     try {
-      await axios.post(endpoint.watermarkList, values);
+      await axios.post(endpoint.watermarkConfig, values);
       messageApi.open({
         type: 'success',
         content: 'Create category successfully!',
@@ -69,7 +69,7 @@ const UpdateWatermarkList = ({
 
   const updateWatermark = async (_id: string, values: WatermarkFormValue) => {
     try {
-      await axios.put(endpoint.watermarkList, { _id, ...values });
+      await axios.put(endpoint.watermarkConfig, { _id, ...values });
       messageApi.open({
         type: 'success',
         content: 'Update category successfully!',

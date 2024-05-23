@@ -9,25 +9,34 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import moment from 'moment';
 import _get from 'lodash/get';
 
+interface CreateWatermarkParam {
+  logoUrl: string;
+  logoWidth: number;
+  logoHeight: number;
+  imageWidth: number;
+  imageHeight: number;
+  shopName: string;
+  quality: number;
+  images: string[];
+  name: string;
+}
+
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
 
-export async function POST(request: Request) {
-  const payload = await request.json();
+export async function CreateWatermark({
+  logoUrl,
+  logoWidth,
+  logoHeight,
+  imageWidth,
+  imageHeight,
+  shopName,
+  quality,
+  images,
+  name: originName,
+}: CreateWatermarkParam) {
   const date = moment().format('YYYY-MM-DD-HH-mm-ss');
   const imagesFolderPath = `media`;
   try {
-    const logoUrl = _toString(_get(payload, 'logoUrl', ''));
-    const logoWidth = Number(_get(payload, 'logoWidth'));
-    const logoHeight = Number(_get(payload, 'logoHeight'));
-    const imageWidth = Number(_get(payload, 'imageWidth'));
-    const imageHeight = Number(_get(payload, 'imageHeight'));
-    const shopName = _toString(_get(payload, 'shopName'));
-    const quality = Number(_get(payload, 'quality'));
-    const imagesUrlInRow = _toString(_get(payload, 'images'));
-    const originName = _toString(_get(payload, 'name'));
-
-    mkdirSync(imagesFolderPath, { recursive: true });
-
     const logoResponse = await axios.get(logoUrl, {
       responseType: 'arraybuffer',
     });
@@ -35,10 +44,9 @@ export async function POST(request: Request) {
       .resize(logoWidth, logoHeight)
       .toBuffer();
     const name = originName.replace(formatNameRegex, '');
-    const imagesList = imagesUrlInRow.split(',');
     const imageUrlList = [];
-    for (let i = 0, len = imagesList.length; i < len; i++) {
-      const imageUrl = imagesList[i];
+    for (let i = 0, len = images.length; i < len; i++) {
+      const imageUrl = images[i];
       const imageName = `${name.replaceAll(' ', '-')}-${i + 1}.jpg`;
       const imagePath = `${imagesFolderPath}/${imageName}`;
       try {
@@ -64,12 +72,10 @@ export async function POST(request: Request) {
         continue;
       }
     }
-
     deleteFolderRecursive(imagesFolderPath);
-    return Response.json(imageUrlList, { status: 200 });
+    return imageUrlList;
   } catch (error) {
-    console.log('error router handler', error);
-    deleteFolderRecursive(imagesFolderPath);
-    return Response.json(error, { status: 500 });
+    console.error('error create watermark', error);
+    return []
   }
 }
