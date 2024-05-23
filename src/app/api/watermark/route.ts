@@ -58,7 +58,6 @@ export async function POST(request: Request) {
         const bufferImage = await sharp(imagePath).toBuffer();
         await uploadBytes(storageRef, bufferImage);
         const urlImage = await getDownloadURL(storageRef);
-        console.log('urlImage', urlImage);
         imageUrlList.push(urlImage);
       } catch (error) {
         console.error('error get ' + imageName, error);

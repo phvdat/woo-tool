@@ -10,7 +10,6 @@ const fetcher = async (url: string) => {
 
 export function useWoo() {
   const { data, error, isLoading, mutate } = useSWR(endpoint.woo, fetcher);
-  console.log(data);
 
   return {
     woo: data?.[0],
