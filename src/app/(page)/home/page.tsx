@@ -14,7 +14,7 @@ const toolPath = [
   },
   {
     label: 'Watermark',
-    path: '/watermark',
+    path: '/woo/config-watermark-websites',
   },
 ];
 

@@ -25,6 +25,13 @@ const Woo = () => {
       >
         <SettingOutlined /> Config Categories
       </Button>
+      <Button
+        type='default'
+        href='/woo/config-watermark-websites'
+        style={{ marginTop: 20 }}
+      >
+        <SettingOutlined /> Config Watermark Websites
+      </Button>
     </div>
   );
 };

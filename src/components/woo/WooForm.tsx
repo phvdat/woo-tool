@@ -18,6 +18,7 @@ import { WooCommerce } from '@/types/woo';
 import { useCategories } from '@/app/hooks/useCategories';
 import TextArea from 'antd/es/input/TextArea';
 import { normFile } from '@/helper/common';
+import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
 const { Text } = Typography;
 
 interface FormValue {
@@ -25,6 +26,7 @@ interface FormValue {
   file: FileList;
   promptQuestion: string;
   category: string;
+  watermarkWebsite: string;
 }
 
 export const KEY_LOCAL_STORAGE = 'api-key';
@@ -42,6 +44,7 @@ const WooForm = () => {
   const [percent, setPercent] = useState<number>(0);
 
   const { categories } = useCategories();
+  const { watermarkWebsites } = useWatermarkWebsites();
 
   const categoriesOptions = useMemo(() => {
     if (!categories) return [];
@@ -50,6 +53,14 @@ const WooForm = () => {
       value: category._id,
     }));
   }, [categories]);
+
+  const watermarkOptions = useMemo(() => {
+    if (!watermarkWebsites) return [];
+    return watermarkWebsites.map((watermark) => ({
+      label: watermark.shopName,
+      value: watermark._id,
+    }));
+  }, [watermarkWebsites]);
 
   const onFinish = async (value: FormValue) => {
     setPercent(0);
@@ -109,6 +120,20 @@ const WooForm = () => {
             showSearch
           />
         </Form.Item>
+        <Form.Item<FormValue>
+          name='watermarkWebsite'
+          label='Watermark Website'
+          rules={[
+            { required: true, message: 'Please select watermark for website!' },
+          ]}
+        >
+          <Select
+            placeholder='Select Watermark Website'
+            options={watermarkOptions}
+            showSearch
+          />
+        </Form.Item>
+
         <Form.Item<FormValue>
           name='file'
           valuePropName='fileList'

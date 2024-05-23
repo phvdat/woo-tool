@@ -117,6 +117,7 @@ export async function handleCreateFileWoo(
           const imageUrls: string[] = rowData['Images'].split(',');
           const question = promptQuestion.replaceAll('{key}', keyWord);
           const responseChatGPT = await sendMessage(question, apiKey);
+          const responseImages = await sendMessage(keyWord, apiKey);
           const content = _get(
             responseChatGPT,
             'choices[0].message.content',
