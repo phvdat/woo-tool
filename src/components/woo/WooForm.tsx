@@ -67,16 +67,19 @@ const WooForm = () => {
     setLoading(true);
     const { file, apiKey, promptQuestion, category } = value;
     const categoriesObject = categories?.find((item) => item._id === category);
-
+    const watermarkObject = watermarkWebsites?.find(
+      (item) => item._id === value.watermarkWebsite
+    );
     setApiKeyLocal(apiKey);
     setPromptQuestion(promptQuestion);
     setDataFile([]);
-    if (file && categoriesObject) {
+    if (file && categoriesObject && watermarkObject) {
       const data = await handleCreateFileWoo(
         _get(file[0], 'originFileObj'),
         apiKey,
         promptQuestion,
         categoriesObject,
+        watermarkObject,
         setPercent
       );
       setDataFile(data);
