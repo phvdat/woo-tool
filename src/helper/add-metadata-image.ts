@@ -1,4 +1,4 @@
-import moment from "moment";
+import moment from 'moment';
 const shell = require('shelljs');
 
 type AddMetadataParams = {
@@ -48,7 +48,7 @@ export function addMetadata({ name, shopName, imagePath }: AddMetadataParams) {
     SubSecCreateDate: currentDate,
     SubSecDateTimeOriginal: currentDate,
   };
-  // runExiftoolCommand(imagePath, metadata);
+  runExiftoolCommand(imagePath, metadata);
 }
 
 function runExiftoolCommand(imagePath: string, metadata: any) {
@@ -59,4 +59,3 @@ function runExiftoolCommand(imagePath: string, metadata: any) {
   const command = `exiftool -overwrite_original ${metadataArgs} "${imagePath}"`;
   return shell.exec(command);
 }
-
