@@ -4,6 +4,9 @@ import * as XLSX from 'xlsx';
 import _get from 'lodash/get';
 import moment from 'moment';
 import { WooCategoryPayload } from '@/app/api/woo/categories/route';
+import { WooWatermarkPayload } from '@/app/api/woo/watermark/route';
+import axios from 'axios';
+import { endpoint } from '@/constant/endpoint';
 
 export interface WooFixedOption {
   SKUPrefix: string;
@@ -95,6 +98,7 @@ export async function handleCreateFileWoo(
   apiKey: string,
   promptQuestion: string,
   categoriesObject: WooCategoryPayload,
+  watermarkObject: WooWatermarkPayload,
   setPercent: (percent: number) => void
 ) {
   const promise = new Promise<WooCommerce[]>((resolve, reject) => {
@@ -116,7 +120,17 @@ export async function handleCreateFileWoo(
           const keyWord: string = rowData['Name'];
           const imageUrls: string[] = rowData['Images'].split(',');
           const question = promptQuestion.replaceAll('{key}', keyWord);
-          const responseChatGPT = await sendMessage(question, apiKey);
+          const responseChatGPTPromise = sendMessage(question, apiKey);
+          const responseImagesPromise = axios.post(endpoint.watermark, {
+            ...watermarkObject,
+            images: imageUrls,
+            name: keyWord,
+          });
+          const [responseChatGPT, { data: urlImageList }] = await Promise.all([
+            responseChatGPTPromise,
+            responseImagesPromise,
+          ]);
+
           const content = _get(
             responseChatGPT,
             'choices[0].message.content',
@@ -126,19 +140,12 @@ export async function handleCreateFileWoo(
           const formattedPublishedDate = publishedDate.format(
             'YYYY-MM-DD HH:mm:ss'
           );
-          const pathImages = imageUrls.map((_, index) => {
-            return `${
-              categoriesObject.pathnameImage
-            }/wp-content/uploads/${publishedDate.format(
-              'YYYY/MM'
-            )}/${keyWord.replaceAll(' ', '-')}-${index + 1}.jpg`;
-          });
           processedData.push(
             createWooRecord(categoriesObject, {
               ...rowData,
               description: content,
               publishedDate: formattedPublishedDate,
-              images: pathImages.join(','),
+              images: urlImageList.join(','),
             })
           );
           publishedDate.add(5, 'minutes');
