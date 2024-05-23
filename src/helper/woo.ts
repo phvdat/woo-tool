@@ -113,13 +113,14 @@ export async function handleCreateFileWoo(
         let publishedDate = moment().add(4, 'hours');
         for (const row of data) {
           const rowData = row as any;
-          const keyWord: string = rowData['name'];
-          const imageUrls: string[] = rowData['images'].split(',');
+          const keyWord: string = rowData['Name'];
+          const imageUrls: string[] = rowData['Images'].split(',');
           const question = promptQuestion.replaceAll('{key}', keyWord);
           const responseChatGPT = await sendMessage(question, apiKey);
           const content = _get(
             responseChatGPT,
-            'choices[0].message.content'
+            'choices[0].message.content',
+            ''
           ).replaceAll('*', '');
 
           const formattedPublishedDate = publishedDate.format(
@@ -157,15 +158,16 @@ export async function handleCreateFileWoo(
 }
 
 export async function handleDownloadFile(dataFile: WooCommerce[]) {
+  const date = moment().format('YYYY-MM-DD-HH-mm-ss');
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(dataFile);
   XLSX.utils.book_append_sheet(wb, ws, 'Sheet 1');
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const wbout = XLSX.write(wb, { bookType: 'csv', type: 'array' });
   const blob = new Blob([wbout], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'processed_file.xlsx';
+  link.download = `woo-${date}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }

@@ -1,5 +1,11 @@
 import * as XLSX from 'xlsx';
-import { createReadStream, createWriteStream, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import {
+  createReadStream,
+  createWriteStream,
+  mkdirSync,
+  unlinkSync,
+  writeFileSync,
+} from 'fs';
 import axios from 'axios';
 import sharp from 'sharp';
 import _toString from 'lodash/toString';
@@ -8,15 +14,16 @@ import TelegramBot from 'node-telegram-bot-api';
 import { addMetadata } from '@/helper/add-metadata-image';
 import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
 
-
 interface SheetData {
-  name: string;
-  images: string;
+  Name: string;
+  Images: string;
 }
 
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
 
-const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), { polling: false });
+const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
+  polling: false,
+});
 
 export async function POST(request: Request) {
   try {
@@ -36,11 +43,13 @@ export async function POST(request: Request) {
     mkdirSync(imagesFolderPath, { recursive: true });
 
     // read excelFile with xlsx
-    const workbook = XLSX.read(await (excelFile as any).arrayBuffer(), { type: 'array' });
+    const workbook = XLSX.read(await (excelFile as any).arrayBuffer(), {
+      type: 'array',
+    });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(worksheet) as SheetData[];
     // check valid collumn name and images excel file
-    if (!data[0].hasOwnProperty('name') || !data[0].hasOwnProperty('images')) {
+    if (!data[0].hasOwnProperty('Name') || !data[0].hasOwnProperty('Images')) {
       return Response.json('Invalid excel file', { status: 400 });
     }
 
@@ -48,12 +57,14 @@ export async function POST(request: Request) {
     const logoResponse = await axios.get(logoUrl, {
       responseType: 'arraybuffer',
     });
-    const resizedLogo = await sharp(logoResponse.data).resize(logoWidth, logoHeight).toBuffer();
+    const resizedLogo = await sharp(logoResponse.data)
+      .resize(logoWidth, logoHeight)
+      .toBuffer();
 
     for (const item of data) {
-      const originName = item['name'];
+      const originName = item['Name'];
       const name = originName.replace(formatNameRegex, '');
-      const imagesList = item['images'].split(',');
+      const imagesList = item['Images'].split(',');
       const folderPath = `${imagesFolderPath}/${name}`;
       mkdirSync(folderPath, { recursive: true });
       for (let i = 0, len = imagesList.length; i < len; i++) {
@@ -63,14 +74,17 @@ export async function POST(request: Request) {
         try {
           const { data: imageResponse } = await axios.get(imageUrl, {
             responseType: 'arraybuffer',
-          })
+          });
 
-          const buffer = await sharp(imageResponse).resize(imageWidth, imageHeight)
-            .composite([{ input: resizedLogo, gravity: 'southeast' }]).jpeg({ quality }).toBuffer();
+          const buffer = await sharp(imageResponse)
+            .resize(imageWidth, imageHeight)
+            .composite([{ input: resizedLogo, gravity: 'southeast' }])
+            .jpeg({ quality })
+            .toBuffer();
           writeFileSync(imagePath, buffer);
           addMetadata({ name, shopName, imagePath });
         } catch (error) {
-          console.error("error get " + imageName, error);
+          console.error('error get ' + imageName, error);
           continue;
         }
       }
@@ -84,14 +98,15 @@ export async function POST(request: Request) {
     output.on('close', () => {
       try {
         const stream = createReadStream(zipFilePath);
-        bot.sendDocument(idTelegram, stream, {
-          caption: `Images for ${shopName}`,
-        }).then(() => {
-          // delete folder and zip file
-          unlinkSync(zipFilePath);
-          deleteFolderRecursive(imagesFolderPath);
-        }
-        );
+        bot
+          .sendDocument(idTelegram, stream, {
+            caption: `Images for ${shopName}`,
+          })
+          .then(() => {
+            // delete folder and zip file
+            unlinkSync(zipFilePath);
+            deleteFolderRecursive(imagesFolderPath);
+          });
       } catch (error) {
         console.error('error sendDocument', error);
         unlinkSync(zipFilePath);

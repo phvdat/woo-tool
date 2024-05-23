@@ -11,7 +11,9 @@ const { Text } = Typography;
 
 const Chat = () => {
   const [apiKeyLocal, setApiKeyLocal] = useLocalStorage(KEY_LOCAL_STORAGE, '');
-  const [message, setMessage] = useState('what is highest mountain in the world?');
+  const [message, setMessage] = useState(
+    'what is highest mountain in the world?'
+  );
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +22,9 @@ const Chat = () => {
     setResponse('');
     try {
       const data = await sendMessage(message, apiKey);
-      setResponse(_get(data, 'choices[0].message.content').replaceAll('*', ''));
+      setResponse(
+        _get(data, 'choices[0].message.content', '').replaceAll('*', '')
+      );
     } catch (error) {
       console.log(error);
     }

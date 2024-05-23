@@ -52,6 +52,7 @@ const WooForm = () => {
   }, [categories]);
 
   const onFinish = async (value: FormValue) => {
+    setPercent(0);
     setLoading(true);
     const { file, apiKey, promptQuestion, category } = value;
     const categoriesObject = categories?.find((item) => item._id === category);
@@ -122,7 +123,7 @@ const WooForm = () => {
         {loading ? (
           <>
             <Progress
-              percent={percent}
+              percent={Number(percent.toFixed(0))}
               strokeColor={{
                 '0%': '#108ee9',
                 '100%': '#87d068',
