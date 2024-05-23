@@ -1,25 +1,26 @@
-import { WatermarkFormValue } from '@/components/woo/UpdateWatermarkList';
-import { connectToDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { WooFormValue } from "@/components/woo/WooForm";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 
-const WATERMARK_COLLECTION = 'watermark-websites';
 
-export interface WooWatermarkPayload extends WatermarkFormValue {
+const WOO_COLLECTION = 'woo';
+
+export interface WooFormValuePayload extends WooFormValue {
   _id?: string;
 }
 
 export async function GET() {
   let { db } = await connectToDatabase();
-  const response = await db.collection(WATERMARK_COLLECTION).find().toArray();
+  const response = await db.collection(WOO_COLLECTION).find().toArray();
   return Response.json(response, { status: 200 });
 }
 
 export async function POST(request: Request) {
   try {
-    const payload: WooWatermarkPayload = await request.json();
+    const payload: WooFormValuePayload = await request.json();
     const { _id, ...rest } = payload;
     let { db } = await connectToDatabase();
-    const response = await db.collection(WATERMARK_COLLECTION).insertOne(rest);
+    const response = await db.collection(WOO_COLLECTION).insertOne(rest);
     return Response.json(response, { status: 200 });
   } catch (error) {
     console.log(error);
@@ -29,11 +30,11 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const payload: WooWatermarkPayload = await request.json();
+  const payload: WooFormValuePayload = await request.json();
   const { _id, ...rest } = payload;
   let { db } = await connectToDatabase();
   const response = await db
-    .collection(WATERMARK_COLLECTION)
+    .collection(WOO_COLLECTION)
     .updateOne({ _id: new ObjectId(_id) }, { $set: rest });
   return Response.json(response, { status: 200 });
 }
@@ -44,7 +45,7 @@ export async function DELETE(request: Request) {
 
   let { db } = await connectToDatabase();
   const response = await db
-    .collection(WATERMARK_COLLECTION)
+    .collection(WOO_COLLECTION)
     .findOneAndDelete({ _id: new ObjectId(_id) });
   return Response.json(response, { status: 200 });
 }

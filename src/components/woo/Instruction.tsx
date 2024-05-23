@@ -3,7 +3,7 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 import { Collapse, CollapseProps, Image, Modal, Typography } from 'antd';
 import { useState } from 'react';
 
-const { Title, Text } = Typography;
+const { Title, Text, Link } = Typography;
 const Instruction = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const showModal = () => {
@@ -46,6 +46,19 @@ const Instruction = () => {
             alt='Excel format'
             style={{ width: '100%' }}
           />
+        </div>
+      ),
+    },
+    {
+      key: '3',
+      label: 'How to get telegram chat id',
+      children: (
+        <div>
+          <Text type='success'>
+            Go to your telegram account and search for the bot called&nbsp;
+            <Link href='https://t.me/userinfobot' type='warning' target='_blank'>@userinfobot</Link>. Click on the start button and it will give you your
+            chat id.
+          </Text>
         </div>
       ),
     }

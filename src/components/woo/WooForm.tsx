@@ -2,44 +2,45 @@
 import {
   Button,
   Card,
+  Col,
   Flex,
   Form,
   Input,
   Progress,
+  Row,
   Select,
   Typography,
   Upload,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 import _get from 'lodash/get';
 import { handleCreateFileWoo, handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { useCategories } from '@/app/hooks/useCategories';
 import TextArea from 'antd/es/input/TextArea';
-import { normFile } from '@/helper/common';
+import { handleErrorMongoDB, normFile } from '@/helper/common';
 import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
-const { Text } = Typography;
+import { SettingOutlined } from '@ant-design/icons';
+import { useWoo } from '@/app/hooks/useWoo';
+import { endpoint } from '@/constant/endpoint';
+import axios from 'axios';
+const { Text, Link } = Typography;
 
-interface FormValue {
+export interface WooFormValue {
   apiKey: string;
   file: FileList;
   promptQuestion: string;
   category: string;
   watermarkWebsite: string;
+  telegramId: string;
 }
 
-export const KEY_LOCAL_STORAGE = 'api-key';
-const PROMPT_QUESTION_LOCAL_STORAGE = 'prompt-question';
-
 const WooForm = () => {
-  const [form] = Form.useForm<FormValue>();
+  const [form] = Form.useForm<WooFormValue>();
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
-  const [apiKeyLocal, setApiKeyLocal] = useLocalStorage(KEY_LOCAL_STORAGE, '');
-  const [promptQuestion, setPromptQuestion] = useLocalStorage(
-    PROMPT_QUESTION_LOCAL_STORAGE,
-    ''
-  );
+  const { woo, isLoading } = useWoo();
+
   const [loading, setLoading] = useState<boolean>(false);
   const [percent, setPercent] = useState<number>(0);
 
@@ -62,7 +63,32 @@ const WooForm = () => {
     }));
   }, [watermarkWebsites]);
 
-  const onFinish = async (value: FormValue) => {
+  const createWoo = async (values: WooFormValue) => {
+    try {
+      await axios.post(endpoint.woo, values);
+    } catch (error) {
+      const { errorMessage } = handleErrorMongoDB(error);
+      console.log('error create woo', errorMessage);
+
+    }
+  };
+  const updateWoo = async (id: string, values: WooFormValue) => {
+    try {
+      await axios.put(endpoint.woo, { _id: id, ...values });
+    } catch (error) {
+      const { errorMessage } = handleErrorMongoDB(error);
+      console.log('error update woo', errorMessage);
+    }
+  }
+
+
+  const onFinish = async (value: WooFormValue) => {
+    if (woo) {
+      updateWoo(_get(woo, '_id', ''), value)
+    }
+    else {
+      createWoo(value)
+    }
     setPercent(0);
     setLoading(true);
     const { file, apiKey, promptQuestion, category } = value;
@@ -70,8 +96,6 @@ const WooForm = () => {
     const watermarkObject = watermarkWebsites?.find(
       (item) => item._id === value.watermarkWebsite
     );
-    setApiKeyLocal(apiKey);
-    setPromptQuestion(promptQuestion);
     setDataFile([]);
     if (file && categoriesObject && watermarkObject) {
       const data = await handleCreateFileWoo(
@@ -87,22 +111,36 @@ const WooForm = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (woo) {
+      const { _id, file, ...initialForm } = woo
+      form.setFieldsValue(initialForm)
+    }
+  }, [woo])
+
   return (
     <Form
       form={form}
       onFinish={onFinish}
-      initialValues={{ apiKey: apiKeyLocal, promptQuestion: promptQuestion }}
       layout='vertical'
+      disabled={isLoading}
+      initialValues={woo}
     >
       <Card>
-        <Form.Item<FormValue>
+        <Form.Item<WooFormValue>
           name='apiKey'
           label='Key ChatGPT'
           rules={[{ required: true, message: 'Please input API key!' }]}
         >
           <Input type='text' placeholder='API key' />
         </Form.Item>
-        <Form.Item<FormValue>
+        <Form.Item<WooFormValue>
+          name='telegramId'
+          label='Telegram ID'
+        >
+          <Input type='text' placeholder='Enter telegram id for receive file, if not you can download in this page' />
+        </Form.Item>
+        <Form.Item<WooFormValue>
           name='promptQuestion'
           label='Prompt Question'
           rules={[{ required: true, message: 'Please input prompt question!' }]}
@@ -112,40 +150,48 @@ const WooForm = () => {
             placeholder='Ex: Write a story about {key} with 100 words'
           />
         </Form.Item>
-        <Form.Item<FormValue>
-          name='category'
-          label='Choose Category'
-          rules={[{ required: true, message: 'Please select category!' }]}
-        >
-          <Select
-            placeholder='Select Category'
-            options={categoriesOptions}
-            showSearch
-          />
-        </Form.Item>
-        <Form.Item<FormValue>
-          name='watermarkWebsite'
-          label='Watermark Website'
-          rules={[
-            { required: true, message: 'Please select watermark for website!' },
-          ]}
-        >
-          <Select
-            placeholder='Select Watermark Website'
-            options={watermarkOptions}
-            showSearch
-          />
-        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
 
-        <Form.Item<FormValue>
+            <Form.Item<WooFormValue>
+              name='category'
+              label={<span>Choose Category <Link href='/woo/config-categories' type='warning' ><SettingOutlined /></Link> </span>}
+              rules={[{ required: true, message: 'Please select category!' }]}
+            >
+              <Select
+                placeholder='Select Category'
+                options={categoriesOptions}
+                showSearch
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<WooFormValue>
+              name='watermarkWebsite'
+              label={<span>Watermark Website <Link href='/woo/config-watermark-websites' type='warning' ><SettingOutlined /></Link> </span>}
+
+              rules={[
+                { required: true, message: 'Please select watermark for website!' },
+              ]}
+            >
+              <Select
+                placeholder='Select Watermark Website'
+                options={watermarkOptions}
+                showSearch
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item<WooFormValue>
           name='file'
           valuePropName='fileList'
           label='File'
           getValueFromEvent={normFile}
           rules={[{ required: true, message: 'Please upload file!' }]}
         >
-          <Upload maxCount={1}>
-            <Button>Upload file excel</Button>
+          <Upload maxCount={1} style={{ width: '100%' }}>
+            <Button block>Upload file excel</Button>
           </Upload>
         </Form.Item>
         {loading ? (
@@ -157,20 +203,22 @@ const WooForm = () => {
                 '100%': '#87d068',
               }}
             />
-            <Text type='warning'>
-              *Note: Should not close the browser while processing
+            <Text type='success'>
+              *Note: You can close this tab and check the telegram message later.
             </Text>
           </>
         ) : null}
       </Card>
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
-        <Button htmlType='submit' loading={loading}>
+        <Button htmlType='submit' loading={loading} block type='primary'
+        >
           Process
         </Button>
         {dataFile.length > 0 && (
           <Button
             htmlType='button'
             type='primary'
+            block
             onClick={() => handleDownloadFile(dataFile)}
           >
             Download
