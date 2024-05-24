@@ -1,13 +1,11 @@
 import { addMetadata } from '@/helper/add-metadata-image';
 import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
-import axios from 'axios';
-import { mkdirSync, writeFileSync } from 'fs';
-import _toString from 'lodash/toString';
-import sharp from 'sharp';
 import { storage } from '@/lib/firebase';
+import axios from 'axios';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { mkdirSync, writeFileSync } from 'fs';
 import moment from 'moment';
-import _get from 'lodash/get';
+import sharp from 'sharp';
 
 interface CreateWatermarkParam {
   logoUrl: string;
@@ -34,8 +32,9 @@ export async function CreateWatermark({
   images,
   name: originName,
 }: CreateWatermarkParam) {
-  const date = moment().format('YYYY-MM-DD-HH-mm-ss');
   const imagesFolderPath = `media`;
+  mkdirSync(imagesFolderPath, { recursive: true });
+
   try {
     const logoResponse = await axios.get(logoUrl, {
       responseType: 'arraybuffer',
@@ -62,6 +61,7 @@ export async function CreateWatermark({
         writeFileSync(imagePath, buffer);
         addMetadata({ name, shopName, imagePath });
         // upload imagePath to firebase storage
+        const date = moment().format('YYYY-MM-DD');
         const storageRef = ref(storage, `woo-image/${date}/${imageName}`);
         const bufferImage = await sharp(imagePath).toBuffer();
         await uploadBytes(storageRef, bufferImage);
@@ -69,13 +69,13 @@ export async function CreateWatermark({
         imageUrlList.push(urlImage);
       } catch (error) {
         console.error('error get ' + imageName, error);
-        continue;
+        throw error;
       }
     }
     deleteFolderRecursive(imagesFolderPath);
     return imageUrlList;
   } catch (error) {
     console.error('error create watermark', error);
-    return []
+    throw error;
   }
 }

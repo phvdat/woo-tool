@@ -9,11 +9,11 @@ const toolPath = [
     path: '/woo',
   },
   {
-    label: 'Chat GPT',
-    path: '/chat',
+    label: 'Config Categories',
+    path: '/config-categories',
   },
   {
-    label: 'Watermark',
+    label: 'Config-Watermark',
     path: '/woo/config-watermark-websites',
   },
 ];

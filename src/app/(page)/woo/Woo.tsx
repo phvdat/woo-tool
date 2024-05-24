@@ -1,8 +1,7 @@
 'use client';
 import Instruction from '@/components/woo/Instruction';
 import WooForm from '@/components/woo/WooForm';
-import { SettingOutlined } from '@ant-design/icons';
-import { Button, Typography } from 'antd';
+import { Typography } from 'antd';
 const { Title } = Typography;
 
 const Woo = () => {

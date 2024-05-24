@@ -1,4 +1,12 @@
 'use client';
+import { useCategories } from '@/app/hooks/useCategories';
+import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
+import { useWoo } from '@/app/hooks/useWoo';
+import { endpoint } from '@/constant/endpoint';
+import { handleErrorMongoDB, normFile } from '@/helper/common';
+import { handleDownloadFile } from '@/helper/woo';
+import { WooCommerce } from '@/types/woo';
+import { DownloadOutlined, SettingOutlined } from '@ant-design/icons';
 import {
   Alert,
   Button,
@@ -7,24 +15,15 @@ import {
   Flex,
   Form,
   Input,
-  Progress,
   Row,
   Select,
   Typography,
   Upload,
 } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
-import _get from 'lodash/get';
-import { handleDownloadFile } from '@/helper/woo';
-import { WooCommerce } from '@/types/woo';
-import { useCategories } from '@/app/hooks/useCategories';
 import TextArea from 'antd/es/input/TextArea';
-import { handleErrorMongoDB, normFile } from '@/helper/common';
-import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
-import { SettingOutlined } from '@ant-design/icons';
-import { useWoo } from '@/app/hooks/useWoo';
-import { endpoint } from '@/constant/endpoint';
 import axios from 'axios';
+import _get from 'lodash/get';
+import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
 export interface WooFormValue {
@@ -69,9 +68,9 @@ const WooForm = () => {
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       console.log('error create woo', errorMessage);
-
     }
   };
+
   const updateWoo = async (id: string, values: WooFormValue) => {
     try {
       await axios.put(endpoint.wooConfig, { _id: id, ...values });
@@ -79,50 +78,52 @@ const WooForm = () => {
       const { errorMessage } = handleErrorMongoDB(error);
       console.log('error update woo', errorMessage);
     }
-  }
-
+  };
 
   const onFinish = async (value: WooFormValue) => {
     if (woo) {
-      updateWoo(_get(woo, '_id', ''), value)
-    }
-    else {
-      createWoo(value)
+      updateWoo(_get(woo, '_id', ''), value);
+    } else {
+      createWoo(value);
     }
     setError('');
     setLoading(true);
     const { file, apiKey, promptQuestion, category } = value;
+    const fileOrigin = _get(file[0], 'originFileObj');
+
     const categoriesObject = categories?.find((item) => item._id === category);
     const watermarkObject = watermarkWebsites?.find(
       (item) => item._id === value.watermarkWebsite
     );
     setDataFile([]);
-    if (file && categoriesObject && watermarkObject) {
+
+    if (fileOrigin && categoriesObject && watermarkObject) {
       try {
         const formData = new FormData();
-        formData.append('file', file[0]);
+        formData.append('file', fileOrigin);
         formData.append('apiKey', apiKey);
         formData.append('promptQuestion', promptQuestion);
         formData.append('categoriesObject', JSON.stringify(categoriesObject));
         formData.append('watermarkObject', JSON.stringify(watermarkObject));
         formData.append('telegramId', value.telegramId);
-        const { data } = await axios.post<WooCommerce[]>(endpoint.wooCreate, formData, {
-        });
+        const { data } = await axios.post<WooCommerce[]>(
+          endpoint.wooCreate,
+          formData
+        );
         setDataFile(data);
       } catch (error: any) {
-        setError(_get(error, 'response.data', 'Error'))
+        setError(_get(error, 'response.data', 'Error'));
       }
-
     }
     setLoading(false);
   };
 
   useEffect(() => {
     if (woo) {
-      const { _id, file, ...initialForm } = woo
-      form.setFieldsValue(initialForm)
+      const { _id, file, ...initialForm } = woo;
+      form.setFieldsValue(initialForm);
     }
-  }, [woo])
+  }, [woo]);
 
   return (
     <Form
@@ -140,11 +141,11 @@ const WooForm = () => {
         >
           <Input type='text' placeholder='API key' />
         </Form.Item>
-        <Form.Item<WooFormValue>
-          name='telegramId'
-          label='Telegram ID'
-        >
-          <Input type='text' placeholder='Enter telegram id for receive file, if not you can download in this page' />
+        <Form.Item<WooFormValue> name='telegramId' label='Telegram ID'>
+          <Input
+            type='text'
+            placeholder='Enter telegram id for receive file, if not you can download in this page'
+          />
         </Form.Item>
         <Form.Item<WooFormValue>
           name='promptQuestion'
@@ -158,10 +159,16 @@ const WooForm = () => {
         </Form.Item>
         <Row gutter={16}>
           <Col span={12}>
-
             <Form.Item<WooFormValue>
               name='category'
-              label={<span>Choose Category <Link href='/woo/config-categories' type='warning' ><SettingOutlined /></Link> </span>}
+              label={
+                <span>
+                  Choose Category{' '}
+                  <Link href='/woo/config-categories' type='warning'>
+                    <SettingOutlined />
+                  </Link>{' '}
+                </span>
+              }
               rules={[{ required: true, message: 'Please select category!' }]}
             >
               <Select
@@ -174,10 +181,19 @@ const WooForm = () => {
           <Col span={12}>
             <Form.Item<WooFormValue>
               name='watermarkWebsite'
-              label={<span>Watermark Website <Link href='/woo/config-watermark-websites' type='warning' ><SettingOutlined /></Link> </span>}
-
+              label={
+                <span>
+                  Watermark Website{' '}
+                  <Link href='/woo/config-watermark-websites' type='warning'>
+                    <SettingOutlined />
+                  </Link>{' '}
+                </span>
+              }
               rules={[
-                { required: true, message: 'Please select watermark for website!' },
+                {
+                  required: true,
+                  message: 'Please select watermark for website!',
+                },
               ]}
             >
               <Select
@@ -205,22 +221,22 @@ const WooForm = () => {
         </Text>
       </Card>
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
-        <Button htmlType='submit' loading={loading} block type='primary'
-        >
+        <Button htmlType='submit' loading={loading} block type='primary'>
           Process
         </Button>
         {dataFile.length > 0 && (
           <Button
             htmlType='button'
-            type='primary'
             block
             onClick={() => handleDownloadFile(dataFile)}
           >
-            Download
+            <DownloadOutlined /> Download
           </Button>
         )}
       </Flex>
-      {error && <Alert message={error} type='error' style={{ marginTop: 24 }} />}
+      {error && (
+        <Alert message={error} type='error' style={{ marginTop: 24 }} />
+      )}
     </Form>
   );
 };
