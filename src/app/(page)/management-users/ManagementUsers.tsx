@@ -12,7 +12,7 @@ const ManagementUsers = () => {
         margin: '20px auto',
       }}
     >
-      <Title level={5}>Management Users</Title>
+      <Title level={4}>Management Users</Title>
       <ManagementUsersForm />
       <UserList />
     </div>

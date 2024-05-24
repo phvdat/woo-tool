@@ -1,13 +1,12 @@
 'use client';
-
 import { Typography } from 'antd';
 
-const { Text } = Typography;
+const { Title } = Typography;
 
 const Home = () => {
   return (
     <div>
-      <Text>Well come to woo tool</Text>
+      <Title level={4}>Well come to woo tool</Title>
     </div>
   );
 };

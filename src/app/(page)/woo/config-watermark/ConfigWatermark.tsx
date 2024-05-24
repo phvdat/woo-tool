@@ -1,15 +1,20 @@
 'use client';
-import { useCategories } from '@/app/hooks/useCategories';
 import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 import UpdateWatermarkList from '@/components/woo/UpdateWatermarkList';
 import WatermarkWebsiteItem from '@/components/woo/WatermarkWebsiteItem';
-import { Row } from 'antd';
+import { Flex, Row, Spin, Typography } from 'antd';
+const { Title } = Typography;
 
 const ConfigWatermark = () => {
-  const { watermarkConfig } = useWatermarkConfig();
+  const { watermarkConfig, isLoading } = useWatermarkConfig();
   return (
     <div>
-      <h1>Config Watermark</h1>
+      <Title level={4}>Config Watermark</Title>
+      {isLoading ? (
+        <Flex justify='center'>
+          <Spin />
+        </Flex>
+      ) : null}
       <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
         {watermarkConfig
           ? watermarkConfig.map((watermark) => (

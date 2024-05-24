@@ -17,6 +17,7 @@ import {
   Input,
   Row,
   Select,
+  Spin,
   Typography,
   Upload,
 } from 'antd';
@@ -133,6 +134,18 @@ const WooForm = () => {
       disabled={isLoading}
       initialValues={woo}
     >
+      {isLoading && (
+        <Spin
+          size='large'
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            zIndex: 100,
+            transform: 'translateX(-50%)',
+          }}
+        />
+      )}
       <Card>
         <Form.Item<WooFormValue>
           name='apiKey'
@@ -184,7 +197,7 @@ const WooForm = () => {
               label={
                 <span>
                   Watermark Website{' '}
-                  <Link href='/woo/config-watermark-websites' type='warning'>
+                  <Link href='/woo/config-watermark' type='warning'>
                     <SettingOutlined />
                   </Link>{' '}
                 </span>

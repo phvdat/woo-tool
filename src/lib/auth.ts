@@ -18,7 +18,8 @@ export const authOptions: NextAuthOptions = {
         let { db } = await connectToDatabase();
         const response = await db.collection(USERS_COLLECTION).find().toArray();
         const listEmail = response.map((item) => item.email);
-        process.env.ADMIN_EMAIL && listEmail.push(process.env.ADMIN_EMAIL);
+        process.env.NEXT_PUBLIC_ADMIN_EMAIL &&
+          listEmail.push(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
         if (
           account?.provider === 'google' &&
           _get(profile, 'email_verified') &&

@@ -7,13 +7,9 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
   return (
-    <Flex
-      vertical
-      justify='space-between'
-      style={{ minHeight: 'calc(100vh - 100px)' }}
-    >
+    <Flex vertical justify='space-between'>
       <Home />
-      {email === process.env.ADMIN_EMAIL ? (
+      {email === process.env.NEXT_PUBLIC_ADMIN_EMAIL ? (
         <Button href='/management-users' style={{ marginTop: 24 }}>
           Management Users
         </Button>

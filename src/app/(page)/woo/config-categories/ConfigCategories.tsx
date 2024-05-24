@@ -2,13 +2,19 @@
 import { useCategories } from '@/app/hooks/useCategories';
 import CategoryItem from '@/components/woo/CategoryItem';
 import UpdateCategory from '@/components/woo/UpdateCategory';
-import { Row } from 'antd';
+import { Flex, Row, Spin, Typography } from 'antd';
+const { Title } = Typography;
 
 const ConfigCategories = () => {
-  const { categories } = useCategories();
+  const { categories, isLoading } = useCategories();
   return (
     <div>
-      <h1>Config Categories</h1>
+      <Title level={4}>Config Categories</Title>
+      {isLoading ? (
+        <Flex justify='center'>
+          <Spin />
+        </Flex>
+      ) : null}
       <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
         {categories
           ? categories.map((category) => (

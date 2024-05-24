@@ -83,7 +83,7 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
     <Col span={24} lg={{ span: 12 }} key={watermark._id}>
       {contextHolder}
       <Card>
-        <Descriptions title={watermark.shopName} items={items} />
+        <Descriptions title={watermark.shopName} items={items} column={1} />
         <Flex justify='end' gap={20}>
           <Popconfirm
             title='Delete the category?'
