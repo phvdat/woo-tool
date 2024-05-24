@@ -1,18 +1,18 @@
 'use client';
 import { useCategories } from '@/app/hooks/useCategories';
-import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
+import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 import UpdateWatermarkList from '@/components/woo/UpdateWatermarkList';
 import WatermarkWebsiteItem from '@/components/woo/WatermarkWebsiteItem';
 import { Row } from 'antd';
 
-const ConfigWatermarkWebsites = () => {
-  const { watermarkWebsites } = useWatermarkWebsites();
+const ConfigWatermark = () => {
+  const { watermarkConfig } = useWatermarkConfig();
   return (
     <div>
       <h1>Config Watermark</h1>
       <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
-        {watermarkWebsites
-          ? watermarkWebsites.map((watermark) => (
+        {watermarkConfig
+          ? watermarkConfig.map((watermark) => (
               <WatermarkWebsiteItem key={watermark._id} watermark={watermark} />
             ))
           : null}
@@ -22,4 +22,4 @@ const ConfigWatermarkWebsites = () => {
   );
 };
 
-export default ConfigWatermarkWebsites;
+export default ConfigWatermark;

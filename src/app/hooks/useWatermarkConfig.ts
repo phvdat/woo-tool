@@ -8,14 +8,14 @@ const fetcher = async (url: string) => {
   return data;
 };
 
-export function useWatermarkWebsites() {
+export function useWatermarkConfig() {
   const { data, error, isLoading, mutate } = useSWR(
     endpoint.watermarkConfig,
     fetcher
   );
 
   return {
-    watermarkWebsites: data,
+    watermarkConfig: data,
     isLoading,
     isError: error,
     mutate,

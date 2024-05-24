@@ -1,7 +1,7 @@
 import { endpoint } from '@/constant/endpoint';
 import { SWRProvider } from '@/provider/swr-provider';
 import axios from 'axios';
-import ConfigWatermarkWebsites from './ConfigWatermarkWebsites';
+import ConfigWatermarkWebsites from './ConfigWatermark';
 
 async function ConfigWatermarkWebsitesPage() {
   const getListCategories = async () => {

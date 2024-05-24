@@ -1,24 +1,9 @@
 import { authOptions } from '@/lib/auth';
-import { Button, Card, Col, Flex, Row } from 'antd';
+import { Button, Flex } from 'antd';
 import { getServerSession } from 'next-auth';
-import Link from 'next/link';
+import Home from './Home';
 
-const toolPath = [
-  {
-    label: 'Woo tool',
-    path: '/woo',
-  },
-  {
-    label: 'Config Categories',
-    path: '/config-categories',
-  },
-  {
-    label: 'Config-Watermark',
-    path: '/woo/config-watermark-websites',
-  },
-];
-
-export default async function Home() {
+export default async function HomePage() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
   return (
@@ -27,17 +12,7 @@ export default async function Home() {
       justify='space-between'
       style={{ minHeight: 'calc(100vh - 100px)' }}
     >
-      <Row gutter={[16, 24]}>
-        {toolPath.map((tool) => (
-          <Col span={24} md={{ span: 12 }} key={tool.path}>
-            <Link href={tool.path}>
-              <Card>
-                <h1>{tool.label}</h1>
-              </Card>
-            </Link>
-          </Col>
-        ))}
-      </Row>
+      <Home />
       {email === process.env.ADMIN_EMAIL ? (
         <Button href='/management-users' style={{ marginTop: 24 }}>
           Management Users

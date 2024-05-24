@@ -1,5 +1,5 @@
 'use client';
-import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
+import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import {
@@ -45,7 +45,7 @@ const UpdateWatermarkList = ({
   initialForm = defaultFormValue,
   _id,
 }: AddNewCategoryProps) => {
-  const { mutate } = useWatermarkWebsites();
+  const { mutate } = useWatermarkConfig();
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<WatermarkFormValue>();

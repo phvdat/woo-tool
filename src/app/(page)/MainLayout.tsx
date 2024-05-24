@@ -1,11 +1,12 @@
 'use client';
 import { LogoutOutlined } from '@ant-design/icons';
 import { Button, Flex, Menu, Typography } from 'antd';
+import moment from 'moment';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PropsWithChildren } from 'react';
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export default function MainLayout({ children }: PropsWithChildren) {
   const items = [
@@ -30,18 +31,10 @@ export default function MainLayout({ children }: PropsWithChildren) {
           key: '/woo/config-categories',
         },
         {
-          label: <Link href='/woo/chat'>Chat GPT</Link>,
-          key: '/woo/chat',
+          label: <Link href='/woo/config-watermark'>Config Watermark</Link>,
+          key: '/woo/config-watermark',
         },
       ],
-    },
-    {
-      label: (
-        <Link href='/watermark'>
-          <Title level={5}>Watermark</Title>
-        </Link>
-      ),
-      key: '/watermark',
     },
   ];
 
@@ -60,6 +53,9 @@ export default function MainLayout({ children }: PropsWithChildren) {
         </Button>
       </Flex>
       {children}
+      <Text type='secondary'>
+        Copyright by deveric {moment().format('YYYY')}
+      </Text>
     </div>
   );
 }

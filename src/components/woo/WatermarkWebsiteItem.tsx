@@ -1,5 +1,4 @@
 import { WooWatermarkPayload } from '@/app/api/woo/watermark-config/route';
-import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import {
@@ -16,6 +15,7 @@ import {
 import axios from 'axios';
 import { useState } from 'react';
 import UpdateWatermarkList from './UpdateWatermarkList';
+import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 
 interface WatermarkWebsiteItem {
   watermark: WooWatermarkPayload;
@@ -59,7 +59,7 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
       children: watermark.imageHeight,
     },
   ];
-  const { mutate } = useWatermarkWebsites();
+  const { mutate } = useWatermarkConfig();
   const [messageApi, contextHolder] = message.useMessage();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);

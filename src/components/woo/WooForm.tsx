@@ -1,6 +1,6 @@
 'use client';
 import { useCategories } from '@/app/hooks/useCategories';
-import { useWatermarkWebsites } from '@/app/hooks/useWatermarkWebsites';
+import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 import { useWoo } from '@/app/hooks/useWoo';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB, normFile } from '@/helper/common';
@@ -44,7 +44,7 @@ const WooForm = () => {
   const [error, setError] = useState<string>('');
 
   const { categories } = useCategories();
-  const { watermarkWebsites } = useWatermarkWebsites();
+  const { watermarkConfig } = useWatermarkConfig();
 
   const categoriesOptions = useMemo(() => {
     if (!categories) return [];
@@ -55,12 +55,12 @@ const WooForm = () => {
   }, [categories]);
 
   const watermarkOptions = useMemo(() => {
-    if (!watermarkWebsites) return [];
-    return watermarkWebsites.map((watermark) => ({
+    if (!watermarkConfig) return [];
+    return watermarkConfig.map((watermark) => ({
       label: watermark.shopName,
       value: watermark._id,
     }));
-  }, [watermarkWebsites]);
+  }, [watermarkConfig]);
 
   const createWoo = async (values: WooFormValue) => {
     try {
@@ -92,7 +92,7 @@ const WooForm = () => {
     const fileOrigin = _get(file[0], 'originFileObj');
 
     const categoriesObject = categories?.find((item) => item._id === category);
-    const watermarkObject = watermarkWebsites?.find(
+    const watermarkObject = watermarkConfig?.find(
       (item) => item._id === value.watermarkWebsite
     );
     setDataFile([]);
@@ -158,7 +158,7 @@ const WooForm = () => {
           />
         </Form.Item>
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={24} sm={{ span: 12 }}>
             <Form.Item<WooFormValue>
               name='category'
               label={
@@ -178,7 +178,7 @@ const WooForm = () => {
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={24} sm={{ span: 12 }}>
             <Form.Item<WooFormValue>
               name='watermarkWebsite'
               label={
