@@ -77,7 +77,7 @@ export function createWooRecord(
     'Sale price': salePrice,
     'Regular price': regularPrice,
     Categories: category,
-    Tags: '',
+    Tags: name.replaceAll(/\s+/g, ','),
     'Shipping class': '',
     Images: images,
     'Download limit': '',
