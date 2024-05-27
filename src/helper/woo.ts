@@ -1,12 +1,6 @@
-import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
-import * as XLSX from 'xlsx';
-import _get from 'lodash/get';
 import moment from 'moment';
-import { WooCategoryPayload } from '@/app/api/woo/categories-config/route';
-import { WooWatermarkPayload } from '@/app/api/woo/watermark-config/route';
-import axios from 'axios';
-import { endpoint } from '@/constant/endpoint';
+import * as XLSX from 'xlsx';
 
 export interface WooFixedOption {
   SKUPrefix: string;
