@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(wordSheet) as SheetData[];
     if (!data[0].hasOwnProperty('Name') || !data[0].hasOwnProperty('Images')) {
-      return Response.json('Invalid excel file', { status: 400 });
+      return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
     let publishedDate = moment().add(4, 'hours');
@@ -76,6 +76,7 @@ export async function POST(request: Request) {
           description: content,
           publishedDate: formattedPublishedDate,
           images: urlImageList.join(','),
+          name: keyWord,
         })
       );
       publishedDate.add(5, 'minutes');
@@ -98,8 +99,10 @@ export async function POST(request: Request) {
       });
     return Response.json(result, { status: 200 });
   } catch (error) {
-    const errorChatGPT = _get(error, 'response.data.error.message');
-    return Response.json(errorChatGPT, {
+    console.log('error api woo', error);
+
+    const errorChatGPT = _get(error, 'response.data.error.message', '');
+    return Response.json({ message: errorChatGPT }, {
       status: 500,
     });
   }

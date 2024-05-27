@@ -113,7 +113,7 @@ const WooForm = () => {
         );
         setDataFile(data);
       } catch (error: any) {
-        setError(_get(error, 'response.data', 'Error'));
+        setError(_get(error, 'response.data.message', 'Error'));
       }
     }
     setLoading(false);
@@ -124,7 +124,7 @@ const WooForm = () => {
       const { _id, file, ...initialForm } = woo;
       form.setFieldsValue(initialForm);
     }
-  }, [woo]);
+  }, [woo, form]);
 
   return (
     <Form
