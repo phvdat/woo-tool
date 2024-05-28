@@ -1,3 +1,4 @@
+// const util = require('util');
 import { exec } from 'child_process';
 import moment from 'moment';
 
@@ -6,7 +7,7 @@ type AddMetadataParams = {
   shopName: string;
   imagePath: string;
 };
-export function addMetadata({ name, shopName, imagePath }: AddMetadataParams) {
+export async function addMetadata({ name, shopName, imagePath }: AddMetadataParams) {
   const currentDate = moment().format('YYYY:MM:DD HH:mm:ss+00:00');
 
   const metadata = {
@@ -48,23 +49,27 @@ export function addMetadata({ name, shopName, imagePath }: AddMetadataParams) {
     SubSecCreateDate: currentDate,
     SubSecDateTimeOriginal: currentDate,
   };
-  runExiftoolCommand(imagePath, metadata);
+  await runExiftoolCommand(imagePath, metadata);
 }
 
-function runExiftoolCommand(imagePath: string, metadata: any) {
+async function runExiftoolCommand(imagePath: string, metadata: any) {
   const metadataArgs = Object.entries(metadata)
     .map(([key, value]) => `-${key}="${value}"`)
     .join(' ');
   const command = `exiftool -overwrite_original ${metadataArgs} "${imagePath}"`;
-  exec(command, (error: any, stdout: any, stderr: any) => {
-    if (error) {
-      console.error(`Error: ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
+  const promise = new Promise((resolve, reject) => {
+    exec(command, (error: any, stdout: any, stderr: any) => {
+      if (error) {
+        console.error(`Error: ${error.message}`);
+        reject(error);
+      }
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+        reject(stderr);
+      }
+      console.log(`stdout: ${stdout}`);
+      resolve(stdout);
+    });
   });
+  await promise;
 }

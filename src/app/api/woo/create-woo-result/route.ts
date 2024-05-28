@@ -100,8 +100,7 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.log('error api woo', error);
-
-    const errorChatGPT = _get(error, 'response.data.error.message', '');
+    const errorChatGPT = _get(error, 'response.data.error.message', 'something went wrong');
     return Response.json({ message: errorChatGPT }, {
       status: 500,
     });

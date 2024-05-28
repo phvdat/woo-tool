@@ -59,7 +59,7 @@ export async function CreateWatermark({
           .jpeg({ quality })
           .toBuffer();
         writeFileSync(imagePath, buffer);
-        addMetadata({ name, shopName, imagePath });
+        await addMetadata({ name, shopName, imagePath });
         // upload imagePath to firebase storage
         const date = moment().format('YYYY-MM-DD');
         const storageRef = ref(storage, `woo-image/${date}/${imageName}`);
