@@ -1,5 +1,5 @@
+import { exec } from 'child_process';
 import moment from 'moment';
-const shell = require('shelljs');
 
 type AddMetadataParams = {
   name: string;
@@ -55,7 +55,16 @@ function runExiftoolCommand(imagePath: string, metadata: any) {
   const metadataArgs = Object.entries(metadata)
     .map(([key, value]) => `-${key}="${value}"`)
     .join(' ');
-
   const command = `exiftool -overwrite_original ${metadataArgs} "${imagePath}"`;
-  return shell.exec(command);
+  exec(command, (error: any, stdout: any, stderr: any) => {
+    if (error) {
+      console.error(`Error: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+      return;
+    }
+    console.log(`stdout: ${stdout}`);
+  });
 }
