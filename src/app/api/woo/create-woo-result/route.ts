@@ -1,15 +1,15 @@
-import * as XLSX from 'xlsx';
-import _get from 'lodash/get';
-import { WooCategoryPayload } from '../categories-config/route';
-import { WooWatermarkPayload } from '../watermark-config/route';
-import { WooCommerce } from '@/types/woo';
-import moment from 'moment';
-import { sendMessage } from '@/services/send-message';
 import { CreateWatermark } from '@/helper/watermark';
 import { createWooRecord } from '@/helper/woo';
-import TelegramBot from 'node-telegram-bot-api';
+import { sendMessage } from '@/services/send-message';
+import { WooCommerce } from '@/types/woo';
+import { createReadStream, unlinkSync, writeFileSync } from 'fs';
+import _get from 'lodash/get';
 import _toString from 'lodash/toString';
-import { createReadStream, unlink, unlinkSync, writeFileSync } from 'fs';
+import moment from 'moment';
+import TelegramBot from 'node-telegram-bot-api';
+import * as XLSX from 'xlsx';
+import { WooCategoryPayload } from '../categories-config/route';
+import { WooWatermarkPayload } from '../watermark-config/route';
 interface SheetData {
   Name: string;
   Images: string;
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
           name: keyWord,
         })
       );
-      publishedDate.add(5, 'minutes');
+      publishedDate.add(300 + Math.floor(Math.random() * 20), 'seconds');
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);
@@ -100,9 +100,16 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.log('error api woo', error);
-    const errorChatGPT = _get(error, 'response.data.error.message', 'something went wrong');
-    return Response.json({ message: errorChatGPT }, {
-      status: 500,
-    });
+    const errorChatGPT = _get(
+      error,
+      'response.data.error.message',
+      'something went wrong'
+    );
+    return Response.json(
+      { message: errorChatGPT },
+      {
+        status: 500,
+      }
+    );
   }
 }

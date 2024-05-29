@@ -1,4 +1,3 @@
-// const util = require('util');
 import { exec } from 'child_process';
 import moment from 'moment';
 
@@ -7,7 +6,11 @@ type AddMetadataParams = {
   shopName: string;
   imagePath: string;
 };
-export async function addMetadata({ name, shopName, imagePath }: AddMetadataParams) {
+export async function addMetadata({
+  name,
+  shopName,
+  imagePath,
+}: AddMetadataParams) {
   const currentDate = moment().format('YYYY:MM:DD HH:mm:ss+00:00');
 
   const metadata = {
@@ -45,7 +48,9 @@ export async function addMetadata({ name, shopName, imagePath }: AddMetadataPara
     Rights: `Copyright ${moment().year()} © ${shopName}`,
     Subject: name,
     Title: name,
-    Rating: 5,
+    Rating: 4 + Math.floor(Math.random() * 2),
+    Keywords: name,
+    Description: name,
     SubSecCreateDate: currentDate,
     SubSecDateTimeOriginal: currentDate,
   };

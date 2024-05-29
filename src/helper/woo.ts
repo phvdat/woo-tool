@@ -18,6 +18,8 @@ export interface WooDynamicOption {
   images: string;
 }
 
+const regexTagsReplace = /[^a-zA-Z0-9]+/g;
+
 function generateSKU(prefix: string) {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -71,7 +73,7 @@ export function createWooRecord(
     'Sale price': salePrice,
     'Regular price': regularPrice,
     Categories: category,
-    Tags: name.replaceAll(/\s+/g, ','),
+    Tags: name.replaceAll(regexTagsReplace, ','),
     'Shipping class': '',
     Images: images,
     'Download limit': '',
