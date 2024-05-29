@@ -113,7 +113,7 @@ const WooForm = () => {
         );
         setDataFile(data);
       } catch (error: any) {
-        setError(_get(error, 'response.data.message', 'Error'));
+        setError(_get(error, 'response.data.message', ''));
       }
     }
     setLoading(false);
