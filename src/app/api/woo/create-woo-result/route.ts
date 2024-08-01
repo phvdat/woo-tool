@@ -1,6 +1,5 @@
 import { CreateWatermark } from '@/helper/watermark';
 import { createWooRecord } from '@/helper/woo';
-import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import _get from 'lodash/get';
@@ -23,8 +22,6 @@ export async function POST(request: Request) {
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
-  const apiKey = payload.get('apiKey') as string;
-  const promptQuestion = payload.get('promptQuestion') as string;
   const categoriesObject = JSON.parse(
     _toString(payload.get('categoriesObject'))
   ) as WooCategoryPayload;
@@ -48,24 +45,11 @@ export async function POST(request: Request) {
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
       const imageUrls: string[] = rowData['Images'].split(',');
-      const question = promptQuestion.replaceAll('{key}', keyWord);
-      const responseChatGPTPromise = sendMessage(question, apiKey);
-      const responseImagesPromise = CreateWatermark({
+      const urlImageList = await CreateWatermark({
         ...watermarkObject,
         images: imageUrls,
         name: keyWord,
       });
-
-      const [responseChatGPT, urlImageList] = await Promise.all([
-        responseChatGPTPromise,
-        responseImagesPromise,
-      ]);
-
-      const content = _get(
-        responseChatGPT,
-        'choices[0].message.content',
-        ''
-      ).replaceAll('*', '');
 
       const formattedPublishedDate = publishedDate.format(
         'YYYY-MM-DD HH:mm:ss'
@@ -73,7 +57,6 @@ export async function POST(request: Request) {
       result.push(
         createWooRecord(categoriesObject, {
           ...rowData,
-          description: content,
           publishedDate: formattedPublishedDate,
           images: urlImageList.join(','),
           name: keyWord,

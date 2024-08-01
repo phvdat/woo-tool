@@ -137,17 +137,12 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
             <Input placeholder='Enter accurate category' />
           </Form.Item>
           <Form.Item<CategoryFormValue>
-            name='startDescription'
-            label='Start description for this category'
+            name='description'
+            label='Description for this category'
           >
             <TextArea rows={4} placeholder='Html content' />
           </Form.Item>
-          <Form.Item<CategoryFormValue>
-            name='endDescription'
-            label='End description for this category'
-          >
-            <TextArea rows={4} placeholder='Html content' />
-          </Form.Item>
+
           <Form.Item>
             <Button type='primary' htmlType='submit' loading={loading}>
               Submit
