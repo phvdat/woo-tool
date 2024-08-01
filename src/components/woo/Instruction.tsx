@@ -11,27 +11,6 @@ const Instruction = () => {
   };
   const items: CollapseProps['items'] = [
     {
-      key: '1',
-      label: 'How to get API key',
-      children: (
-        <div>
-          <Text type='success'>
-            Go to{' '}
-            <a href='https://discord.pawan.krd/' target='_blank'>
-              https://discord.pawan.krd/
-            </a>
-            Go to ⁠🤖𝐁𝐨𝐭 Then do the /key command. It will give you your own
-            key, make sure to not share it with anyone.
-            <br />
-          </Text>
-          <Text type='warning'>
-            Note: API Keys are IP Locked, if you need to use it from another IP
-            you need to reset your IP by doing /resetip command in ⁠🤖𝐁𝐨𝐭
-          </Text>
-        </div>
-      ),
-    },
-    {
       key: '2',
       label: 'Excel format',
       children: (
@@ -56,12 +35,18 @@ const Instruction = () => {
         <div>
           <Text type='success'>
             Go to your telegram account and search for the bot called&nbsp;
-            <Link href='https://t.me/userinfobot' type='warning' target='_blank'>@userinfobot</Link>. Click on the start button and it will give you your
-            chat id.
+            <Link
+              href='https://t.me/userinfobot'
+              type='warning'
+              target='_blank'
+            >
+              @userinfobot
+            </Link>
+            . Click on the start button and it will give you your chat id.
           </Text>
         </div>
       ),
-    }
+    },
   ];
   return (
     <>

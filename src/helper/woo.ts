@@ -8,11 +8,9 @@ export interface WooFixedOption {
   regularPrice: string;
   category: string;
   published?: string;
-  startDescription?: string;
-  endDescription?: string;
+  description?: string;
 }
 export interface WooDynamicOption {
-  description: string;
   name: string;
   publishedDate: string;
   images: string;
@@ -39,10 +37,9 @@ export function createWooRecord(
     salePrice,
     regularPrice,
     category,
-    startDescription = '',
-    endDescription = '',
+    description = '',
   }: WooFixedOption,
-  { name, images, publishedDate, description }: WooDynamicOption
+  { name, images, publishedDate }: WooDynamicOption
 ): WooCommerce {
   const record: WooCommerce = {
     ID: '',
@@ -54,7 +51,7 @@ export function createWooRecord(
     'Is featured?': '0',
     'Visibility in catalog': 'visible',
     'Short description': '',
-    Description: startDescription + description + endDescription,
+    Description: description,
     'Date sale price starts': '',
     'Date sale price ends': '',
     'Tax status': 'taxable',

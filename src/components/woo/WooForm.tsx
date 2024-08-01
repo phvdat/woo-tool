@@ -28,9 +28,7 @@ import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
 export interface WooFormValue {
-  apiKey: string;
   file: FileList;
-  promptQuestion: string;
   category: string;
   watermarkWebsite: string;
   telegramId: string;
@@ -89,7 +87,7 @@ const WooForm = () => {
     }
     setError('');
     setLoading(true);
-    const { file, apiKey, promptQuestion, category } = value;
+    const { file, category } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
 
     const categoriesObject = categories?.find((item) => item._id === category);
@@ -102,8 +100,6 @@ const WooForm = () => {
       try {
         const formData = new FormData();
         formData.append('file', fileOrigin);
-        formData.append('apiKey', apiKey);
-        formData.append('promptQuestion', promptQuestion);
         formData.append('categoriesObject', JSON.stringify(categoriesObject));
         formData.append('watermarkObject', JSON.stringify(watermarkObject));
         formData.append('telegramId', value.telegramId);
@@ -147,27 +143,10 @@ const WooForm = () => {
         />
       )}
       <Card>
-        <Form.Item<WooFormValue>
-          name='apiKey'
-          label='Key ChatGPT'
-          rules={[{ required: true, message: 'Please input API key!' }]}
-        >
-          <Input type='text' placeholder='API key' />
-        </Form.Item>
         <Form.Item<WooFormValue> name='telegramId' label='Telegram ID'>
           <Input
             type='text'
             placeholder='Enter telegram id for receive file, if not you can download in this page'
-          />
-        </Form.Item>
-        <Form.Item<WooFormValue>
-          name='promptQuestion'
-          label='Prompt Question'
-          rules={[{ required: true, message: 'Please input prompt question!' }]}
-        >
-          <TextArea
-            rows={4}
-            placeholder='Ex: Write a story about {key} with 100 words'
           />
         </Form.Item>
         <Row gutter={16}>

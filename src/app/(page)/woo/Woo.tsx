@@ -13,7 +13,7 @@ const Woo = () => {
       }}
     >
       <Title level={4} style={{ textAlign: 'center' }}>
-        WooCommerce ChatGPT
+        WooCommerce Tool
       </Title>
       <Instruction />
       <WooForm />
