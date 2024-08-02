@@ -44,6 +44,9 @@ export async function POST(request: Request) {
     for (const row of data) {
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
+      if (!rowData['Images']) {
+        continue;
+      }
       const imageUrls: string[] = rowData['Images'].split(',');
       const urlImageList = await CreateWatermark({
         imageHeight: Number(watermarkObject.imageHeight),
