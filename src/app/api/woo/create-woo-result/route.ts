@@ -46,7 +46,13 @@ export async function POST(request: Request) {
       const keyWord: string = rowData['Name'];
       const imageUrls: string[] = rowData['Images'].split(',');
       const urlImageList = await CreateWatermark({
-        ...watermarkObject,
+        imageHeight: Number(watermarkObject.imageHeight),
+        imageWidth: Number(watermarkObject.imageWidth),
+        logoHeight: Number(watermarkObject.logoHeight),
+        logoWidth: Number(watermarkObject.logoWidth),
+        logoUrl: watermarkObject.logoUrl,
+        quality: Number(watermarkObject.quality),
+        shopName: watermarkObject.shopName,
         images: imageUrls,
         name: keyWord,
       });

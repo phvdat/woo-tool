@@ -39,7 +39,7 @@ const defaultFormValue: WatermarkFormValue = {
   imageWidth: 1000,
   imageHeight: 1000,
   shopName: '',
-  quality: 50,
+  quality: 70,
 };
 const UpdateWatermarkList = ({
   initialForm = defaultFormValue,
