@@ -49,6 +49,9 @@ export async function CreateWatermark({
       const imageName = `${name.replaceAll(' ', '-')}-${i + 1}.jpg`;
       const imagePath = `${imagesFolderPath}/${imageName}`;
       try {
+        if (!imageUrl) {
+          return;
+        }
         const { data: imageResponse } = await axios.get(imageUrl, {
           responseType: 'arraybuffer',
         });

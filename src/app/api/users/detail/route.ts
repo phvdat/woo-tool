@@ -6,7 +6,6 @@ import { ObjectId } from 'mongodb';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
-  console.log(email);
 
   let { db } = await connectToDatabase();
   const response = await db.collection(USERS_COLLECTION).findOne({ email });

@@ -61,7 +61,7 @@ async function runExiftoolCommand(imagePath: string, metadata: any) {
   const metadataArgs = Object.entries(metadata)
     .map(([key, value]) => `-${key}="${value}"`)
     .join(' ');
-  const command = `exiftool -overwrite_original ${metadataArgs} "${imagePath}"`;
+  const command = `exiftool -overwrite_original -m ${metadataArgs} "${imagePath}"`;
   const promise = new Promise((resolve, reject) => {
     exec(command, (error: any, stdout: any, stderr: any) => {
       if (error) {
