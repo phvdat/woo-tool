@@ -38,7 +38,7 @@ const WooForm = () => {
   const [form] = Form.useForm<WooFormValue>();
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
   const { data } = useSession();
-  const { user } = useUser(data?.user?.email || '');
+  const { user, isLoading } = useUser(data?.user?.email || '');
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -100,8 +100,13 @@ const WooForm = () => {
   }, [form, user]);
 
   return (
-    <Form form={form} onFinish={onFinish} layout='vertical' disabled={loading}>
-      {loading && (
+    <Form
+      form={form}
+      onFinish={onFinish}
+      layout='vertical'
+      disabled={loading || isLoading}
+    >
+      {(loading || isLoading) && (
         <Spin
           size='large'
           style={{

@@ -1,4 +1,4 @@
-import { CategoryFormValue } from '@/components/woo/UpdateCategory';
+import { CategoryFormValue } from '@/components/woo/UpdateCategoryModal';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
@@ -8,9 +8,19 @@ export interface WooCategoryPayload extends CategoryFormValue {
   _id?: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const searchParams = new URL(request.url).searchParams;
+  const searchKeyword = searchParams.get('searchKeyword') || '';
   let { db } = await connectToDatabase();
-  const response = await db.collection(CATEGORIES_COLLECTION).find().toArray();
+  const response = await db
+    .collection(CATEGORIES_COLLECTION)
+    .find({
+      $or: [
+        { templateName: { $regex: searchKeyword, $options: 'i' } },
+        { category: { $regex: searchKeyword, $options: 'i' } },
+      ],
+    })
+    .toArray();
   return Response.json(response, { status: 200 });
 }
 

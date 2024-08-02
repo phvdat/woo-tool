@@ -14,7 +14,7 @@ import {
 } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
-import UpdateWatermarkList from './UpdateWatermarkList';
+import UpdateWatermarkList from './UpdateWatermarkListModal';
 import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 
 interface WatermarkWebsiteItem {

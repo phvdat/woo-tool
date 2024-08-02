@@ -1,4 +1,4 @@
-import { WatermarkFormValue } from '@/components/woo/UpdateWatermarkList';
+import { WatermarkFormValue } from '@/components/woo/UpdateWatermarkListModal';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 

@@ -10,15 +10,25 @@ import { useState } from 'react';
 
 export interface CategoryFormValue extends WooFixedOption {
   templateName: string;
-  pathnameImage: string;
 }
 
-interface AddNewCategoryProps {
+export enum TypeUpdateCategory {
+  ADD_CATEGORY = 'Add New',
+  EDIT_CATEGORY = 'Edit',
+  DUPLICATE_CATEGORY = 'Duplicate',
+}
+
+interface UpdateCategoryProps {
   initialForm?: CategoryFormValue;
   _id?: string;
+  label: TypeUpdateCategory;
 }
 
-const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
+const UpdateCategoryModal = ({
+  initialForm,
+  _id,
+  label,
+}: UpdateCategoryProps) => {
   const { mutate } = useCategories();
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,7 +69,7 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
   const onSubmit = async (values: CategoryFormValue) => {
     setLoading(true);
     setError('');
-    if (_id) {
+    if (label === TypeUpdateCategory.EDIT_CATEGORY && _id) {
       await updateCategory(_id, values);
     } else {
       await createCategory(values);
@@ -69,9 +79,7 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
   return (
     <>
       {contextHolder}
-      <Button onClick={() => setIsModalOpen(true)}>
-        {_id ? 'Edit' : 'Add new Category'}
-      </Button>
+      <Button onClick={() => setIsModalOpen(true)}>{label}</Button>
       <Modal
         title='Category'
         open={isModalOpen}
@@ -101,16 +109,6 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
             rules={[{ required: true, message: 'Please input SKU prefix!' }]}
           >
             <Input placeholder='Ex: MY_WEBSITE.COM' />
-          </Form.Item>
-
-          <Form.Item<CategoryFormValue>
-            label='Pathname Image'
-            name='pathnameImage'
-            rules={[
-              { required: true, message: 'Please input pathname image!' },
-            ]}
-          >
-            <Input placeholder='Ex: https://domain.com' />
           </Form.Item>
 
           <Form.Item<CategoryFormValue>
@@ -155,4 +153,4 @@ const UpdateCategory = ({ initialForm, _id }: AddNewCategoryProps) => {
   );
 };
 
-export default UpdateCategory;
+export default UpdateCategoryModal;

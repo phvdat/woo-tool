@@ -1,6 +1,6 @@
 'use client';
 import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
-import UpdateWatermarkList from '@/components/woo/UpdateWatermarkList';
+import UpdateWatermarkList from '@/components/woo/UpdateWatermarkListModal';
 import WatermarkWebsiteItem from '@/components/woo/WatermarkWebsiteItem';
 import { Flex, Row, Spin, Typography } from 'antd';
 const { Title } = Typography;

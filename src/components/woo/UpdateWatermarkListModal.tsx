@@ -41,7 +41,7 @@ const defaultFormValue: WatermarkFormValue = {
   shopName: '',
   quality: 70,
 };
-const UpdateWatermarkList = ({
+const UpdateWatermarkListModal = ({
   initialForm = defaultFormValue,
   _id,
 }: AddNewCategoryProps) => {
@@ -204,4 +204,4 @@ const UpdateWatermarkList = ({
   );
 };
 
-export default UpdateWatermarkList;
+export default UpdateWatermarkListModal;
