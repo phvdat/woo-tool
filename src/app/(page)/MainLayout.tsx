@@ -13,7 +13,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
       <Layout style={layoutStyle}>
         <Header />
 
-        <Content>{children}</Content>
+        <Content style={contentStyle}>{children}</Content>
 
         <Footer>
           <Text type='secondary'>
@@ -27,4 +27,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
 
 const layoutStyle: React.CSSProperties = {
   minHeight: '100vh',
+};
+const contentStyle: React.CSSProperties = {
+  padding: '0 24px',
 };

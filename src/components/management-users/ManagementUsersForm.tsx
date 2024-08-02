@@ -1,14 +1,12 @@
 'use client';
-import { useUsers } from '@/app/hooks/useUsers';
+import { UsersPayload, useUsers } from '@/app/hooks/useUsers';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import { Alert, Button, Form, Input, message } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
 
-interface UsersFormValues {
-  email: string;
-}
+export interface UsersFormValues extends Omit<UsersPayload, '_id'> {}
 
 const ManagementUsersForm = () => {
   const [form] = Form.useForm<UsersFormValues>();
