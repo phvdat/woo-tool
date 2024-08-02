@@ -1,9 +1,9 @@
 'use client';
 import { useCategories } from '@/app/hooks/useCategories';
+import { useUser } from '@/app/hooks/useUser';
 import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
-import { useWoo } from '@/app/hooks/useWoo';
 import { endpoint } from '@/constant/endpoint';
-import { handleErrorMongoDB, normFile } from '@/helper/common';
+import { normFile } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { DownloadOutlined, SettingOutlined } from '@ant-design/icons';
@@ -21,9 +21,9 @@ import {
   Typography,
   Upload,
 } from 'antd';
-import TextArea from 'antd/es/input/TextArea';
 import axios from 'axios';
 import _get from 'lodash/get';
+import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
@@ -37,7 +37,8 @@ export interface WooFormValue {
 const WooForm = () => {
   const [form] = Form.useForm<WooFormValue>();
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
-  const { woo, isLoading } = useWoo();
+  const { data } = useSession();
+  const { user } = useUser(data?.user?.email || '');
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -61,30 +62,7 @@ const WooForm = () => {
     }));
   }, [watermarkConfig]);
 
-  const createWoo = async (values: WooFormValue) => {
-    try {
-      await axios.post(endpoint.wooConfig, values);
-    } catch (error) {
-      const { errorMessage } = handleErrorMongoDB(error);
-      console.log('error create woo', errorMessage);
-    }
-  };
-
-  const updateWoo = async (id: string, values: WooFormValue) => {
-    try {
-      await axios.put(endpoint.wooConfig, { _id: id, ...values });
-    } catch (error) {
-      const { errorMessage } = handleErrorMongoDB(error);
-      console.log('error update woo', errorMessage);
-    }
-  };
-
   const onFinish = async (value: WooFormValue) => {
-    if (woo) {
-      updateWoo(_get(woo, '_id', ''), value);
-    } else {
-      createWoo(value);
-    }
     setError('');
     setLoading(true);
     const { file, category } = value;
@@ -116,21 +94,14 @@ const WooForm = () => {
   };
 
   useEffect(() => {
-    if (woo) {
-      const { _id, file, ...initialForm } = woo;
-      form.setFieldsValue(initialForm);
+    if (user) {
+      form.setFieldValue('telegramId', user.telegramId);
     }
-  }, [woo, form]);
+  }, [form, user]);
 
   return (
-    <Form
-      form={form}
-      onFinish={onFinish}
-      layout='vertical'
-      disabled={isLoading}
-      initialValues={woo}
-    >
-      {isLoading && (
+    <Form form={form} onFinish={onFinish} layout='vertical' disabled={loading}>
+      {loading && (
         <Spin
           size='large'
           style={{
@@ -167,6 +138,11 @@ const WooForm = () => {
                 placeholder='Select Category'
                 options={categoriesOptions}
                 showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
               />
             </Form.Item>
           </Col>
@@ -192,6 +168,11 @@ const WooForm = () => {
                 placeholder='Select Watermark Website'
                 options={watermarkOptions}
                 showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
               />
             </Form.Item>
           </Col>

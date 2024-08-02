@@ -5,6 +5,7 @@ import useSWR from 'swr';
 export interface UsersPayload {
   _id: string;
   email: string;
+  telegramId?: string;
 }
 
 const fetcher = async (url: string) => {
