@@ -7,6 +7,7 @@ import { Alert, Button, Form, Input, Modal, message } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import axios from 'axios';
 import { useState } from 'react';
+import { mutate } from 'swr';
 
 export interface CategoryFormValue extends WooFixedOption {
   templateName: string;
@@ -29,7 +30,6 @@ const UpdateCategoryModal = ({
   _id,
   label,
 }: UpdateCategoryProps) => {
-  const { mutate } = useCategories();
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<CategoryFormValue>();
@@ -43,7 +43,6 @@ const UpdateCategoryModal = ({
         type: 'success',
         content: 'Create category successfully!',
       });
-      await mutate();
       setIsModalOpen(false);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
@@ -58,7 +57,6 @@ const UpdateCategoryModal = ({
         type: 'success',
         content: 'Update category successfully!',
       });
-      await mutate();
       setIsModalOpen(false);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
@@ -74,6 +72,7 @@ const UpdateCategoryModal = ({
     } else {
       await createCategory(values);
     }
+    await mutate([endpoint.categoryConfig, '']);
     setLoading(false);
   };
   return (

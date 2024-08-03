@@ -18,6 +18,7 @@ import { handleErrorMongoDB } from '@/helper/common';
 import axios from 'axios';
 import { endpoint } from '@/constant/endpoint';
 import { useCategories } from '@/app/hooks/useCategories';
+import { mutate } from 'swr';
 const { Text } = Typography;
 
 interface CategoryItem {
@@ -47,7 +48,6 @@ const CategoryItem = ({ category }: CategoryItem) => {
       children: category.salePrice,
     },
   ];
-  const { mutate } = useCategories();
   const [messageApi, contextHolder] = message.useMessage();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -60,7 +60,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
         type: 'success',
         content: 'Delete category successfully!',
       });
-      await mutate();
+      await mutate([endpoint.categoryConfig, '']);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
@@ -98,7 +98,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
               _id={category._id}
               initialForm={{
                 ...category,
-                templateName: `${category.category} copy`,
+                templateName: `${category.templateName} copy`,
               }}
               label={TypeUpdateCategory.DUPLICATE_CATEGORY}
             />
