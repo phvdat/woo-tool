@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
-    let publishedDate = moment().add(4, 'hours');
+    let publishedDate = moment();
     for (const row of data) {
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
           name: keyWord,
         })
       );
-      publishedDate.add(300 + Math.floor(Math.random() * 20), 'seconds');
+      publishedDate.add(100 + Math.floor(Math.random() * 20), 'seconds');
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);
