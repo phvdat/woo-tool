@@ -6,6 +6,7 @@ export interface UsersPayload {
   _id: string;
   email: string;
   telegramId?: string;
+  publicMinutes: number;
 }
 
 const fetcher = async (url: string) => {

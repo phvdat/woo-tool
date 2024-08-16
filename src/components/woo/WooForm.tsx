@@ -27,6 +27,8 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
+const PUBLIC_MINUTES = 10;
+
 export interface WooFormValue {
   file: FileList;
   category: string;
@@ -81,6 +83,10 @@ const WooForm = () => {
         formData.append('categoriesObject', JSON.stringify(categoriesObject));
         formData.append('watermarkObject', JSON.stringify(watermarkObject));
         formData.append('telegramId', value.telegramId);
+        formData.append(
+          'publicMinutes',
+          (user?.publicMinutes || PUBLIC_MINUTES).toString()
+        );
         const { data } = await axios.post<WooCommerce[]>(
           endpoint.wooCreate,
           formData
@@ -106,7 +112,7 @@ const WooForm = () => {
       layout='vertical'
       disabled={loading || isLoading}
     >
-      {(loading || isLoading) && (
+      {isLoading && (
         <Spin
           size='large'
           style={{

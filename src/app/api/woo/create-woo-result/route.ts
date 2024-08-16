@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     _toString(payload.get('watermarkObject'))
   ) as WooWatermarkPayload;
   const telegramId = payload.get('telegramId') as string;
+  const publicMinutes = Number(payload.get('publicMinutes'));
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
       return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
-    let publishedDate = moment();
+    let publishedDate = moment().add(publicMinutes, 'minutes');
     for (const row of data) {
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
           name: keyWord,
         })
       );
-      publishedDate.add(100 + Math.floor(Math.random() * 20), 'seconds');
+      publishedDate.add(60 + Math.floor(Math.random() * 20), 'seconds');
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);
@@ -92,16 +93,8 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.log('error api woo', error);
-    const errorChatGPT = _get(
-      error,
-      'response.data.error.message',
-      'something went wrong'
-    );
-    return Response.json(
-      { message: errorChatGPT },
-      {
-        status: 500,
-      }
-    );
+    return Response.json(error, {
+      status: _get(error, 'response.status', 500),
+    });
   }
 }

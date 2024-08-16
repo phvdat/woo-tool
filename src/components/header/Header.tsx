@@ -80,7 +80,7 @@ const Header = () => {
           trigger={['click']}
           placement='bottomRight'
         >
-          <Avatar src={data?.user?.image} />
+          <Avatar src={data?.user?.image} style={{ cursor: 'pointer' }} />
         </Dropdown>
       </Flex>
     </HeaderAntd>

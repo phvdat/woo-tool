@@ -1,5 +1,5 @@
 const navigation = {
-  profile: 'my-profile',
+  profile: 'setting',
   home: '/home',
   woo: '/woo',
   managementUser: '/management-user',
