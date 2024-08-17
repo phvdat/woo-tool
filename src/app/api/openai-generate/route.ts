@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       const Description = rowData['Description'];
       const finalDescription = Description.replace(
         '(content)',
-        responseChatGPT
+        `<p>${responseChatGPT}</p>`
       );
       result.push({ ...rowData, Description: finalDescription });
     }
