@@ -1,5 +1,6 @@
 import { CreateWatermark } from '@/helper/watermark';
 import { createWooRecord } from '@/helper/woo';
+import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import _get from 'lodash/get';
@@ -7,8 +8,6 @@ import _toString from 'lodash/toString';
 import moment from 'moment';
 import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
-import { WooCategoryPayload } from '../categories-config/route';
-import { WooWatermarkPayload } from '../watermark-config/route';
 interface SheetData {
   Name: string;
   Images: string;
@@ -22,14 +21,9 @@ export async function POST(request: Request) {
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
-  const categoriesObject = JSON.parse(
-    _toString(payload.get('categoriesObject'))
-  ) as WooCategoryPayload;
-  const watermarkObject = JSON.parse(
-    _toString(payload.get('watermarkObject'))
-  ) as WooWatermarkPayload;
   const telegramId = payload.get('telegramId') as string;
-  const publicMinutes = Number(payload.get('publicMinutes'));
+  const promptQuestion = payload.get('promptQuestion') as string;
+  const apiKey = payload.get('apiKey') as string;
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
@@ -37,42 +31,21 @@ export async function POST(request: Request) {
     });
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(wordSheet) as SheetData[];
-    if (!data[0].hasOwnProperty('Name') || !data[0].hasOwnProperty('Images')) {
+    if (!data[0].hasOwnProperty('Name')) {
       return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
-    let publishedDate = moment().add(publicMinutes, 'minutes');
     for (const row of data) {
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
-      if (!rowData['Images']) {
-        continue;
-      }
-      const imageUrls: string[] = rowData['Images'].split(',');
-      const urlImageList = await CreateWatermark({
-        imageHeight: Number(watermarkObject.imageHeight),
-        imageWidth: Number(watermarkObject.imageWidth),
-        logoHeight: Number(watermarkObject.logoHeight),
-        logoWidth: Number(watermarkObject.logoWidth),
-        logoUrl: watermarkObject.logoUrl + 'false',
-        quality: Number(watermarkObject.quality),
-        shopName: watermarkObject.shopName,
-        images: imageUrls,
-        name: keyWord,
-      });
-
-      const formattedPublishedDate = publishedDate.format(
-        'YYYY-MM-DD HH:mm:ss'
+      const question = promptQuestion.replaceAll('{product-name}', keyWord);
+      const responseChatGPT = await sendMessage(question, apiKey);
+      const Description = rowData['Description'];
+      const finalDescription = Description.replace(
+        '(content)',
+        responseChatGPT
       );
-      result.push(
-        createWooRecord(categoriesObject, {
-          ...rowData,
-          publishedDate: formattedPublishedDate,
-          images: urlImageList.join(','),
-          name: keyWord,
-        })
-      );
-      publishedDate.add(60 + Math.floor(Math.random() * 20), 'seconds');
+      result.push({ ...rowData, Description: finalDescription });
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);
@@ -80,7 +53,7 @@ export async function POST(request: Request) {
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
     const date = moment().format('YYYY-MM-DD-HH-mm-ss');
-    const fileName = `woo-${date}.csv`;
+    const fileName = `woo-openai-${date}.csv`;
     writeFileSync(fileName, buffer);
     const stream = createReadStream(fileName);
     bot
@@ -92,7 +65,7 @@ export async function POST(request: Request) {
       });
     return Response.json(result, { status: 200 });
   } catch (error) {
-    console.log('error api woo', error);
+    console.log('error api openai', error);
     return Response.json(error, {
       status: _get(error, 'response.status', 500),
     });

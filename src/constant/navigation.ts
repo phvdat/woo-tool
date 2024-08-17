@@ -1,8 +1,8 @@
 const navigation = {
-  profile: 'setting',
-  home: '/home',
+  setting: '/setting',
   woo: '/woo',
-  managementUser: '/management-user',
+  openaiContent: '/openai-content',
+  managementUser: '/management-users',
   configCategories: '/woo/config-categories',
   configWatermark: '/woo/config-watermark',
 };

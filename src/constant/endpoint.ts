@@ -5,4 +5,6 @@ export const endpoint = {
   wooCreate: '/api/woo/create-woo-result',
   categoryConfig: '/api/woo/categories-config',
   watermarkConfig: '/api/woo/watermark-config',
+
+  openaiGenerate: '/api/openai-generate',
 };

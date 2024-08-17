@@ -20,29 +20,30 @@ const Header = () => {
   const headerItems = [
     {
       label: (
-        <Link href='/home'>
-          <Title level={5}>Home</Title>
-        </Link>
-      ),
-      key: '/home',
-    },
-    {
-      label: (
-        <Link href='/woo'>
+        <Link href={navigation.woo}>
           <Title level={5}>Woo tool</Title>
         </Link>
       ),
-      key: '/woo',
+      key: navigation.woo,
       children: [
         {
           label: <Link href='/woo/config-categories'>Config Categories</Link>,
-          key: '/woo/config-categories',
+          key: navigation.configCategories,
         },
         {
           label: <Link href='/woo/config-watermark'>Config Watermark</Link>,
-          key: '/woo/config-watermark',
+          key: navigation.configWatermark,
         },
       ],
+    },
+
+    {
+      label: (
+        <Link href={navigation.openaiContent}>
+          <Title level={5}>Openai Content</Title>
+        </Link>
+      ),
+      key: navigation.openaiContent,
     },
   ];
 
@@ -50,7 +51,7 @@ const Header = () => {
     {
       key: '1',
       label: (
-        <Link href={navigation.profile}>
+        <Link href={navigation.setting}>
           <Flex vertical align='center'>
             <Avatar src={data?.user?.image} />
             <Text strong>{data?.user?.name}</Text>
