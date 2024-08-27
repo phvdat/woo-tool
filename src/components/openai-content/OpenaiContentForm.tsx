@@ -1,13 +1,13 @@
 'use client';
+import { useUser } from '@/app/hooks/user/useUser';
+import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
 import { Alert, Button, Card, Form, Input, Upload } from 'antd';
+import axios from 'axios';
+import _get from 'lodash/get';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 const { TextArea } = Input;
-import _get from 'lodash/get';
-import { useUser } from '@/app/hooks/useUser';
-import { useSession } from 'next-auth/react';
-import { endpoint } from '@/constant/endpoint';
-import axios from 'axios';
 
 interface OpenaiFormValues {
   promptQuestion: string;
@@ -29,13 +29,15 @@ const OpenaiContentForm = () => {
     const { file } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
 
-    if (fileOrigin && user) {
+    if (fileOrigin && user?.setting) {
       try {
         const formData = new FormData();
         formData.append('file', fileOrigin);
-        formData.append('telegramId', user.telegramId);
-        formData.append('promptQuestion', user.promptQuestion);
-        formData.append('apiKey', user.apiKey);
+        formData.append('telegramId', user.setting.telegramId);
+        formData.append('promptQuestion', user.setting.promptQuestion);
+        formData.append('apiKey', user.setting.apiKey);
+        formData.append('publicMinutes', user.setting.publicMinutes.toString());
+        formData.append('gapMinutes', user.setting.gapMinutes.toString());
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
         setError(_get(error, 'response.data.message', ''));

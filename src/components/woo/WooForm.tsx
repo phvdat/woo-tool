@@ -1,8 +1,10 @@
 'use client';
-import { useCategories } from '@/app/hooks/useCategories';
-import { useUser } from '@/app/hooks/useUser';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { useCategory } from '@/app/hooks/store/useCategory';
+import { useStore } from '@/app/hooks/store/useStore';
+import { useStoreList } from '@/app/hooks/store/useStoreList';
+import { useUser } from '@/app/hooks/user/useUser';
 import { endpoint } from '@/constant/endpoint';
+import { navigation } from '@/constant/navigation';
 import { normFile } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
@@ -28,11 +30,12 @@ import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
 const PUBLIC_MINUTES = 10;
+const GAP_MINUTES = 5;
 
 export interface WooFormValue {
   file: FileList;
   category: string;
-  watermarkWebsite: string;
+  store: string;
   telegramId: string;
 }
 
@@ -40,29 +43,29 @@ const WooForm = () => {
   const [form] = Form.useForm<WooFormValue>();
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
   const { data } = useSession();
-  const { user, isLoading } = useUser(data?.user?.email || '');
+  const { user, isLoading } = useUser(data?.user?.email as string);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-
-  const { categories } = useCategories();
-  const { watermarkConfig } = useWatermarkConfig();
+  const { storeList } = useStoreList();
+  const { store } = useStore(form.getFieldValue('storeId'));
 
   const categoriesOptions = useMemo(() => {
-    if (!categories) return [];
+    if (!store?.categories) return [];
+    const categories = store.categories;
     return categories.map((category) => ({
-      label: category.templateName,
+      label: category.categoryName,
       value: category._id,
     }));
-  }, [categories]);
+  }, [store]);
 
-  const watermarkOptions = useMemo(() => {
-    if (!watermarkConfig) return [];
-    return watermarkConfig.map((watermark) => ({
-      label: watermark.shopName,
-      value: watermark._id,
+  const storeOption = useMemo(() => {
+    if (!storeList) return [];
+    return storeList.map((store) => ({
+      label: store.watermark.shopName,
+      value: store._id,
     }));
-  }, [watermarkConfig]);
+  }, [storeList]);
 
   const onFinish = async (value: WooFormValue) => {
     setError('');
@@ -70,22 +73,22 @@ const WooForm = () => {
     const { file, category } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
 
-    const categoriesObject = categories?.find((item) => item._id === category);
-    const watermarkObject = watermarkConfig?.find(
-      (item) => item._id === value.watermarkWebsite
-    );
     setDataFile([]);
 
-    if (fileOrigin && categoriesObject && watermarkObject) {
+    if (fileOrigin) {
       try {
         const formData = new FormData();
         formData.append('file', fileOrigin);
-        formData.append('categoriesObject', JSON.stringify(categoriesObject));
-        formData.append('watermarkObject', JSON.stringify(watermarkObject));
+        formData.append('categoryId', value.category);
+        formData.append('storeId', value.store);
         formData.append('telegramId', value.telegramId);
         formData.append(
           'publicMinutes',
-          (user?.publicMinutes || PUBLIC_MINUTES).toString()
+          (user?.settings.publicMinutes || PUBLIC_MINUTES).toString()
+        );
+        formData.append(
+          'gapMinutes',
+          (user?.settings.gapMinutes || GAP_MINUTES).toString()
         );
         const { data } = await axios.post<WooCommerce[]>(
           endpoint.wooCreate,
@@ -101,7 +104,7 @@ const WooForm = () => {
 
   useEffect(() => {
     if (user) {
-      form.setFieldValue('telegramId', user.telegramId);
+      form.setFieldValue('telegramId', user.settings?.telegramId || '');
     }
   }, [form, user]);
 
@@ -134,50 +137,28 @@ const WooForm = () => {
         <Row gutter={16}>
           <Col span={24} sm={{ span: 12 }}>
             <Form.Item<WooFormValue>
-              name='category'
+              name='store'
               label={
                 <span>
-                  Choose Category{' '}
-                  <Link href='/woo/config-categories' type='warning'>
+                  Store{' '}
+                  <Link
+                    href={navigation.configStore(user?._id as string)}
+                    type='warning'
+                  >
                     <SettingOutlined />
-                  </Link>{' '}
-                </span>
-              }
-              rules={[{ required: true, message: 'Please select category!' }]}
-            >
-              <Select
-                placeholder='Select Category'
-                options={categoriesOptions}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-              />
-            </Form.Item>
-          </Col>
-          <Col span={24} sm={{ span: 12 }}>
-            <Form.Item<WooFormValue>
-              name='watermarkWebsite'
-              label={
-                <span>
-                  Watermark Website{' '}
-                  <Link href='/woo/config-watermark' type='warning'>
-                    <SettingOutlined />
-                  </Link>{' '}
+                  </Link>
                 </span>
               }
               rules={[
                 {
                   required: true,
-                  message: 'Please select watermark for website!',
+                  message: 'Please select store!',
                 },
               ]}
             >
               <Select
-                placeholder='Select Watermark Website'
-                options={watermarkOptions}
+                placeholder='Select Store'
+                options={storeOption}
                 showSearch
                 filterOption={(input, option) =>
                   (option?.label ?? '')
@@ -187,6 +168,33 @@ const WooForm = () => {
               />
             </Form.Item>
           </Col>
+          {form.getFieldValue('storeId') && (
+            <Col span={24} sm={{ span: 12 }}>
+              <Form.Item<WooFormValue>
+                name='category'
+                label={
+                  <span>
+                    Choose Category{' '}
+                    <Link href='/woo/config-categories' type='warning'>
+                      <SettingOutlined />
+                    </Link>{' '}
+                  </span>
+                }
+                rules={[{ required: true, message: 'Please select category!' }]}
+              >
+                <Select
+                  placeholder='Select Category'
+                  options={categoriesOptions}
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
+            </Col>
+          )}
         </Row>
 
         <Form.Item<WooFormValue>

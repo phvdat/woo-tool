@@ -1,12 +1,12 @@
 'use client';
-import { useCategories } from '@/app/hooks/useCategories';
+import { useCategory } from '@/app/hooks/store/useCategory';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import { WooFixedOption } from '@/helper/woo';
 import { Alert, Button, Form, Input, Modal, message } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import axios from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { mutate } from 'swr';
 
 export interface CategoryFormValue extends WooFixedOption {
@@ -20,25 +20,27 @@ export enum TypeUpdateCategory {
 }
 
 interface UpdateCategoryProps {
-  initialForm?: CategoryFormValue;
   _id?: string;
   label: TypeUpdateCategory;
+  storeId?: string;
 }
 
-const UpdateCategoryModal = ({
-  initialForm,
-  _id,
-  label,
-}: UpdateCategoryProps) => {
+const UpdateCategoryModal = ({ _id, label, storeId }: UpdateCategoryProps) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<CategoryFormValue>();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const createCategory = async (values: CategoryFormValue) => {
+  const { category } = useCategory(_id as string);
+
+  const createCategory = async (values: CategoryFormValue, storeId: string) => {
+    const payload = {
+      ...values,
+      storeId,
+    };
     try {
-      await axios.post(endpoint.categoryConfig, values);
+      await axios.post(endpoint.categoryConfig, payload);
       messageApi.open({
         type: 'success',
         content: 'Create category successfully!',
@@ -50,9 +52,14 @@ const UpdateCategoryModal = ({
     }
   };
 
-  const updateCategory = async (_id: string, values: CategoryFormValue) => {
+  const updateCategory = async (
+    _id: string,
+    values: CategoryFormValue,
+    _storeId: string
+  ) => {
     try {
-      await axios.put(endpoint.categoryConfig, { _id, ...values });
+      const payload = { _id, ...values, _storeId };
+      await axios.put(endpoint.categoryConfig, payload);
       messageApi.open({
         type: 'success',
         content: 'Update category successfully!',
@@ -68,13 +75,18 @@ const UpdateCategoryModal = ({
     setLoading(true);
     setError('');
     if (label === TypeUpdateCategory.EDIT_CATEGORY && _id) {
-      await updateCategory(_id, values);
+      await updateCategory(_id, values, storeId as string);
     } else {
-      await createCategory(values);
+      await createCategory(values, storeId as string);
     }
-    await mutate([endpoint.categoryConfig, '']);
+    await mutate(`${endpoint.store}/${storeId}`);
     setLoading(false);
   };
+  useEffect(() => {
+    if (category) {
+      form.setFieldsValue(category);
+    }
+  }, [category, form]);
   return (
     <>
       {contextHolder}
@@ -91,7 +103,6 @@ const UpdateCategoryModal = ({
           onFinish={onSubmit}
           layout='vertical'
           name='add-category-form'
-          initialValues={initialForm}
           disabled={loading}
         >
           <Form.Item<CategoryFormValue>

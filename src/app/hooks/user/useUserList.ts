@@ -1,14 +1,14 @@
+import { SettingFormValues } from '@/app/(page)/settings/Settings';
+import { StoreItemProps } from '@/components/woo/StoreItem';
 import { endpoint } from '@/constant/endpoint';
 import axios from 'axios';
 import useSWR from 'swr';
 
-export interface UsersPayload {
+export interface UserCollection {
   _id: string;
   email: string;
-  telegramId: string;
-  publicMinutes: number;
-  apiKey: string;
-  promptQuestion: string;
+  stores: Omit<StoreItemProps, '_userId'>[];
+  settings: SettingFormValues;
 }
 
 const fetcher = async (url: string) => {
@@ -17,8 +17,8 @@ const fetcher = async (url: string) => {
 };
 
 export function useUsers() {
-  const { data, error, isLoading, mutate } = useSWR<UsersPayload[]>(
-    endpoint.users,
+  const { data, error, isLoading, mutate } = useSWR<UserCollection[]>(
+    endpoint.user,
     fetcher
   );
 

@@ -1,19 +1,17 @@
 'use client';
-import { useCategories } from '@/app/hooks/useCategories';
+import { useStore } from '@/app/hooks/store/useStore';
 import CategoryItem from '@/components/woo/CategoryItem';
-import UpdateCategory, {
+import UpdateCategoryModal, {
   TypeUpdateCategory,
 } from '@/components/woo/UpdateCategoryModal';
 import { SearchOutlined } from '@ant-design/icons';
-import { Flex, Input, List, Row, Spin, Typography } from 'antd';
+import { Flex, Input, List, Typography } from 'antd';
 import { useEffect, useState } from 'react';
-import { useDebounceValue } from 'usehooks-ts';
 const { Title } = Typography;
 
-const ConfigCategories = () => {
+const ConfigCategories = ({ storeId }: { storeId: string }) => {
   const [searchValue, setSearchValue] = useState('');
-  const debouncedValue = useDebounceValue(searchValue, 500);
-  const { categories, isLoading } = useCategories(debouncedValue[0]);
+  const { store, isLoading } = useStore(storeId);
 
   useEffect;
   return (
@@ -33,14 +31,22 @@ const ConfigCategories = () => {
           </Title>
         }
         bordered
-        dataSource={categories}
+        dataSource={store?.categories}
         renderItem={(item) => (
           <List.Item>
-            <CategoryItem key={item._id} category={item} />
+            <CategoryItem
+              key={item._id}
+              categoryName={item.categoryName}
+              _id={item._id}
+              _storeId={storeId}
+            />
           </List.Item>
         )}
       />
-      <UpdateCategory label={TypeUpdateCategory.ADD_CATEGORY} />
+      <UpdateCategoryModal
+        label={TypeUpdateCategory.ADD_CATEGORY}
+        storeId={storeId}
+      />
     </Flex>
   );
 };

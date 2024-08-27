@@ -24,7 +24,10 @@ export async function POST(request: Request) {
   const telegramId = payload.get('telegramId') as string;
   const promptQuestion = payload.get('promptQuestion') as string;
   const apiKey = payload.get('apiKey') as string;
-  let publishedDate = moment().add(10, 'minutes');
+  const publicMinutes = payload.get('publicMinutes') as string;
+  const gapMinutes = payload.get('gapMinutes') as string;
+
+  let publishedDate = moment().add(publicMinutes, 'minutes');
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
@@ -55,7 +58,10 @@ export async function POST(request: Request) {
         Description: finalDescription,
         'Published Date': formattedPublishedDate,
       });
-      publishedDate.add(60 + Math.floor(Math.random() * 20), 'seconds');
+      publishedDate.add(
+        Number(gapMinutes) * 60 + Math.floor(Math.random() * 20),
+        'seconds'
+      );
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);

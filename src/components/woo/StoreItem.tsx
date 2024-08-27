@@ -1,9 +1,13 @@
+import { StoreCollection } from '@/app/hooks/store/useStore';
+import { useStoreList } from '@/app/hooks/store/useStoreList';
 import { endpoint } from '@/constant/endpoint';
+import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
 import {
   Alert,
   Button,
   Col,
+  DescriptionsProps,
   Flex,
   Popconfirm,
   Row,
@@ -12,32 +16,35 @@ import {
 } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
+import UpdateStoreListModal from './UpdateStoreListModal';
 import { mutate } from 'swr';
-import UpdateCategory, { TypeUpdateCategory } from './UpdateCategoryModal';
+import { useSession } from 'next-auth/react';
 const { Text } = Typography;
 
-export interface CategoryItemProps {
+export interface StoreItemProps {
   _id: string;
-  categoryName: string;
-  _storeId: string;
+  storeName: string;
+  _userId: string;
 }
 
-const CategoryItem = ({ categoryName, _id, _storeId }: CategoryItemProps) => {
+const StoreItem = ({ _id, storeName, _userId }: StoreItemProps) => {
+  const { data } = useSession();
   const [messageApi, contextHolder] = message.useMessage();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleDeleteCategory = async (_id: string) => {
+  const handleDeleteStore = async (_id: string, _userId: string) => {
     setLoading(true);
+    const storeEndpoint = `${endpoint.store}/${_id}`;
     try {
-      await axios.delete(endpoint.categoryConfig, {
-        params: { _id, _storeId },
+      await axios.delete(storeEndpoint, {
+        params: { _userId },
       });
       messageApi.open({
         type: 'success',
-        content: 'Delete category successfully!',
+        content: 'Delete store successfully!',
       });
-      await mutate(`${endpoint.store}/${_storeId}`);
+      await mutate(`${endpoint.user}/${data?.user?.email}`);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
@@ -48,15 +55,14 @@ const CategoryItem = ({ categoryName, _id, _storeId }: CategoryItemProps) => {
     <>
       {contextHolder}
       <Row key={_id} style={{ width: '100%' }} gutter={[20, 20]}>
-        <Col xs={{ span: 12 }} md={{ span: 8 }}>
-          <Text>{categoryName}</Text>
+        <Col span={18}>
+          <Text>{storeName}</Text>
         </Col>
-
-        <Col xs={{ span: 24 }} md={{ span: 8 }}>
+        <Col span={6}>
           <Flex justify='end' gap={20}>
             <Popconfirm
-              title='Delete the category?'
-              onConfirm={() => handleDeleteCategory(_id || '')}
+              title='Delete the store?'
+              onConfirm={() => handleDeleteStore(_id, _userId)}
               okText='Yes'
               cancelText='No'
             >
@@ -64,14 +70,10 @@ const CategoryItem = ({ categoryName, _id, _storeId }: CategoryItemProps) => {
                 Delete
               </Button>
             </Popconfirm>
-            <UpdateCategory
-              _id={_id}
-              label={TypeUpdateCategory.EDIT_CATEGORY}
-            />
-            <UpdateCategory
-              _id={_id}
-              label={TypeUpdateCategory.DUPLICATE_CATEGORY}
-            />
+            <Button href={navigation.configCategories(_id)}>
+              Config Categories
+            </Button>
+            <UpdateStoreListModal _id={_id} _userId={_userId} />
           </Flex>
         </Col>
       </Row>
@@ -80,4 +82,4 @@ const CategoryItem = ({ categoryName, _id, _storeId }: CategoryItemProps) => {
   );
 };
 
-export default CategoryItem;
+export default StoreItem;

@@ -1,3 +1,4 @@
+import { useUser } from '@/app/hooks/user/useUser';
 import { navigation } from '@/constant/navigation';
 import {
   Avatar,
@@ -16,34 +17,35 @@ const { Title, Text } = Typography;
 
 const Header = () => {
   const { data } = useSession();
+  const { user } = useUser(data?.user?.email as string);
 
   const headerItems = [
     {
       label: (
-        <Link href={navigation.woo}>
+        <Link href={navigation.woo()}>
           <Title level={5}>Woo tool</Title>
         </Link>
       ),
-      key: navigation.woo,
+      key: navigation.woo(),
       children: [
         {
-          label: <Link href='/woo/config-categories'>Config Categories</Link>,
-          key: navigation.configCategories,
-        },
-        {
-          label: <Link href='/woo/config-watermark'>Config Watermark</Link>,
-          key: navigation.configWatermark,
+          label: (
+            <Link href={navigation.configStore(user?._id as string)}>
+              Config Stores
+            </Link>
+          ),
+          key: navigation.configStore(user?._id as string),
         },
       ],
     },
 
     {
       label: (
-        <Link href={navigation.openaiContent}>
+        <Link href={navigation.openaiContent()}>
           <Title level={5}>Openai Content</Title>
         </Link>
       ),
-      key: navigation.openaiContent,
+      key: navigation.openaiContent(),
     },
   ];
 

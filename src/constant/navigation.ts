@@ -1,9 +1,9 @@
 const navigation = {
-  setting: '/setting',
-  woo: '/woo',
-  openaiContent: '/openai-content',
-  managementUser: '/management-users',
-  configCategories: '/woo/config-categories',
-  configWatermark: '/woo/config-watermark',
+  setting: '/settings',
+  woo: () => '/woo',
+  openaiContent: () => '/openai-content',
+  managementUser: () => '/management-users',
+  configCategories: (id: string) => `/woo/config-categories/${id}`,
+  configStore: (id: string) => `/woo/config-store/${id}`,
 };
 export { navigation };

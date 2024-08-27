@@ -1,31 +1,40 @@
 'use client';
-import { useUser } from '@/app/hooks/useUser';
+import { useUser } from '@/app/hooks/user/useUser';
 import { UsersFormValues } from '@/components/management-users/ManagementUsersForm';
 import { endpoint } from '@/constant/endpoint';
 import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
-import { Button, Form, Input, InputNumber, Typography } from 'antd';
+import { Button, Divider, Form, Input, InputNumber, Typography } from 'antd';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 const { Title } = Typography;
 const { TextArea } = Input;
 
+export interface SettingFormValues {
+  telegramId: string;
+  publicMinutes: number;
+  gapMinutes: number;
+  apiKey: string;
+  promptQuestion: string;
+}
+
 interface SettingProps {
   isAdmin: boolean;
 }
 
-const Setting = ({ isAdmin }: SettingProps) => {
-  const [form] = Form.useForm<UsersFormValues>();
+const Settings = ({ isAdmin }: SettingProps) => {
+  const [form] = Form.useForm<SettingFormValues>();
   const { data } = useSession();
   const { user } = useUser(data?.user?.email || '');
   const [loading, setLoading] = useState<boolean>(false);
+  console.log(user);
 
   const updateInformation = async (values: UsersFormValues) => {
     setLoading(true);
     try {
-      await axios.put(endpoint.user, {
-        ...values,
+      await axios.put(endpoint.settings, {
+        settings: values,
         email: data?.user?.email,
       });
     } catch (error) {
@@ -38,7 +47,7 @@ const Setting = ({ isAdmin }: SettingProps) => {
 
   useEffect(() => {
     form.setFieldsValue({
-      ...user,
+      ...user?.settings,
     });
   }, [form, user]);
 
@@ -65,6 +74,9 @@ const Setting = ({ isAdmin }: SettingProps) => {
         >
           <Input type='text' placeholder='Enter telegram id for receive file' />
         </Form.Item>
+
+        <Divider />
+
         <Form.Item<UsersFormValues>
           name='publicMinutes'
           label='Public Minutes'
@@ -76,6 +88,20 @@ const Setting = ({ isAdmin }: SettingProps) => {
             style={{ width: '100%' }}
           />
         </Form.Item>
+
+        <Form.Item<UsersFormValues>
+          name='gapMinute'
+          label='Gap Minutes'
+          shouldUpdate
+        >
+          <InputNumber
+            type='text'
+            placeholder='Enter gap minutes for public product'
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+
+        <Divider />
 
         <Form.Item<UsersFormValues>
           name='apiKey'
@@ -100,7 +126,7 @@ const Setting = ({ isAdmin }: SettingProps) => {
           Save
         </Button>
         {isAdmin && (
-          <Button href={navigation.managementUser} style={{ marginLeft: 24 }}>
+          <Button href={navigation.managementUser()} style={{ marginLeft: 24 }}>
             Management Users
           </Button>
         )}
@@ -109,4 +135,4 @@ const Setting = ({ isAdmin }: SettingProps) => {
   );
 };
 
-export default Setting;
+export default Settings;

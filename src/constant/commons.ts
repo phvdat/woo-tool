@@ -1,1 +1,4 @@
-export const USERS_COLLECTION = 'users';
+const USER_COLLECTION = 'users';
+const STORE_COLLECTION = 'stores';
+
+export { USER_COLLECTION, STORE_COLLECTION };
