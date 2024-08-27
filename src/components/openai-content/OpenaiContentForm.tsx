@@ -8,6 +8,7 @@ import { useUser } from '@/app/hooks/useUser';
 import { useSession } from 'next-auth/react';
 import { endpoint } from '@/constant/endpoint';
 import axios from 'axios';
+import { GAP_MINUTES, PUBLIC_MINUTES } from '../woo/WooForm';
 
 interface OpenaiFormValues {
   promptQuestion: string;
@@ -36,6 +37,14 @@ const OpenaiContentForm = () => {
         formData.append('telegramId', user.telegramId);
         formData.append('promptQuestion', user.promptQuestion);
         formData.append('apiKey', user.apiKey);
+        formData.append(
+          'publicMinutes',
+          (user?.publicMinutes || PUBLIC_MINUTES).toString()
+        );
+        formData.append(
+          'gapMinutes',
+          (user?.gapMinutes || GAP_MINUTES).toString()
+        );
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
         setError(_get(error, 'response.data.message', ''));

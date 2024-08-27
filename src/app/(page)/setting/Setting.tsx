@@ -4,7 +4,7 @@ import { UsersFormValues } from '@/components/management-users/ManagementUsersFo
 import { endpoint } from '@/constant/endpoint';
 import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
-import { Button, Form, Input, InputNumber, Typography } from 'antd';
+import { Button, Divider, Form, Input, InputNumber, Typography } from 'antd';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -65,6 +65,9 @@ const Setting = ({ isAdmin }: SettingProps) => {
         >
           <Input type='text' placeholder='Enter telegram id for receive file' />
         </Form.Item>
+
+        <Divider />
+
         <Form.Item<UsersFormValues>
           name='publicMinutes'
           label='Public Minutes'
@@ -76,6 +79,20 @@ const Setting = ({ isAdmin }: SettingProps) => {
             style={{ width: '100%' }}
           />
         </Form.Item>
+
+        <Form.Item<UsersFormValues>
+          name='gapMinutes'
+          label='Gap Minutes'
+          shouldUpdate
+        >
+          <InputNumber
+            type='text'
+            placeholder='Enter gap minutes for public product'
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+
+        <Divider />
 
         <Form.Item<UsersFormValues>
           name='apiKey'

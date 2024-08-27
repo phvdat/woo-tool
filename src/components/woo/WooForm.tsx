@@ -27,7 +27,8 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
-const PUBLIC_MINUTES = 10;
+export const PUBLIC_MINUTES = 10;
+export const GAP_MINUTES = 10;
 
 export interface WooFormValue {
   file: FileList;
@@ -86,6 +87,10 @@ const WooForm = () => {
         formData.append(
           'publicMinutes',
           (user?.publicMinutes || PUBLIC_MINUTES).toString()
+        );
+        formData.append(
+          'gapMinutes',
+          (user?.gapMinutes || GAP_MINUTES).toString()
         );
         const { data } = await axios.post<WooCommerce[]>(
           endpoint.wooCreate,

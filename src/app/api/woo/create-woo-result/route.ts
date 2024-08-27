@@ -30,6 +30,7 @@ export async function POST(request: Request) {
   ) as WooWatermarkPayload;
   const telegramId = payload.get('telegramId') as string;
   const publicMinutes = Number(payload.get('publicMinutes'));
+  const gapMinutes = Number(payload.get('gapMinutes'));
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
@@ -72,7 +73,10 @@ export async function POST(request: Request) {
           name: keyWord,
         })
       );
-      publishedDate.add(60 + Math.floor(Math.random() * 20), 'seconds');
+      publishedDate.add(
+        gapMinutes * 60 + Math.floor(Math.random() * 20),
+        'seconds'
+      );
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);

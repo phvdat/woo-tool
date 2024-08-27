@@ -7,6 +7,7 @@ export interface UsersPayload {
   email: string;
   telegramId: string;
   publicMinutes: number;
+  gapMinutes: number;
   apiKey: string;
   promptQuestion: string;
 }
