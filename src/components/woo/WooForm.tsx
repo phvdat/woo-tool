@@ -22,12 +22,13 @@ import {
   Upload,
 } from 'antd';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
-export const PUBLIC_MINUTES = 10;
+export const PUBLIC_TIME = '00:00';
 export const GAP_MINUTES = 10;
 
 export interface WooFormValue {
@@ -85,8 +86,8 @@ const WooForm = () => {
         formData.append('watermarkObject', JSON.stringify(watermarkObject));
         formData.append('telegramId', value.telegramId);
         formData.append(
-          'publicMinutes',
-          (user?.publicMinutes || PUBLIC_MINUTES).toString()
+          'publicTime',
+          (user?.publicTime || PUBLIC_TIME).toString()
         );
         formData.append(
           'gapMinutes',
@@ -98,7 +99,9 @@ const WooForm = () => {
         );
         setDataFile(data);
       } catch (error: any) {
-        setError(_get(error, 'response.data.message', ''));
+        console.log(error);
+
+        setError(_get(error, 'response.statusText', ''));
       }
     }
     setLoading(false);

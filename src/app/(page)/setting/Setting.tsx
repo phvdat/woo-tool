@@ -4,12 +4,23 @@ import { UsersFormValues } from '@/components/management-users/ManagementUsersFo
 import { endpoint } from '@/constant/endpoint';
 import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
-import { Button, Divider, Form, Input, InputNumber, Typography } from 'antd';
+import {
+  Button,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  TimePicker,
+  Typography,
+} from 'antd';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 const { Title } = Typography;
 const { TextArea } = Input;
+
+const format = 'HH:mm';
 
 interface SettingProps {
   isAdmin: boolean;
@@ -24,8 +35,13 @@ const Setting = ({ isAdmin }: SettingProps) => {
   const updateInformation = async (values: UsersFormValues) => {
     setLoading(true);
     try {
-      await axios.put(endpoint.user, {
+      const payload = {
         ...values,
+        publicTime: dayjs(values.publicTime).format(format),
+      };
+
+      await axios.put(endpoint.user, {
+        ...payload,
         email: data?.user?.email,
       });
     } catch (error) {
@@ -69,13 +85,16 @@ const Setting = ({ isAdmin }: SettingProps) => {
         <Divider />
 
         <Form.Item<UsersFormValues>
-          name='publicMinutes'
+          name='publicTime'
           label='Public Minutes'
           shouldUpdate
+          getValueProps={(value) => ({
+            value: value ? dayjs(value, format) : '',
+          })}
         >
-          <InputNumber
-            type='text'
-            placeholder='Enter public minutes for public product'
+          <TimePicker
+            format={format}
+            placeholder='Enter public time'
             style={{ width: '100%' }}
           />
         </Form.Item>
@@ -113,7 +132,7 @@ const Setting = ({ isAdmin }: SettingProps) => {
           />
         </Form.Item>
 
-        <Button type='primary' htmlType='submit'>
+        <Button type='primary' htmlType='submit' loading={loading}>
           Save
         </Button>
         {isAdmin && (

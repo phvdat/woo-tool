@@ -1,14 +1,13 @@
 'use client';
-import { normFile } from '@/helper/common';
-import { Alert, Button, Card, Form, Input, Upload } from 'antd';
-import { useState } from 'react';
-const { TextArea } = Input;
-import _get from 'lodash/get';
 import { useUser } from '@/app/hooks/useUser';
-import { useSession } from 'next-auth/react';
 import { endpoint } from '@/constant/endpoint';
+import { normFile } from '@/helper/common';
+import { Alert, Button, Card, Form, Upload } from 'antd';
 import axios from 'axios';
-import { GAP_MINUTES, PUBLIC_MINUTES } from '../woo/WooForm';
+import _get from 'lodash/get';
+import { useSession } from 'next-auth/react';
+import { useState } from 'react';
+import { GAP_MINUTES, PUBLIC_TIME } from '../woo/WooForm';
 
 interface OpenaiFormValues {
   promptQuestion: string;
@@ -38,8 +37,8 @@ const OpenaiContentForm = () => {
         formData.append('promptQuestion', user.promptQuestion);
         formData.append('apiKey', user.apiKey);
         formData.append(
-          'publicMinutes',
-          (user?.publicMinutes || PUBLIC_MINUTES).toString()
+          'publicTime',
+          (user?.publicTime || PUBLIC_TIME).toString()
         );
         formData.append(
           'gapMinutes',

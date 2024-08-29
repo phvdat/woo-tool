@@ -9,6 +9,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
 import { WooCategoryPayload } from '../categories-config/route';
 import { WooWatermarkPayload } from '../watermark-config/route';
+import dayjs from 'dayjs';
 interface SheetData {
   Name: string;
   Images: string;
@@ -29,9 +30,16 @@ export async function POST(request: Request) {
     _toString(payload.get('watermarkObject'))
   ) as WooWatermarkPayload;
   const telegramId = payload.get('telegramId') as string;
-  const publicMinutes = Number(payload.get('publicMinutes'));
+  const publicTime = payload.get('publicTime') as string;
   const gapMinutes = Number(payload.get('gapMinutes'));
-
+  const hour = publicTime.split(':')[0];
+  const minute = publicTime.split(':')[1];
+  let now = dayjs();
+  let publishedDate = now.hour(Number(hour)).minute(Number(minute));
+  if (now.isAfter(publishedDate)) {
+    publishedDate = publishedDate.add(1, 'day');
+  }
+  const formattedPublishedDate = publishedDate.format('YYYY-MM-DD HH:mm:ss');
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
       type: 'array',
@@ -42,7 +50,6 @@ export async function POST(request: Request) {
       return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
-    let publishedDate = moment().add(publicMinutes, 'minutes');
     for (const row of data) {
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
@@ -62,9 +69,6 @@ export async function POST(request: Request) {
         name: keyWord,
       });
 
-      const formattedPublishedDate = publishedDate.format(
-        'YYYY-MM-DD HH:mm:ss'
-      );
       result.push(
         createWooRecord(categoriesObject, {
           ...rowData,

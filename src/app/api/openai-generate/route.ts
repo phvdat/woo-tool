@@ -1,7 +1,6 @@
-import { CreateWatermark } from '@/helper/watermark';
-import { createWooRecord } from '@/helper/woo';
 import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
+import dayjs from 'dayjs';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import _get from 'lodash/get';
 import _toString from 'lodash/toString';
@@ -24,9 +23,15 @@ export async function POST(request: Request) {
   const telegramId = payload.get('telegramId') as string;
   const promptQuestion = payload.get('promptQuestion') as string;
   const apiKey = payload.get('apiKey') as string;
-  const publicMinutes = Number(payload.get('publicMinutes'));
+  const publicTime = payload.get('publicTime') as string;
   const gapMinutes = Number(payload.get('gapMinutes'));
-  let publishedDate = moment().add(publicMinutes, 'minutes');
+  const hour = publicTime.split(':')[0];
+  const minute = publicTime.split(':')[1];
+  let now = dayjs();
+  let publishedDate = now.hour(Number(hour)).minute(Number(minute));
+  if (now.isAfter(publishedDate)) {
+    publishedDate = publishedDate.add(1, 'day');
+  }
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
