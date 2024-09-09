@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         imageWidth: Number(watermarkObject.imageWidth),
         logoHeight: Number(watermarkObject.logoHeight),
         logoWidth: Number(watermarkObject.logoWidth),
-        logoUrl: watermarkObject.logoUrl + 'false',
+        logoUrl: watermarkObject.logoUrl,
         quality: Number(watermarkObject.quality),
         shopName: watermarkObject.shopName,
         images: imageUrls,
