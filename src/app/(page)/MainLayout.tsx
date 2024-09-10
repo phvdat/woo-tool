@@ -30,4 +30,5 @@ const layoutStyle: React.CSSProperties = {
 };
 const contentStyle: React.CSSProperties = {
   padding: '0 24px',
+  background: '#fff',
 };

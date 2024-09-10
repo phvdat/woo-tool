@@ -5,5 +5,6 @@ const navigation = {
   managementUser: '/management-users',
   configCategories: '/woo/config-categories',
   configWatermark: '/woo/config-watermark',
+  crawlTool: '/crawl-tool',
 };
 export { navigation };
