@@ -5,6 +5,7 @@ import { Form, Input, Button } from 'antd';
 import * as XLSX from 'xlsx';
 import { isEmpty } from 'lodash';
 import dayjs from 'dayjs';
+import { endpoint } from '@/constant/endpoint';
 
 type Product = {
   Name: string;
@@ -21,42 +22,19 @@ function CrawlProductDetail() {
   const [file, setFile] = useState<Product[]>();
   const [loading, setLoading] = useState(false);
 
-  const handleSingleProduct = async (
-    url: string,
-    selectorProductName: string,
-    selectorImageLinks: string
-  ) => {
-    try {
-      const response = await axios.get(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
-      );
-      const htmlContent = response.data.contents;
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
-
-      const name =
-        (doc.querySelector(selectorProductName) as any)?.innerText || '';
-      const imgs = Array.from(doc.querySelectorAll(selectorImageLinks));
-      const imgLinks = imgs.map((img) => (img as any).src);
-      console.log(imgs, imgLinks);
-
-      return { Name: name, Images: imgLinks.join(',') };
-    } catch (error) {
-      console.error('Error fetching product data: ', error);
-    }
-  };
-
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
     const { urls, selectorProductName, selectorImageLinks } = value;
     const urlsArray = urls.split(',');
     const promises = urlsArray.map((url) => {
-      return handleSingleProduct(url, selectorProductName, selectorImageLinks);
+      return axios.get(endpoint.crawlDetail, {
+        params: { url, selectorProductName, selectorImageLinks },
+      });
     });
     try {
-      const data = await Promise.all(promises);
-      setFile(data as Product[]);
+      const response = await Promise.all(promises);
+      const data = response.map((res) => res.data);
+      setFile(data);
     } catch (error) {
       console.error('Error fetching product data: ', error);
     }
