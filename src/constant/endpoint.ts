@@ -7,4 +7,6 @@ export const endpoint = {
   watermarkConfig: '/api/woo/watermark-config',
 
   openaiGenerate: '/api/openai-generate',
+  crawlList: '/api/crawl/list-url',
+  crawlDetail: '/api/crawl/detail-product',
 };

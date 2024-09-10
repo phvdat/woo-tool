@@ -2,35 +2,41 @@
 import axios from 'axios';
 import { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
-import { isEmpty } from 'lodash';
+import { isEmpty, trim } from 'lodash';
 import { CopyFilled } from '@ant-design/icons';
+import { endpoint } from '@/constant/endpoint';
+
+interface FormValues {
+  urls: string;
+  productLinksSelector: string;
+}
 
 function CrawlListProductUrl() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState<boolean>(false);
-  const [url, setUrl] = useState('');
   const [productLinks, setProductLinks] = useState<string[]>([]);
-  const [selectorProductLinks, setSelectorProductLinks] = useState<string>('');
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (value: FormValues) => {
     setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
-      );
-      const htmlContent = response.data.contents;
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlContent, 'text/html');
+    const { urls, productLinksSelector } = value;
 
-      const links = Array.from(doc.querySelectorAll(selectorProductLinks));
-      const productLink = links.map((img) => (img as any).href);
-      setProductLinks(productLink);
-      console.log(productLink);
+    const urlsArray = urls.split(',');
+    const promises = urlsArray.map((url) => {
+      return axios.get(endpoint.crawlList, {
+        params: { url: trim(url), productLinksSelector },
+      });
+    });
+    try {
+      const response = await Promise.all(promises);
+      const data = response.map((res) => res.data);
+      console.log(data);
+
+      const productLinks = data.flat();
+      setProductLinks(productLinks);
     } catch (error) {
-      console.error('Error fetching products data: ', error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching product data: ', error);
     }
+    setLoading(false);
   };
 
   const handleCopy = () => {
@@ -49,20 +55,15 @@ function CrawlListProductUrl() {
         labelCol={{ style: { minWidth: 180 } }}
         labelAlign='left'
       >
-        <Form.Item label='URL'>
-          <Input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder='Enter URL'
-          />
+        <Form.Item<FormValues> label='Pages URL' name='urls'>
+          <Input.TextArea placeholder='Enter Pages URL' />
         </Form.Item>
 
-        <Form.Item label='Product links selector'>
-          <Input
-            value={selectorProductLinks}
-            onChange={(e) => setSelectorProductLinks(e.target.value)}
-            placeholder='Enter image links selector'
-          />
+        <Form.Item<FormValues>
+          label='Product links selector'
+          name='productLinksSelector'
+        >
+          <Input placeholder='Enter image links selector' />
         </Form.Item>
         <Form.Item>
           <Button type='primary' htmlType='submit' loading={loading}>
@@ -75,8 +76,7 @@ function CrawlListProductUrl() {
           <Button onClick={handleCopy} icon={<CopyFilled />}>
             Click to copy
           </Button>
-
-          <div>{productLinks.join('\n')}</div>
+          <div>{productLinks.join(',')}</div>
         </div>
       )}
     </div>
