@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 interface SheetData {
   Name: string;
   Images: string;
+  Contain?: string;
 }
 
 const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
@@ -52,7 +53,8 @@ export async function POST(request: Request) {
     const result: WooCommerce[] = [];
     for (const row of data) {
       const rowData = row as any;
-      const keyWord: string = rowData['Name'];
+      const name: string = rowData['Name'];
+      const fit = rowData['Fit'];
       if (!rowData['Images']) {
         continue;
       }
@@ -66,7 +68,8 @@ export async function POST(request: Request) {
         quality: Number(watermarkObject.quality),
         shopName: watermarkObject.shopName,
         images: imageUrls,
-        name: keyWord,
+        name: name,
+        fit: fit
       });
 
       result.push(
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
           ...rowData,
           publishedDate: formattedPublishedDate,
           images: urlImageList.join(','),
-          name: keyWord,
+          name: name,
         })
       );
       publishedDate.add(
