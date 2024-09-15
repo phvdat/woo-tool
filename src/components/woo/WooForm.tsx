@@ -49,14 +49,18 @@ const WooForm = () => {
 
   const { categories } = useCategories();
   const { watermarkConfig } = useWatermarkConfig();
+  const watchShopId = Form.useWatch('watermarkWebsite', form);
 
   const categoriesOptions = useMemo(() => {
-    if (!categories) return [];
-    return categories.map((category) => ({
+    const categoriesByShop = categories?.filter(
+      (category) => category.shopID === watchShopId
+    );
+    if (!categoriesByShop) return [];
+    return categoriesByShop.map((category) => ({
       label: category.templateName,
       value: category._id,
     }));
-  }, [categories]);
+  }, [categories, watchShopId]);
 
   const watermarkOptions = useMemo(() => {
     if (!watermarkConfig) return [];
@@ -140,6 +144,37 @@ const WooForm = () => {
           />
         </Form.Item>
         <Row gutter={16}>
+          {' '}
+          <Col span={24} sm={{ span: 12 }}>
+            <Form.Item<WooFormValue>
+              name='watermarkWebsite'
+              label={
+                <span>
+                  Watermark Website{' '}
+                  <Link href='/woo/config-watermark' type='warning'>
+                    <SettingOutlined />
+                  </Link>
+                </span>
+              }
+              rules={[
+                {
+                  required: true,
+                  message: 'Please select watermark for website!',
+                },
+              ]}
+            >
+              <Select
+                placeholder='Select Watermark Website'
+                options={watermarkOptions}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              />
+            </Form.Item>
+          </Col>
           <Col span={24} sm={{ span: 12 }}>
             <Form.Item<WooFormValue>
               name='category'
@@ -156,36 +191,6 @@ const WooForm = () => {
               <Select
                 placeholder='Select Category'
                 options={categoriesOptions}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-              />
-            </Form.Item>
-          </Col>
-          <Col span={24} sm={{ span: 12 }}>
-            <Form.Item<WooFormValue>
-              name='watermarkWebsite'
-              label={
-                <span>
-                  Watermark Website{' '}
-                  <Link href='/woo/config-watermark' type='warning'>
-                    <SettingOutlined />
-                  </Link>{' '}
-                </span>
-              }
-              rules={[
-                {
-                  required: true,
-                  message: 'Please select watermark for website!',
-                },
-              ]}
-            >
-              <Select
-                placeholder='Select Watermark Website'
-                options={watermarkOptions}
                 showSearch
                 filterOption={(input, option) =>
                   (option?.label ?? '')

@@ -9,6 +9,7 @@ export interface WooFixedOption {
   category: string;
   published?: string;
   description?: string;
+  shopID?: string;
 }
 export interface WooDynamicOption {
   name: string;

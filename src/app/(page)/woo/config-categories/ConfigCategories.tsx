@@ -1,5 +1,6 @@
 'use client';
 import { useCategories } from '@/app/hooks/useCategories';
+import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
 import CategoryItem from '@/components/woo/CategoryItem';
 import UpdateCategory, {
   TypeUpdateCategory,
