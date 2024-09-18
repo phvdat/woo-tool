@@ -16,7 +16,10 @@ export async function GET(request: Request) {
     const name = document.querySelector(selectorProductName)?.innerHTML || '';
     const imgs = Array.from(document.querySelectorAll(selectorImageLinks));
     const imgLinks = imgs.map((img) => (img as any).src);
-    return Response.json({ Name: name, Images: imgLinks.join(',') });
+    return Response.json({
+      Name: name.replaceAll('\n', ''),
+      Images: imgLinks.join(','),
+    });
   } catch (error) {
     console.log('error api openai', error);
     return Response.json(error, {

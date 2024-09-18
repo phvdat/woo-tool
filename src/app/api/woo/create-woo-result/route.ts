@@ -31,16 +31,10 @@ export async function POST(request: Request) {
     _toString(payload.get('watermarkObject'))
   ) as WooWatermarkPayload;
   const telegramId = payload.get('telegramId') as string;
-  const publicTime = payload.get('publicTime') as string;
+  const publicTime = Number(payload.get('publicTime'));
   const gapMinutes = Number(payload.get('gapMinutes'));
-  const hour = publicTime.split(':')[0];
-  const minute = publicTime.split(':')[1];
-  let now = dayjs();
-  let publishedDate = now.hour(Number(hour)).minute(Number(minute));
-  if (now.isAfter(publishedDate)) {
-    publishedDate = publishedDate.add(1, 'day');
-  }
-  const formattedPublishedDate = publishedDate.format('YYYY-MM-DD HH:mm:ss');
+  let publishedDate = dayjs().add(publicTime, 'minute');
+
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
       type: 'array',
@@ -69,9 +63,12 @@ export async function POST(request: Request) {
         shopName: watermarkObject.shopName,
         images: imageUrls,
         name: name,
-        fit: fit
+        fit: fit,
       });
 
+      const formattedPublishedDate = publishedDate.format(
+        'YYYY-MM-DD HH:mm:ss'
+      );
       result.push(
         createWooRecord(categoriesObject, {
           ...rowData,

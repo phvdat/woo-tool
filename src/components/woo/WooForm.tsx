@@ -28,7 +28,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 const { Text, Link } = Typography;
 
-export const PUBLIC_TIME = '00:00';
+export const PUBLIC_TIME = 10;
 export const GAP_MINUTES = 10;
 
 export interface WooFormValue {

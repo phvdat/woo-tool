@@ -104,6 +104,7 @@ const UpdateWatermarkListModal = ({
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         destroyOnClose
+        maskClosable={false}
       >
         <Form
           form={form}

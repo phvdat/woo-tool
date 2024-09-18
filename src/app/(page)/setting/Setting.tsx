@@ -4,23 +4,11 @@ import { UsersFormValues } from '@/components/management-users/ManagementUsersFo
 import { endpoint } from '@/constant/endpoint';
 import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
-import {
-  Button,
-  Divider,
-  Form,
-  Input,
-  InputNumber,
-  TimePicker,
-  Typography,
-} from 'antd';
+import { Button, Divider, Form, Input, InputNumber } from 'antd';
 import axios from 'axios';
-import dayjs from 'dayjs';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-const { Title } = Typography;
 const { TextArea } = Input;
-
-const format = 'HH:mm';
 
 interface SettingProps {
   isAdmin: boolean;
@@ -37,7 +25,6 @@ const Setting = ({ isAdmin }: SettingProps) => {
     try {
       const payload = {
         ...values,
-        publicTime: dayjs(values.publicTime).format(format),
       };
 
       await axios.put(endpoint.user, {
@@ -88,13 +75,10 @@ const Setting = ({ isAdmin }: SettingProps) => {
           name='publicTime'
           label='Public Minutes'
           shouldUpdate
-          getValueProps={(value) => ({
-            value: value ? dayjs(value, format) : '',
-          })}
         >
-          <TimePicker
-            format={format}
-            placeholder='Enter public time'
+          <InputNumber
+            type='text'
+            placeholder='Enter waiting minutes for start public'
             style={{ width: '100%' }}
           />
         </Form.Item>

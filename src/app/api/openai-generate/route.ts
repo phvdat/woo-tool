@@ -23,15 +23,9 @@ export async function POST(request: Request) {
   const telegramId = payload.get('telegramId') as string;
   const promptQuestion = payload.get('promptQuestion') as string;
   const apiKey = payload.get('apiKey') as string;
-  const publicTime = payload.get('publicTime') as string;
+  const publicTime = Number(payload.get('publicTime'));
   const gapMinutes = Number(payload.get('gapMinutes'));
-  const hour = publicTime.split(':')[0];
-  const minute = publicTime.split(':')[1];
-  let now = dayjs();
-  let publishedDate = now.hour(Number(hour)).minute(Number(minute));
-  if (now.isAfter(publishedDate)) {
-    publishedDate = publishedDate.add(1, 'day');
-  }
+  let publishedDate = dayjs().add(publicTime, 'minute');
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {

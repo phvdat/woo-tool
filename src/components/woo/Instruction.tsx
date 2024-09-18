@@ -63,6 +63,7 @@ const Instruction = () => {
         open={isModalOpen}
         onOk={() => setIsModalOpen(false)}
         onCancel={() => setIsModalOpen(false)}
+        maskClosable={false}
       >
         <Collapse items={items} />
       </Modal>
