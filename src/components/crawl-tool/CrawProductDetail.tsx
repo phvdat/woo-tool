@@ -16,6 +16,7 @@ interface FormValues {
   urls: string;
   selectorProductName: string;
   selectorImageLinks: string;
+  maxImageQuality: number;
 }
 
 function CrawlProductDetail() {
@@ -34,6 +35,23 @@ function CrawlProductDetail() {
     try {
       const response = await Promise.all(promises);
       const data = response.map((res) => res.data);
+      if (value.maxImageQuality) {
+        const shottenData = data.map((item) => ({
+          ...item,
+          Images: item.Images.split(',')
+            .slice(0, Number(value.maxImageQuality))
+            .join(','),
+        }));
+        console.log(shottenData);
+        setFile(
+          data.map((item) => ({
+            ...item,
+            Images: item.Images.slice(0, Number(value.maxImageQuality)),
+          }))
+        );
+      } else {
+        setFile(data);
+      }
       setFile(data);
     } catch (error) {
       console.error('Error fetching product data: ', error);
@@ -73,6 +91,9 @@ function CrawlProductDetail() {
           name='selectorImageLinks'
         >
           <Input placeholder='Enter image links selector' />
+        </Form.Item>
+        <Form.Item<FormValues> label='Max image quality' name='maxImageQuality'>
+          <Input placeholder='Enter max image quality' />
         </Form.Item>
         <Form.Item>
           <Button type='primary' htmlType='submit' loading={loading}>

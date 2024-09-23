@@ -1,6 +1,6 @@
 import axios from 'axios';
 import _get from 'lodash/get';
-import { JSDOM } from 'jsdom';
+import puppeteer from 'puppeteer';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,14 +10,15 @@ export async function GET(request: Request) {
   ) as string;
 
   try {
-    const response = await axios.get(url);
-    const htmlContent = response.data;
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
 
-    const dom = new JSDOM(htmlContent);
-    const document = dom.window.document;
+    const productLinks = await page.$$eval(productLinksSelector, (links) =>
+      links.map((link) => (link as HTMLLinkElement).href)
+    );
 
-    const links = Array.from(document.querySelectorAll(productLinksSelector));
-    const productLinks = links.map((link) => (link as HTMLAnchorElement).href);
+    await browser.close();
 
     return new Response(JSON.stringify(productLinks), { status: 200 });
   } catch (error) {
