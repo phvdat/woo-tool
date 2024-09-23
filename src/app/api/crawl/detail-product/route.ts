@@ -1,5 +1,6 @@
 import _get from 'lodash/get';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import { executablePath } from 'puppeteer';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,7 +9,11 @@ export async function GET(request: Request) {
   const selectorImageLinks = searchParams.get('selectorImageLinks') as string;
 
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: executablePath(),
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+    });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
