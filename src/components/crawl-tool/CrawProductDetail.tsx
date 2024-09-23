@@ -26,33 +26,23 @@ function CrawlProductDetail() {
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
     const { urls, selectorProductName, selectorImageLinks } = value;
-    const urlsArray = urls.split(',');
-    const promises = urlsArray.map((url) => {
-      return axios.get(endpoint.crawlDetail, {
-        params: { url, selectorProductName, selectorImageLinks },
-      });
-    });
     try {
-      const response = await Promise.all(promises);
-      const data = response.map((res) => res.data);
+      const { data } = await axios.get<Product[]>(endpoint.crawlDetail, {
+        params: { urls, selectorProductName, selectorImageLinks },
+      });
+      console.log('dev', data);
+
       if (value.maxImageQuality) {
         const shottenData = data.map((item) => ({
           ...item,
           Images: item.Images.split(',')
-            .slice(0, Number(value.maxImageQuality))
+            .slice(0, value.maxImageQuality)
             .join(','),
         }));
-        console.log(shottenData);
-        setFile(
-          data.map((item) => ({
-            ...item,
-            Images: item.Images.slice(0, Number(value.maxImageQuality)),
-          }))
-        );
+        setFile(shottenData);
       } else {
         setFile(data);
       }
-      setFile(data);
     } catch (error) {
       console.error('Error fetching product data: ', error);
     }
@@ -78,7 +68,7 @@ function CrawlProductDetail() {
         labelAlign='left'
       >
         <Form.Item<FormValues> label='Products URL' name='urls'>
-          <Input placeholder='Enter products URL' />
+          <Input.TextArea placeholder='Enter products URL' />
         </Form.Item>
         <Form.Item<FormValues>
           label='Product name selector'
