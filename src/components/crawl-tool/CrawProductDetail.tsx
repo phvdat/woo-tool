@@ -29,28 +29,20 @@ function CrawlProductDetail() {
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
-    const { urls, selectorProductName, selectorImageLinks } = value;
+    const { urls, selectorProductName, selectorImageLinks, maxImageQuality } =
+      value;
     try {
       const { data } = await axios.get<Product[]>(endpoint.crawlDetail, {
         params: {
           urls,
           selectorProductName,
           selectorImageLinks,
+          maxImageQuality,
           telegramId: user?.telegramId,
         },
       });
 
-      if (value.maxImageQuality) {
-        const shottenData = data.map((item) => ({
-          ...item,
-          Images: item.Images.split(',')
-            .slice(0, value.maxImageQuality)
-            .join(','),
-        }));
-        setFile(shottenData);
-      } else {
-        setFile(data);
-      }
+      setFile(data);
     } catch (error) {
       console.error('Error fetching product data: ', error);
     }

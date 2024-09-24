@@ -16,6 +16,7 @@ export async function GET(request: Request) {
   const urls = searchParams.get('urls') as string;
   const selectorProductName = searchParams.get('selectorProductName') as string;
   const selectorImageLinks = searchParams.get('selectorImageLinks') as string;
+  const maxImageQuality = Number(searchParams.get('maxImageQuality'));
   const telegramId = searchParams.get('telegramId') as string;
   const urlList = urls.split(',');
   const result = [];
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
 
       result.push({
         Name: name.replaceAll('\n', ''),
-        Images: imgLinks.join(','),
+        Images: imgLinks.slice(0, maxImageQuality).join(','),
       });
     }
 

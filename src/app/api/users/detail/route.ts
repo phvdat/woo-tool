@@ -1,7 +1,6 @@
 import { UsersPayload } from '@/app/hooks/useUsers';
 import { USERS_COLLECTION } from '@/constant/commons';
 import { connectToDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
