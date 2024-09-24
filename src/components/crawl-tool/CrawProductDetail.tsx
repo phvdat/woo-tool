@@ -6,6 +6,8 @@ import * as XLSX from 'xlsx';
 import { isEmpty } from 'lodash';
 import dayjs from 'dayjs';
 import { endpoint } from '@/constant/endpoint';
+import { useUser } from '@/app/hooks/useUser';
+import { useSession } from 'next-auth/react';
 
 type Product = {
   Name: string;
@@ -22,15 +24,21 @@ interface FormValues {
 function CrawlProductDetail() {
   const [file, setFile] = useState<Product[]>();
   const [loading, setLoading] = useState(false);
+  const { data } = useSession();
+  const { user } = useUser(data?.user?.email || '');
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
     const { urls, selectorProductName, selectorImageLinks } = value;
     try {
       const { data } = await axios.get<Product[]>(endpoint.crawlDetail, {
-        params: { urls, selectorProductName, selectorImageLinks },
+        params: {
+          urls,
+          selectorProductName,
+          selectorImageLinks,
+          telegramId: user?.telegramId,
+        },
       });
-      console.log('dev', data);
 
       if (value.maxImageQuality) {
         const shottenData = data.map((item) => ({

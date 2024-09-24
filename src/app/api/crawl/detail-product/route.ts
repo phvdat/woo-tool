@@ -1,12 +1,22 @@
 import _get from 'lodash/get';
 import puppeteer from 'puppeteer-core';
 import { executablePath } from 'puppeteer';
+import TelegramBot from 'node-telegram-bot-api';
+import _toString from 'lodash/toString';
+import * as XLSX from 'xlsx';
+import moment from 'moment';
+import { createReadStream, unlinkSync, writeFileSync } from 'fs';
+
+const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
+  polling: false,
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const urls = searchParams.get('urls') as string;
   const selectorProductName = searchParams.get('selectorProductName') as string;
   const selectorImageLinks = searchParams.get('selectorImageLinks') as string;
+  const telegramId = searchParams.get('telegramId') as string;
   const urlList = urls.split(',');
   const result = [];
   try {
@@ -32,7 +42,22 @@ export async function GET(request: Request) {
     }
 
     await browser.close();
-
+    // create excel from result and send file to telegram id by bot
+    const ws = XLSX.utils.json_to_sheet(result);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'result');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
+    const date = moment().format('YYYY-MM-DD-HH-mm-ss');
+    const fileName = `crawl-products-${date}.csv`;
+    writeFileSync(fileName, buffer);
+    const stream = createReadStream(fileName);
+    bot
+      .sendDocument(telegramId, stream, {
+        caption: `Here is your file: ${fileName}`,
+      })
+      .then(() => {
+        unlinkSync(fileName);
+      });
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.log('Error in API call', error);
