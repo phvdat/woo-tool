@@ -11,13 +11,16 @@ const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
   polling: false,
 });
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const urls = searchParams.get('urls') as string;
-  const selectorProductName = searchParams.get('selectorProductName') as string;
-  const selectorImageLinks = searchParams.get('selectorImageLinks') as string;
-  const maxImageQuality = Number(searchParams.get('maxImageQuality'));
-  const telegramId = searchParams.get('telegramId') as string;
+export async function POST(request: Request) {
+  const payload = await request.json();
+  const {
+    urls,
+    selectorProductName,
+    selectorImageLinks,
+    maxImageQuality,
+    telegramId,
+  } = payload;
+
   const urlList = urls.split(',');
   const result = [];
   try {

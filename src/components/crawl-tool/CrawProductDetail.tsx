@@ -32,14 +32,12 @@ function CrawlProductDetail() {
     const { urls, selectorProductName, selectorImageLinks, maxImageQuality } =
       value;
     try {
-      const { data } = await axios.get<Product[]>(endpoint.crawlDetail, {
-        params: {
-          urls,
-          selectorProductName,
-          selectorImageLinks,
-          maxImageQuality,
-          telegramId: user?.telegramId,
-        },
+      const { data } = await axios.post<Product[]>(endpoint.crawlDetail, {
+        urls,
+        selectorProductName,
+        selectorImageLinks,
+        maxImageQuality,
+        telegramId: user?.telegramId,
       });
 
       setFile(data);
