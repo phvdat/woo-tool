@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector(productLinksSelector);
 
     const productLinks = await page.$$eval(productLinksSelector, (links) =>
       links.map((link) => (link as HTMLLinkElement).href)

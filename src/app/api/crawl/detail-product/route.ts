@@ -32,7 +32,9 @@ export async function POST(request: Request) {
     const page = await browser.newPage();
     for (const url of urlList) {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector(selectorProductName);
       const name = await page.$eval(selectorProductName, (el) => el.innerHTML);
+      await page.waitForSelector(selectorImageLinks);
       const imgLinks = await page.$$eval(selectorImageLinks, (imgs) =>
         imgs.map((img: Element) => (img as HTMLImageElement).src)
       );

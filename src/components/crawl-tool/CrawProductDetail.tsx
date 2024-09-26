@@ -36,7 +36,7 @@ function CrawlProductDetail() {
         urls,
         selectorProductName,
         selectorImageLinks,
-        maxImageQuality,
+        maxImageQuality: maxImageQuality || 100,
         telegramId: user?.telegramId,
       });
 
