@@ -8,7 +8,6 @@ import moment from 'moment';
 import sharp from 'sharp';
 
 interface CreateWatermarkParam {
-  logoUrl: string;
   logoWidth: number;
   logoHeight: number;
   imageWidth: number;
@@ -18,12 +17,12 @@ interface CreateWatermarkParam {
   images: string[];
   name: string;
   fit: 'contain' | 'cover' | 'fill';
+  logoResponse: any;
 }
 
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
 
 export async function CreateWatermark({
-  logoUrl,
   logoWidth,
   logoHeight,
   imageWidth,
@@ -33,14 +32,12 @@ export async function CreateWatermark({
   images,
   name: originName,
   fit,
+  logoResponse,
 }: CreateWatermarkParam) {
   const imagesFolderPath = `public/media`;
   mkdirSync(imagesFolderPath, { recursive: true });
 
   try {
-    const logoResponse = await axios.get(logoUrl, {
-      responseType: 'arraybuffer',
-    });
     const resizedLogo = await sharp(logoResponse.data)
       .resize(logoWidth, logoHeight)
       .toBuffer();
@@ -63,7 +60,7 @@ export async function CreateWatermark({
             width: imageWidth,
             height: imageHeight,
             fit: fit || 'cover',
-            background: { r: 255, g: 255, b: 255, alpha: 1 }
+            background: { r: 255, g: 255, b: 255, alpha: 1 },
           })
           .composite([{ input: resizedLogo, gravity: 'center' }])
           .jpeg({ quality })

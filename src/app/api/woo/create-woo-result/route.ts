@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { WooCategoryPayload } from '../categories-config/route';
 import { WooWatermarkPayload } from '../watermark-config/route';
 import dayjs from 'dayjs';
+import axios from 'axios';
 interface SheetData {
   Name: string;
   Images: string;
@@ -45,6 +46,9 @@ export async function POST(request: Request) {
       return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
+    const logoResponse = await axios.get(watermarkObject.logoUrl, {
+      responseType: 'arraybuffer',
+    });
     for (const row of data) {
       const rowData = row as any;
       const name: string = rowData['Name'];
@@ -53,17 +57,18 @@ export async function POST(request: Request) {
         continue;
       }
       const imageUrls: string[] = rowData['Images'].split(',');
+
       const urlImageList = await CreateWatermark({
         imageHeight: Number(watermarkObject.imageHeight),
         imageWidth: Number(watermarkObject.imageWidth),
         logoHeight: Number(watermarkObject.logoHeight),
         logoWidth: Number(watermarkObject.logoWidth),
-        logoUrl: watermarkObject.logoUrl,
         quality: Number(watermarkObject.quality),
         shopName: watermarkObject.shopName,
         images: imageUrls,
         name: name,
         fit: fit,
+        logoResponse,
       });
 
       const formattedPublishedDate = publishedDate.format(

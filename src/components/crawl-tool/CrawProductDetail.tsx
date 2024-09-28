@@ -1,7 +1,7 @@
 'use client';
 import axios from 'axios';
 import { useState } from 'react';
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Button, Alert } from 'antd';
 import * as XLSX from 'xlsx';
 import { isEmpty } from 'lodash';
 import dayjs from 'dayjs';
@@ -26,6 +26,7 @@ function CrawlProductDetail() {
   const [loading, setLoading] = useState(false);
   const { data } = useSession();
   const { user } = useUser(data?.user?.email || '');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
@@ -43,6 +44,9 @@ function CrawlProductDetail() {
       setFile(data);
     } catch (error) {
       console.error('Error fetching product data: ', error);
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      }
     }
     setLoading(false);
   };
@@ -88,6 +92,7 @@ function CrawlProductDetail() {
             Get Product Info
           </Button>
         </Form.Item>
+        {errorMessage && <Alert message={errorMessage} type='error' />}
         {isEmpty(file) || loading ? null : (
           <Button onClick={handleDownload}>Download file</Button>
         )}

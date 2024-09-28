@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       console.log('imgLinks', imgLinks);
 
       result.push({
-        Name: name.replaceAll('\n', ''),
+        Name: name.replaceAll('\n', '').trim(),
         Images: imgLinks.slice(0, maxImageQuality).join(','),
       });
     }
