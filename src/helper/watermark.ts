@@ -3,7 +3,7 @@ import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
 import { storage } from '@/lib/firebase';
 import axios from 'axios';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { mkdirSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import moment from 'moment';
 import sharp from 'sharp';
 
@@ -70,7 +70,8 @@ export async function CreateWatermark({
         // upload imagePath to firebase storage
         const date = moment().format('YYYY-MM-DD');
         const storageRef = ref(storage, `woo-image/${date}/${imageName}`);
-        const blob = new Blob([buffer], { type: 'image/jpeg' });
+        const fileImage = readFileSync(imagePath);
+        const blob = new Blob([fileImage], { type: 'image/jpeg' });
         await uploadBytes(storageRef, blob);
         const urlImage = await getDownloadURL(storageRef);
         imageUrlList.push(urlImage);
