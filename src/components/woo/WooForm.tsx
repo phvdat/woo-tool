@@ -15,6 +15,7 @@ import {
   Flex,
   Form,
   Input,
+  Progress,
   Row,
   Select,
   Spin,
@@ -22,7 +23,7 @@ import {
   Upload,
 } from 'antd';
 import axios from 'axios';
-import dayjs from 'dayjs';
+import { socket } from '@/config/socket';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
@@ -43,6 +44,7 @@ const WooForm = () => {
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
   const { data } = useSession();
   const { user, isLoading } = useUser(data?.user?.email || '');
+  const [progress, setProgress] = useState<number>(0);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -72,6 +74,7 @@ const WooForm = () => {
 
   const onFinish = async (value: WooFormValue) => {
     setError('');
+    setProgress(0);
     setLoading(true);
     const { file, category } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
@@ -104,8 +107,6 @@ const WooForm = () => {
         setDataFile(data);
       } catch (error: any) {
         console.log(error);
-
-        setError(_get(error, 'response.statusText', ''));
       }
     }
     setLoading(false);
@@ -116,6 +117,20 @@ const WooForm = () => {
       form.setFieldValue('telegramId', user.telegramId);
     }
   }, [form, user]);
+
+  useEffect(() => {
+    socket.on('woo-progress', (payload: number) => {
+      setProgress(payload);
+    });
+    socket.on('woo-error', (error) => {
+      console.log(error);
+      const errorMessage = `${_get(error, 'status')} - ${_get(
+        error,
+        'config.url'
+      )}`;
+      setError(errorMessage);
+    });
+  }, []);
 
   return (
     <Form
@@ -213,10 +228,15 @@ const WooForm = () => {
             <Button block>Upload file excel</Button>
           </Upload>
         </Form.Item>
-        <Text type='success'>
-          *Note: You can close this tab and check the telegram message later.
-        </Text>
       </Card>
+
+      {progress ? (
+        <Progress
+          percent={progress}
+          strokeColor={{ from: '#108ee9', to: '#87d068' }}
+        />
+      ) : null}
+
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
         <Button htmlType='submit' loading={loading} block type='primary'>
           Process

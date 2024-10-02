@@ -1,3 +1,4 @@
+import { socket } from '@/config/socket';
 import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
 import dayjs from 'dayjs';
@@ -38,6 +39,8 @@ export async function POST(request: Request) {
     }
     const result: WooCommerce[] = [];
     for (const row of data) {
+      const progressPercent = Math.floor((result.length / data.length) * 100);
+      socket.emit('openai-progress', progressPercent);
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
       const question = promptQuestion.replaceAll('{product-name}', keyWord);
