@@ -56,7 +56,7 @@ function CrawlListProductUrl() {
         labelAlign='left'
       >
         <Form.Item<FormValues> label='Pages URL' name='urls'>
-          <Input.TextArea placeholder='Enter Pages URL' />
+          <Input.TextArea placeholder='Enter Pages URL' rows={4} />
         </Form.Item>
 
         <Form.Item<FormValues>

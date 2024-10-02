@@ -17,10 +17,9 @@ export async function POST(request: Request) {
     urls,
     selectorProductName,
     selectorImageLinks,
-    maxImageQuality,
+    selectImagesIndex,
     telegramId,
   } = payload;
-
   const urlList = urls.split(',');
   const result = [];
   try {
@@ -41,10 +40,20 @@ export async function POST(request: Request) {
       console.log('name', name);
       console.log('imgLinks', imgLinks);
 
-      result.push({
-        Name: name.replaceAll('\n', '').trim(),
-        Images: imgLinks.slice(0, maxImageQuality).join(','),
-      });
+      if (selectImagesIndex) {
+        const imagesIndex = selectImagesIndex.split(',');
+        result.push({
+          Name: name.replaceAll('\n', '').trim(),
+          Images: imgLinks
+            .filter((_, index) => imagesIndex.includes((index + 1).toString()))
+            .join(','),
+        });
+      } else {
+        result.push({
+          Name: name.replaceAll('\n', '').trim(),
+          Images: imgLinks.slice(0, selectImagesIndex).join(','),
+        });
+      }
     }
 
     await browser.close();

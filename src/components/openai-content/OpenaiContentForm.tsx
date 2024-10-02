@@ -2,12 +2,13 @@
 import { useUser } from '@/app/hooks/useUser';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
-import { Alert, Button, Card, Form, Upload } from 'antd';
+import { Alert, Button, Card, Form, Progress, Upload } from 'antd';
 import axios from 'axios';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { GAP_MINUTES, PUBLIC_TIME } from '../woo/WooForm';
+import { getSocket } from '@/config/socket';
 
 interface OpenaiFormValues {
   promptQuestion: string;
@@ -17,6 +18,11 @@ interface OpenaiFormValues {
 
 const OpenaiContentForm = () => {
   const [form] = Form.useForm();
+  const [progress, setProgress] = useState<number>(0);
+  const socket = useMemo(() => {
+    const socket = getSocket();
+    return socket.connect();
+  }, []);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -52,6 +58,12 @@ const OpenaiContentForm = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    socket.on('openai-progress', (payload: number) => {
+      setProgress(payload);
+    });
+  }, []);
+
   return (
     <Form
       form={form}
@@ -71,6 +83,14 @@ const OpenaiContentForm = () => {
             <Button block>Upload file excel</Button>
           </Upload>
         </Form.Item>
+
+        {progress ? (
+          <Progress
+            percent={progress}
+            strokeColor={{ from: '#108ee9', to: '#87d068' }}
+          />
+        ) : null}
+
         <Button htmlType='submit' loading={loading} block type='primary'>
           Process
         </Button>

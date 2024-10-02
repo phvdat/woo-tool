@@ -11,6 +11,11 @@ import { WooCategoryPayload } from '../categories-config/route';
 import { WooWatermarkPayload } from '../watermark-config/route';
 import dayjs from 'dayjs';
 import axios from 'axios';
+import { getSocket } from '@/config/socket';
+
+const socket = getSocket();
+socket.connect();
+
 interface SheetData {
   Name: string;
   Images: string;
@@ -50,6 +55,8 @@ export async function POST(request: Request) {
       responseType: 'arraybuffer',
     });
     for (const row of data) {
+      const progressPercent = Math.floor((result.length / data.length) * 100);
+      socket.emit('woo-progress', progressPercent);
       const rowData = row as any;
       const name: string = rowData['Name'];
       const fit = rowData['Fit'];
@@ -106,6 +113,7 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.log('error api woo', error);
+    socket.emit('woo-error', error);
     return Response.json(error, {
       status: _get(error, 'response.status', 500),
     });
