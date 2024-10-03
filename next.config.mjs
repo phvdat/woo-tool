@@ -1,9 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  webpack: (config, { isServer }) => {
-    isServer && (config.externals = [...config.externals, 'socket.io-client']);
-    return config;
-  },
-};
+const nextConfig = {};
 
 export default nextConfig;

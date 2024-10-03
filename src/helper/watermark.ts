@@ -76,12 +76,14 @@ export async function CreateWatermark({
         const urlImage = await getDownloadURL(storageRef);
         imageUrlList.push(urlImage);
       } catch (error) {
+        console.error('error get ' + imageName, error);
         throw error;
       }
     }
     deleteFolderRecursive(imagesFolderPath);
     return imageUrlList;
   } catch (error) {
+    console.error('error create watermark', error);
     throw error;
   }
 }
