@@ -1,3 +1,4 @@
+import { getSocket } from '@/config/socket';
 import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
 import dayjs from 'dayjs';
@@ -15,6 +16,9 @@ interface SheetData {
 const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
   polling: false,
 });
+
+const socket = getSocket();
+socket.connect();
 
 export async function POST(request: Request) {
   const payload = await request.formData();
@@ -38,6 +42,8 @@ export async function POST(request: Request) {
     }
     const result: WooCommerce[] = [];
     for (const row of data) {
+      const progressPercent = Math.floor((result.length / data.length) * 100);
+      socket.emit('openai-progress', progressPercent);
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
       const question = promptQuestion.replaceAll('{product-name}', keyWord);

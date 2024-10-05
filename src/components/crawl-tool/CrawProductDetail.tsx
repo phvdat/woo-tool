@@ -18,7 +18,7 @@ interface FormValues {
   urls: string;
   selectorProductName: string;
   selectorImageLinks: string;
-  maxImageQuality: number;
+  selectImagesIndex: number;
 }
 
 function CrawlProductDetail() {
@@ -30,14 +30,14 @@ function CrawlProductDetail() {
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
-    const { urls, selectorProductName, selectorImageLinks, maxImageQuality } =
+    const { urls, selectorProductName, selectorImageLinks, selectImagesIndex } =
       value;
     try {
       const { data } = await axios.post<Product[]>(endpoint.crawlDetail, {
         urls,
         selectorProductName,
         selectorImageLinks,
-        maxImageQuality: maxImageQuality || 100,
+        selectImagesIndex: selectImagesIndex || 0,
         telegramId: user?.telegramId,
       });
 
@@ -70,7 +70,7 @@ function CrawlProductDetail() {
         labelAlign='left'
       >
         <Form.Item<FormValues> label='Products URL' name='urls'>
-          <Input.TextArea placeholder='Enter products URL' />
+          <Input.TextArea placeholder='Enter products URL' rows={4} />
         </Form.Item>
         <Form.Item<FormValues>
           label='Product name selector'
@@ -84,8 +84,11 @@ function CrawlProductDetail() {
         >
           <Input placeholder='Enter image links selector' />
         </Form.Item>
-        <Form.Item<FormValues> label='Max image quality' name='maxImageQuality'>
-          <Input placeholder='Enter max image quality' />
+        <Form.Item<FormValues>
+          label='Select images index'
+          name='selectImagesIndex'
+        >
+          <Input placeholder='Enter select images index' />
         </Form.Item>
         <Form.Item>
           <Button type='primary' htmlType='submit' loading={loading}>
