@@ -37,7 +37,7 @@ function CrawlProductDetail() {
         urls,
         selectorProductName,
         selectorImageLinks,
-        selectImagesIndex: selectImagesIndex || 0,
+        selectImagesIndex: selectImagesIndex,
         telegramId: user?.telegramId,
       });
 
