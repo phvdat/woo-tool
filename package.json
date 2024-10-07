@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "nodemon",
-    "build": "next build && tsc --project tsconfig.server.json",
-    "start": "node dist/server.js",
+    "dev": "node server.mjs",
+    "build": "next build",
+    "start": "node server.mjs",
     "lint": "next lint"
   },
   "dependencies": {
