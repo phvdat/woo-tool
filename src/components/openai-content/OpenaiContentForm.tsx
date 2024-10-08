@@ -27,12 +27,10 @@ const OpenaiContentForm = () => {
   const socketId = dayjs().unix();
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
   const { data } = useSession();
   const { user, isLoading } = useUser(data?.user?.email || '');
 
   const onFinish = async (value: OpenaiFormValues) => {
-    setError('');
     setLoading(true);
     const { file } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
@@ -56,7 +54,6 @@ const OpenaiContentForm = () => {
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
         console.log('error', error);
-        setError(_get(error, 'response.data.message', 'Something went wrong'));
       }
     }
     setLoading(false);
@@ -100,9 +97,6 @@ const OpenaiContentForm = () => {
           Process
         </Button>
       </Card>
-      {error && (
-        <Alert message={error} type='error' style={{ marginTop: 24 }} />
-      )}
     </Form>
   );
 };

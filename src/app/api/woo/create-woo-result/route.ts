@@ -88,7 +88,7 @@ export async function POST(request: Request) {
           name: name,
         })
       );
-      publishedDate.add(
+      publishedDate = publishedDate.add(
         gapMinutes * 60 + Math.floor(Math.random() * 20),
         'seconds'
       );
