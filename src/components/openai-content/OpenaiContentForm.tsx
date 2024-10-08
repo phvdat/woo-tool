@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { GAP_MINUTES, PUBLIC_TIME } from '../woo/WooForm';
 import { getSocket } from '@/config/socket';
+import dayjs from 'dayjs';
 
 interface OpenaiFormValues {
   promptQuestion: string;
@@ -23,6 +24,7 @@ const OpenaiContentForm = () => {
     const socket = getSocket();
     return socket.connect();
   }, []);
+  const socketId = dayjs().unix();
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -50,19 +52,22 @@ const OpenaiContentForm = () => {
           'gapMinutes',
           (user?.gapMinutes || GAP_MINUTES).toString()
         );
+        formData.append('socketId', socketId.toString());
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
-        setError(_get(error, 'response.data.message', ''));
+        console.log('error', error);
+        setError(_get(error, 'response.data.message', 'Something went wrong'));
       }
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    socket.on('openai-progress', (payload: number) => {
-      setProgress(payload);
+    socket.on('openai-progress', (payload) => {
+      if (Number(_get(payload, 'socketId')) !== socketId) return;
+      setProgress(_get(payload, 'progress'));
     });
-  }, []);
+  }, [socketId]);
 
   return (
     <Form

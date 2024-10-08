@@ -2,6 +2,7 @@
 import { useCategories } from '@/app/hooks/useCategories';
 import { useUser } from '@/app/hooks/useUser';
 import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { getSocket } from '@/config/socket';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
@@ -23,11 +24,11 @@ import {
   Upload,
 } from 'antd';
 import axios from 'axios';
-import { getSocket } from '@/config/socket';
+import dayjs from 'dayjs';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
-const { Text, Link } = Typography;
+import { useEffect, useId, useMemo, useState } from 'react';
+const { Link } = Typography;
 
 export const PUBLIC_TIME = 10;
 export const GAP_MINUTES = 10;
@@ -45,6 +46,8 @@ const WooForm = () => {
   const { data } = useSession();
   const { user, isLoading } = useUser(data?.user?.email || '');
   const [progress, setProgress] = useState<number>(0);
+  const [socketId, setSocketId] = useState<number>();
+
   const socket = useMemo(() => {
     const socket = getSocket();
     return socket.connect();
@@ -77,6 +80,8 @@ const WooForm = () => {
   }, [watermarkConfig]);
 
   const onFinish = async (value: WooFormValue) => {
+    const socketId = dayjs().unix();
+    setSocketId(socketId);
     setError('');
     setProgress(0);
     setLoading(true);
@@ -104,6 +109,7 @@ const WooForm = () => {
           'gapMinutes',
           (user?.gapMinutes || GAP_MINUTES).toString()
         );
+        formData.append('socketId', socketId.toString());
         const { data } = await axios.post<WooCommerce[]>(
           endpoint.wooCreate,
           formData
@@ -123,18 +129,25 @@ const WooForm = () => {
   }, [form, user]);
 
   useEffect(() => {
-    socket.on('woo-progress', (payload: number) => {
-      setProgress(payload);
+    socket.on('woo-progress', (payload) => {
+      if (_get(payload, 'socketId') !== socketId) return;
+      setProgress(_get(payload, 'progress'));
     });
-    socket.on('woo-error', (error) => {
-      console.log(error);
-      const errorMessage = `${_get(error, 'status')} - ${_get(
-        error,
-        'config.url'
+    socket.on('woo-error', (payload) => {
+      if (Number(_get(payload, 'socketId')) !== socketId) return;
+      console.log(_get(payload, 'error'));
+      const errorMessage = `${_get(payload, 'error.status')} - ${_get(
+        payload,
+        'error.config.url'
       )}`;
       setError(errorMessage);
     });
-  }, []);
+
+    return () => {
+      socket.off('woo-progress');
+      socket.off('woo-error');
+    };
+  }, [socketId]);
 
   return (
     <Form

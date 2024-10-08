@@ -7,6 +7,7 @@ import { isEmpty } from 'lodash';
 import dayjs from 'dayjs';
 import { endpoint } from '@/constant/endpoint';
 import { useUser } from '@/app/hooks/useUser';
+import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
 
 type Product = {
@@ -30,6 +31,7 @@ function CrawlProductDetail() {
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
+    setErrorMessage('');
     const { urls, selectorProductName, selectorImageLinks, selectImagesIndex } =
       value;
     try {
@@ -45,7 +47,7 @@ function CrawlProductDetail() {
     } catch (error) {
       console.error('Error fetching product data: ', error);
       if (error instanceof Error) {
-        setErrorMessage(error.message);
+        setErrorMessage(_get(error, 'message', 'Something went wrong'));
       }
     }
     setLoading(false);

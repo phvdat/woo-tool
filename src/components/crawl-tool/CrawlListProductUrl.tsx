@@ -1,10 +1,11 @@
 'use client';
 import axios from 'axios';
 import { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { isEmpty, trim } from 'lodash';
+import { Form, Input, Button, message, Typography, Alert } from 'antd';
+import { isEmpty, set, trim } from 'lodash';
 import { CopyFilled } from '@ant-design/icons';
 import { endpoint } from '@/constant/endpoint';
+import _get from 'lodash/get';
 
 interface FormValues {
   urls: string;
@@ -15,11 +16,13 @@ function CrawlListProductUrl() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState<boolean>(false);
   const [productLinks, setProductLinks] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
+    setErrorMessage('');
+    setProductLinks([]);
     const { urls, productLinksSelector } = value;
-
     const urlsArray = urls.split(',');
     const promises = urlsArray.map((url) => {
       return axios.get(endpoint.crawlList, {
@@ -34,6 +37,7 @@ function CrawlListProductUrl() {
       const productLinks = data.flat();
       setProductLinks(productLinks);
     } catch (error) {
+      setErrorMessage(_get(error, 'message', 'Something went wrong'));
       console.error('Error fetching product data: ', error);
     }
     setLoading(false);
@@ -70,11 +74,12 @@ function CrawlListProductUrl() {
             Get Products Link
           </Button>
         </Form.Item>
+        {errorMessage ? <Alert message={errorMessage} type='error' /> : null}
       </Form>
       {isEmpty(productLinks) ? null : (
         <div>
           <Button onClick={handleCopy} icon={<CopyFilled />}>
-            Click to copy
+            Click to copy {productLinks.length} product links
           </Button>
           <div>{productLinks.join(',')}</div>
         </div>

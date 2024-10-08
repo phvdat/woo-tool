@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const apiKey = payload.get('apiKey') as string;
   const publicTime = Number(payload.get('publicTime'));
   const gapMinutes = Number(payload.get('gapMinutes'));
+  const socketId = Number(payload.get('socketId'));
   let publishedDate = dayjs().add(publicTime, 'minute');
 
   try {
@@ -42,11 +43,15 @@ export async function POST(request: Request) {
     }
     const result: WooCommerce[] = [];
     for (const row of data) {
-      const progressPercent = Math.floor((result.length / data.length) * 100);
-      socket.emit('openai-progress', progressPercent);
       const rowData = row as any;
       const keyWord: string = rowData['Name'];
-      const question = promptQuestion.replaceAll('{product-name}', keyWord);
+      const categoryRaw = rowData['Categories'];
+      const category = categoryRaw.split('>').pop().trim();
+      const question = promptQuestion
+        .replaceAll('{product-name}', `"${keyWord}"`)
+        .replaceAll('{category}', category);
+      console.log(question);
+
       const responseChatGPT = await sendMessage(question, apiKey);
       const Description = rowData['Description'];
       const finalDescription = Description.replace(
@@ -66,6 +71,8 @@ export async function POST(request: Request) {
         gapMinutes * 60 + Math.floor(Math.random() * 20),
         'seconds'
       );
+      const progress = Math.floor((result.length / data.length) * 100);
+      socket.emit('openai-progress', { progress, socketId });
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);

@@ -39,6 +39,7 @@ export async function POST(request: Request) {
   const telegramId = payload.get('telegramId') as string;
   const publicTime = Number(payload.get('publicTime'));
   const gapMinutes = Number(payload.get('gapMinutes'));
+  const socketId = Number(payload.get('socketId'));
   let publishedDate = dayjs().add(publicTime, 'minute');
 
   try {
@@ -55,8 +56,6 @@ export async function POST(request: Request) {
       responseType: 'arraybuffer',
     });
     for (const row of data) {
-      const progressPercent = Math.floor((result.length / data.length) * 100);
-      socket.emit('woo-progress', progressPercent);
       const rowData = row as any;
       const name: string = rowData['Name'];
       const fit = rowData['Fit'];
@@ -93,6 +92,11 @@ export async function POST(request: Request) {
         gapMinutes * 60 + Math.floor(Math.random() * 20),
         'seconds'
       );
+      const progress = Math.floor((result.length / data.length) * 100);
+      socket.emit('woo-progress', {
+        progress,
+        socketId,
+      });
     }
     // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(result);
@@ -113,7 +117,7 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     console.log('error api woo', error);
-    socket.emit('woo-error', error);
+    socket.emit('woo-error', { error, socketId });
     return Response.json(error, {
       status: _get(error, 'response.status', 500),
     });
