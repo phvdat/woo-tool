@@ -10,12 +10,12 @@ export async function GET(request: Request) {
     'productLinksSelector'
   ) as string;
 
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: executablePath(), // Ensure the correct path to Chromium/Chrome
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+  });
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: executablePath(), // Ensure the correct path to Chromium/Chrome
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
-    });
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector(productLinksSelector);
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
 
     return new Response(JSON.stringify(productLinks), { status: 200 });
   } catch (error) {
+    await browser.close();
     console.log('Error fetching data', error);
     return new Response(JSON.stringify(error), {
       status: _get(error, 'response.status', 500),

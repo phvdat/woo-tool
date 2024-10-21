@@ -22,12 +22,12 @@ export async function POST(request: Request) {
   } = payload;
   const urlList = urls.split(',');
   const result = [];
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: executablePath(),
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+  });
   try {
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: executablePath(),
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
-    });
     const page = await browser.newPage();
     for (const url of urlList) {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -75,6 +75,7 @@ export async function POST(request: Request) {
       });
     return Response.json(result, { status: 200 });
   } catch (error) {
+    await browser.close();
     console.log('Error in API call', error);
     return Response.json(error, {
       status: _get(error, 'response.status', 500),
