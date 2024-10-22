@@ -33,5 +33,7 @@ export async function GET(request: Request) {
     return new Response(JSON.stringify(error), {
       status: _get(error, 'response.status', 500),
     });
+  } finally {
+    await browser.close();
   }
 }

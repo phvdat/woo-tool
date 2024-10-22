@@ -24,13 +24,16 @@ const OpenaiContentForm = () => {
     const socket = getSocket();
     return socket.connect();
   }, []);
-  const socketId = dayjs().unix();
 
   const [loading, setLoading] = useState<boolean>(false);
   const { data } = useSession();
   const { user, isLoading } = useUser(data?.user?.email || '');
+  const [socketId, setSocketId] = useState<number>();
 
   const onFinish = async (value: OpenaiFormValues) => {
+    const socketId = dayjs().unix();
+    setSocketId(socketId);
+    setProgress(0);
     setLoading(true);
     const { file } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
@@ -53,7 +56,7 @@ const OpenaiContentForm = () => {
         formData.append('socketId', socketId.toString());
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
-        console.log('error', error);
+        console.log('error-openai', error);
       }
     }
     setLoading(false);
@@ -64,6 +67,10 @@ const OpenaiContentForm = () => {
       if (Number(_get(payload, 'socketId')) !== socketId) return;
       setProgress(_get(payload, 'progress'));
     });
+
+    return () => {
+      socket.off('openai-progress');
+    };
   }, [socketId]);
 
   return (

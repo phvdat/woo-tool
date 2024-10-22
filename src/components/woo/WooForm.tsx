@@ -116,7 +116,7 @@ const WooForm = () => {
         );
         setDataFile(data);
       } catch (error: any) {
-        console.log(error);
+        console.log('error-woo', error);
       }
     }
     setLoading(false);

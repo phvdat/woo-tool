@@ -80,5 +80,7 @@ export async function POST(request: Request) {
     return Response.json(error, {
       status: _get(error, 'response.status', 500),
     });
+  } finally {
+    await browser.close();
   }
 }
