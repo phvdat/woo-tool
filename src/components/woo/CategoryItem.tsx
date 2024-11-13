@@ -1,25 +1,21 @@
 import { WooCategoryPayload } from '@/app/api/woo/categories-config/route';
+import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { endpoint } from '@/constant/endpoint';
+import { handleErrorMongoDB } from '@/helper/common';
 import {
   Alert,
   Button,
-  Card,
   Col,
-  Descriptions,
-  DescriptionsProps,
   Flex,
   Popconfirm,
   Row,
   Typography,
   message,
 } from 'antd';
-import { useState } from 'react';
-import UpdateCategory, { TypeUpdateCategory } from './UpdateCategoryModal';
-import { handleErrorMongoDB } from '@/helper/common';
 import axios from 'axios';
-import { endpoint } from '@/constant/endpoint';
-import { useCategories } from '@/app/hooks/useCategories';
+import { useState } from 'react';
 import { mutate } from 'swr';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import UpdateCategory, { TypeUpdateCategory } from './UpdateCategoryModal';
 const { Text } = Typography;
 
 interface CategoryItem {
@@ -72,7 +68,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
               okText='Yes'
               cancelText='No'
             >
-              <Button danger loading={loading}>
+              <Button danger loading={loading} type='primary'>
                 Delete
               </Button>
             </Popconfirm>

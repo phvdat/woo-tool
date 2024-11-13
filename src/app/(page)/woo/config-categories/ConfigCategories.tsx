@@ -5,26 +5,29 @@ import CategoryItem from '@/components/woo/CategoryItem';
 import UpdateCategory, {
   TypeUpdateCategory,
 } from '@/components/woo/UpdateCategoryModal';
-import { SearchOutlined } from '@ant-design/icons';
-import { Flex, Input, List, Row, Spin, Typography } from 'antd';
-import { useEffect, useState } from 'react';
-import { useDebounceValue } from 'usehooks-ts';
+import { Flex, List, Radio, Typography } from 'antd';
+import { useState } from 'react';
 const { Title } = Typography;
 
 const ConfigCategories = () => {
-  const [searchValue, setSearchValue] = useState('');
-  const debouncedValue = useDebounceValue(searchValue, 500);
-  const { categories, isLoading } = useCategories(debouncedValue[0]);
+  const [webSite, setWebSite] = useState('');
+  const { categories, isLoading } = useCategories(webSite);
+  const { watermarkConfig } = useWatermarkConfig();
+  const options =
+    watermarkConfig?.map((item) => ({
+      label: item.shopName,
+      value: item._id as string,
+    })) || [];
 
-  useEffect;
   return (
     <Flex gap={20} vertical style={{ marginTop: 24 }}>
-      <Input
-        placeholder='Search category'
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-        style={{ maxWidth: 300 }}
-        prefix={<SearchOutlined />}
+      <Radio.Group
+        options={[{ label: 'All', value: '' }, ...options]}
+        defaultValue=''
+        optionType='button'
+        buttonStyle='solid'
+        onChange={(e) => setWebSite(e.target.value)}
+        style={{ textAlign: 'center' }}
       />
       <List
         loading={isLoading}

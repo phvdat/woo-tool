@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       $or: [
         { templateName: { $regex: searchKeyword, $options: 'i' } },
         { category: { $regex: searchKeyword, $options: 'i' } },
+        { shopID: { $regex: searchKeyword, $options: 'i' } },
       ],
     })
     .toArray();
