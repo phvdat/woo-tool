@@ -45,15 +45,6 @@ const Header = () => {
       ),
       key: navigation.openaiContent,
     },
-
-    {
-      label: (
-        <Link href={navigation.crawlTool}>
-          <Title level={5}>Crawl Tool</Title>
-        </Link>
-      ),
-      key: navigation.crawlTool,
-    },
   ];
 
   const dropdownItems: MenuProps['items'] = [
