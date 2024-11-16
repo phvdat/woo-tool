@@ -39,4 +39,5 @@ export interface WooCommerce {
   'External URL': string;
   'Button text': string;
   Position: string;
+  [key: string]: string;
 }

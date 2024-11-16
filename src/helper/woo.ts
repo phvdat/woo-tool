@@ -42,6 +42,7 @@ export function createWooRecord(
   }: WooFixedOption,
   { name, images, publishedDate }: WooDynamicOption
 ): WooCommerce {
+  const categoryChild = category.split('>').pop()?.trim();
   const record: WooCommerce = {
     ID: '',
     Type: 'simple',
@@ -83,6 +84,7 @@ export function createWooRecord(
     'External URL': '',
     'Button text': '',
     Position: '0',
+    'Meta: rank_math_focus_keyword': `${name},${categoryChild}`,
   };
   return record;
 }
