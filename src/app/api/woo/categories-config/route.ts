@@ -2,7 +2,7 @@ import { CategoryFormValue } from '@/components/woo/UpdateCategoryModal';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-const CATEGORIES_COLLECTION = 'categories';
+export const CATEGORIES_COLLECTION = 'categories';
 
 export interface WooCategoryPayload extends CategoryFormValue {
   _id?: string;

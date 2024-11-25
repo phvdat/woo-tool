@@ -1,5 +1,5 @@
 import { CreateWatermark } from '@/helper/watermark';
-import { createWooRecord } from '@/helper/woo';
+import { createWooRecord, WooFixedOption } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import _get from 'lodash/get';
@@ -7,11 +7,15 @@ import _toString from 'lodash/toString';
 import moment from 'moment';
 import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
-import { WooCategoryPayload } from '../categories-config/route';
+import {
+  CATEGORIES_COLLECTION,
+  WooCategoryPayload,
+} from '../categories-config/route';
 import { WooWatermarkPayload } from '../watermark-config/route';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import { getSocket } from '@/config/socket';
+import { connectToDatabase } from '@/lib/mongodb';
 
 const socket = getSocket();
 socket.connect();
@@ -27,6 +31,12 @@ const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
 });
 
 export async function POST(request: Request) {
+  let { db } = await connectToDatabase();
+  const categoriesList = await db
+    .collection(CATEGORIES_COLLECTION)
+    .find()
+    .toArray();
+
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
@@ -62,6 +72,12 @@ export async function POST(request: Request) {
       if (!rowData['Images']) {
         continue;
       }
+      let categoryObjectByRow = null;
+      if (rowData['Categories']) {
+        categoryObjectByRow = categoriesList.find(
+          (item) => item.category === rowData['Categories']
+        ) as unknown as WooFixedOption;
+      }
       const imageUrls: string[] = rowData['Images'].split(',');
 
       const urlImageList = await CreateWatermark({
@@ -81,7 +97,7 @@ export async function POST(request: Request) {
         'YYYY-MM-DD HH:mm:ss'
       );
       result.push(
-        createWooRecord(categoriesObject, {
+        createWooRecord(categoryObjectByRow || categoriesObject, {
           ...rowData,
           publishedDate: formattedPublishedDate,
           images: urlImageList.join(','),
@@ -104,7 +120,9 @@ export async function POST(request: Request) {
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
     const date = moment().format('YYYY-MM-DD-HH-mm-ss');
-    const fileName = `woo-${date}.csv`;
+    const fileName = `woo-${
+      watermarkObject.shopName.split('.')[0]
+    }-${date}.csv`;
     writeFileSync(fileName, buffer);
     const stream = createReadStream(fileName);
     bot
