@@ -7,15 +7,14 @@ import _toString from 'lodash/toString';
 import moment from 'moment';
 import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
-import {
-  CATEGORIES_COLLECTION,
-  WooCategoryPayload,
-} from '../categories-config/route';
+import { WooCategoryPayload } from '../categories-config/route';
 import { WooWatermarkPayload } from '../watermark-config/route';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import { getSocket } from '@/config/socket';
 import { connectToDatabase } from '@/lib/mongodb';
+
+const CATEGORIES_COLLECTION = 'categories';
 
 const socket = getSocket();
 socket.connect();
