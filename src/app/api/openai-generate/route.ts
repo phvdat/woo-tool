@@ -65,7 +65,11 @@ export async function POST(request: Request) {
       result.push({
         ...rowData,
         Description: finalDescription,
-        'Published Date': formattedPublishedDate,
+        ...(publicTime
+          ? {
+              'published Date': formattedPublishedDate,
+            }
+          : {}),
       });
       publishedDate = publishedDate.add(
         gapMinutes * 60 + Math.floor(Math.random() * 20),
