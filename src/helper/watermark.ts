@@ -69,7 +69,7 @@ export async function CreateWatermark({
         await addMetadata({ name, shopName, imagePath });
         // upload imagePath to firebase storage
         const date = moment().format('YYYY-MM');
-        const storageRef = ref(storage, `Image/${date}/${imageName}`);
+        const storageRef = ref(storage, `${imageName}`);
         const fileImage = readFileSync(imagePath);
         const blob = new Blob([fileImage], { type: 'image/jpeg' });
         await uploadBytes(storageRef, blob);
