@@ -98,13 +98,9 @@ export async function POST(request: Request) {
       result.push(
         createWooRecord(categoryObjectByRow || categoriesObject, {
           ...rowData,
+          publishedDate: formattedPublishedDate,
           images: urlImageList.join(','),
           name: name,
-          ...(publicTime
-            ? {
-                'published Date': formattedPublishedDate,
-              }
-            : {}),
         })
       );
       publishedDate = publishedDate.add(
