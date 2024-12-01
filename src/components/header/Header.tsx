@@ -1,6 +1,8 @@
 import { navigation } from '@/constant/navigation';
+import { BarsOutlined } from '@ant-design/icons';
 import {
   Avatar,
+  Drawer,
   Dropdown,
   Flex,
   Layout,
@@ -11,6 +13,8 @@ import {
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { useMediaQuery } from 'usehooks-ts';
 const { Header: HeaderAntd } = Layout;
 const { Title, Text } = Typography;
 
@@ -19,11 +23,7 @@ const Header = () => {
 
   const headerItems = [
     {
-      label: (
-        <Link href={navigation.woo}>
-          <Title level={5}>Woo tool</Title>
-        </Link>
-      ),
+      label: <Link href={navigation.woo}>Woo tool</Link>,
       key: navigation.woo,
       children: [
         {
@@ -38,12 +38,14 @@ const Header = () => {
     },
 
     {
-      label: (
-        <Link href={navigation.openaiContent}>
-          <Title level={5}>Openai Content</Title>
-        </Link>
-      ),
+      label: <Link href={navigation.openaiContent}>Openai Content</Link>,
       key: navigation.openaiContent,
+    },
+    {
+      label: (
+        <Link href={navigation.updatePublishedTime}>Update Published Time</Link>
+      ),
+      key: navigation.updatePublishedTime,
     },
   ];
 
@@ -65,12 +67,18 @@ const Header = () => {
     },
   ];
 
+  const [open, setOpen] = useState(false);
   const pathName = usePathname();
+  const pcMedia = useMediaQuery('(min-width: 768px)');
   return (
     <HeaderAntd style={headerStyle}>
-      <Flex align='center'>
+      <Flex
+        align='center'
+        justify='space-between'
+        style={{ width: '100%', height: '100%' }}
+      >
         <Menu
-          style={{ minWidth: 0, flex: 'auto' }}
+          style={{ minWidth: 1, flex: 1 }}
           mode='horizontal'
           selectedKeys={[pathName]}
           items={headerItems}
@@ -90,6 +98,7 @@ const Header = () => {
 
 const headerStyle: React.CSSProperties = {
   background: '#fff',
+  minHeight: '64px',
 };
 
 export default Header;

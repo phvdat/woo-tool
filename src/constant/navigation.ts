@@ -6,5 +6,6 @@ const navigation = {
   configCategories: '/woo/config-categories',
   configWatermark: '/woo/config-watermark',
   crawlTool: '/crawl-tool',
+  updatePublishedTime: '/update-published-time',
 };
 export { navigation };
