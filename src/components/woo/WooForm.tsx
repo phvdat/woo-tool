@@ -176,7 +176,6 @@ const WooForm = () => {
           />
         </Form.Item>
         <Row gutter={16}>
-          {' '}
           <Col span={24} sm={{ span: 12 }}>
             <Form.Item<WooFormValue>
               name='watermarkWebsite'

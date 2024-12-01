@@ -7,5 +7,6 @@ const navigation = {
   configWatermark: '/woo/config-watermark',
   crawlTool: '/crawl-tool',
   updatePublishedTime: '/update-published-time',
+  createInitialFile: '/create-initial-file',
 };
 export { navigation };

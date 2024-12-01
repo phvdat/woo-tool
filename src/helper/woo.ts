@@ -89,7 +89,7 @@ export function createWooRecord(
   return record;
 }
 
-export async function handleDownloadFile(dataFile: WooCommerce[]) {
+export async function handleDownloadFile(dataFile: any[]) {
   const date = moment().format('YYYY-MM-DD-HH-mm-ss');
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(dataFile);

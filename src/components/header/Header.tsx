@@ -47,6 +47,12 @@ const Header = () => {
       ),
       key: navigation.updatePublishedTime,
     },
+    {
+      label: (
+        <Link href={navigation.createInitialFile}>Create Initial File</Link>
+      ),
+      key: navigation.createInitialFile,
+    },
   ];
 
   const dropdownItems: MenuProps['items'] = [
