@@ -82,6 +82,10 @@ const InitialFile = () => {
     }
   };
 
+  const removeRecordByName = (name: string) => {
+    setDataFile((prev) => prev.filter((item) => item.Name !== name));
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
       <Form
@@ -145,16 +149,16 @@ const InitialFile = () => {
           <Col span={24} sm={{ span: 12 }}>
             <Form.Item<InitialFileValues>
               name='website'
-              label='Watermark Website'
+              label='Website'
               rules={[
                 {
                   required: true,
-                  message: 'Please select watermark for website!',
+                  message: 'Please select for website!',
                 },
               ]}
             >
               <Select
-                placeholder='Select Watermark Website'
+                placeholder='Select Website'
                 options={websiteOptions}
                 showSearch
                 filterOption={(input, option) =>
@@ -193,12 +197,15 @@ const InitialFile = () => {
       </Form>
       {dataFile.length ? (
         <>
-          <InitialFileTable data={dataFile} />
+          <InitialFileTable
+            data={dataFile}
+            removeRecordByName={removeRecordByName}
+          />
           <Button
             type='primary'
             style={{ marginTop: '10px' }}
             htmlType='button'
-            onClick={() => handleDownloadFile(dataFile)}
+            onClick={() => handleDownloadFile(dataFile, 'initial-file')}
             block
           >
             <DownloadOutlined /> Download

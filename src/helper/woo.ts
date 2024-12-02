@@ -89,7 +89,7 @@ export function createWooRecord(
   return record;
 }
 
-export async function handleDownloadFile(dataFile: any[]) {
+export async function handleDownloadFile(dataFile: any[], fileName?: string) {
   const date = moment().format('YYYY-MM-DD-HH-mm-ss');
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(dataFile);
@@ -99,7 +99,7 @@ export async function handleDownloadFile(dataFile: any[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `woo-${date}.csv`;
+  link.download = `${fileName || 'woo'}-${date}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }
