@@ -87,114 +87,116 @@ const InitialFile = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
-      <Form
-        name='initial-file'
-        onFinish={handleSubmit}
-        layout='vertical'
-        form={form}
-      >
-        {(categoriesLoading || websiteLoading) && (
-          <Spin
-            size='large'
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              zIndex: 100,
-              transform: 'translateX(-50%)',
-            }}
-          />
-        )}
-
-        <Form.Item<InitialFileValues>
-          label='Name'
-          name='Name'
-          rules={[{ required: true, message: 'Please input product name' }]}
+    <div>
+      <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
+        <Form
+          name='initial-file'
+          onFinish={handleSubmit}
+          layout='vertical'
+          form={form}
         >
-          <Input
-            suffix={
-              <Button
-                type='default'
-                icon={<CopyOutlined />}
-                onClick={() => handlePasteName()}
+          {(categoriesLoading || websiteLoading) && (
+            <Spin
+              size='large'
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                zIndex: 100,
+                transform: 'translateX(-50%)',
+              }}
+            />
+          )}
+
+          <Form.Item<InitialFileValues>
+            label='Name'
+            name='Name'
+            rules={[{ required: true, message: 'Please input product name' }]}
+          >
+            <Input
+              suffix={
+                <Button
+                  type='default'
+                  icon={<CopyOutlined />}
+                  onClick={() => handlePasteName()}
+                >
+                  Paste
+                </Button>
+              }
+              allowClear
+            />
+          </Form.Item>
+
+          <Form.Item<InitialFileValues>
+            label='Images'
+            name='Images'
+            rules={[{ required: true, message: 'Please input product images' }]}
+          >
+            <Input
+              suffix={
+                <Button
+                  type='default'
+                  icon={<CopyOutlined />}
+                  onClick={() => handlePasteImages()}
+                >
+                  Paste Multiple
+                </Button>
+              }
+              allowClear
+            />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={24} sm={{ span: 12 }}>
+              <Form.Item<InitialFileValues>
+                name='website'
+                label='Website'
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please select for website!',
+                  },
+                ]}
               >
-                Paste
-              </Button>
-            }
-            allowClear
-          />
-        </Form.Item>
-
-        <Form.Item<InitialFileValues>
-          label='Images'
-          name='Images'
-          rules={[{ required: true, message: 'Please input product images' }]}
-        >
-          <Input
-            suffix={
-              <Button
-                type='default'
-                icon={<CopyOutlined />}
-                onClick={() => handlePasteImages()}
+                <Select
+                  placeholder='Select Website'
+                  options={websiteOptions}
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col span={24} sm={{ span: 12 }}>
+              <Form.Item<InitialFileValues>
+                name='Categories'
+                label='Choose Category'
+                rules={[{ required: true, message: 'Please select category!' }]}
               >
-                Paste Multiple
-              </Button>
-            }
-            allowClear
-          />
-        </Form.Item>
+                <Select
+                  placeholder='Select Category'
+                  options={categoriesOptions}
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
-        <Row gutter={16}>
-          <Col span={24} sm={{ span: 12 }}>
-            <Form.Item<InitialFileValues>
-              name='website'
-              label='Website'
-              rules={[
-                {
-                  required: true,
-                  message: 'Please select for website!',
-                },
-              ]}
-            >
-              <Select
-                placeholder='Select Website'
-                options={websiteOptions}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-              />
-            </Form.Item>
-          </Col>
-          <Col span={24} sm={{ span: 12 }}>
-            <Form.Item<InitialFileValues>
-              name='Categories'
-              label='Choose Category'
-              rules={[{ required: true, message: 'Please select category!' }]}
-            >
-              <Select
-                placeholder='Select Category'
-                options={categoriesOptions}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Form.Item>
-          <Button htmlType='submit' block>
-            Add Row
-          </Button>
-        </Form.Item>
-      </Form>
+          <Form.Item>
+            <Button htmlType='submit' block>
+              Add Row
+            </Button>
+          </Form.Item>
+        </Form>
+      </div>
       {dataFile.length ? (
         <>
           <InitialFileTable

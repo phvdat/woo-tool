@@ -78,6 +78,7 @@ const InitialFileTable = ({
       columns={columns}
       pagination={false}
       scroll={{ x: 768, y: 400 }}
+      footer={() => `Total: ${data.length}`}
     />
   );
 };

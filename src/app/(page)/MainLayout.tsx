@@ -17,7 +17,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
 
         <Footer>
           <Text type='secondary'>
-            Copyright by deveric {moment().format('YYYY')}
+            Copyright by Eric Pham {moment().format('YYYY')}
           </Text>
         </Footer>
       </Layout>

@@ -1,8 +1,6 @@
 import { navigation } from '@/constant/navigation';
-import { BarsOutlined } from '@ant-design/icons';
 import {
   Avatar,
-  Drawer,
   Dropdown,
   Flex,
   Layout,
@@ -13,10 +11,8 @@ import {
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { useMediaQuery } from 'usehooks-ts';
 const { Header: HeaderAntd } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const Header = () => {
   const { data } = useSession();
@@ -73,9 +69,7 @@ const Header = () => {
     },
   ];
 
-  const [open, setOpen] = useState(false);
   const pathName = usePathname();
-  const pcMedia = useMediaQuery('(min-width: 768px)');
   return (
     <HeaderAntd style={headerStyle}>
       <Flex
