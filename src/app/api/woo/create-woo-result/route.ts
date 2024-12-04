@@ -31,11 +31,6 @@ const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
 
 export async function POST(request: Request) {
   let { db } = await connectToDatabase();
-  const categoriesList = await db
-    .collection(CATEGORIES_COLLECTION)
-    .find()
-    .toArray();
-
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
@@ -50,6 +45,10 @@ export async function POST(request: Request) {
   const gapMinutes = Number(payload.get('gapMinutes'));
   const socketId = Number(payload.get('socketId'));
   let publishedDate = dayjs().add(publicTime, 'minute');
+  const categoriesList = await db
+    .collection(CATEGORIES_COLLECTION)
+    .find({ shopID: { $regex: watermarkObject._id, $options: 'i' } })
+    .toArray();
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
