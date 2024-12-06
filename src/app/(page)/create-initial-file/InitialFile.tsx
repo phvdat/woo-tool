@@ -79,6 +79,7 @@ const InitialFile = () => {
       setDataFile((prev) => [...prev, data]);
       form.setFieldValue('Name', '');
       form.setFieldValue('Images', '');
+      message.success('Product added successfully!');
     }
   };
 

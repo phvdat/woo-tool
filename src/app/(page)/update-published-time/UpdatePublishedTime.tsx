@@ -1,6 +1,6 @@
 'use client';
 import React, { use, useEffect, useState } from 'react';
-import { Form, InputNumber, Upload, Button, message } from 'antd';
+import { Form, InputNumber, Upload, Button, message, Col, Row } from 'antd';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { handleDownloadFile } from '@/helper/woo';
@@ -11,23 +11,27 @@ import dayjs from 'dayjs';
 import { useLocalStorage } from 'usehooks-ts';
 
 const PUB_TIME_AFTER = 'PUB_TIME_AFTER';
-const GAP_TIME = 'GAP_TIME';
+const GAP_FROM = 'GAP_FROM';
+const GAP_TO = 'GAP_TO';
 
 interface FormValues {
   after: number;
-  gapTime: number;
+  gapFrom: number;
+  gapTo: number;
   file: FileList;
 }
 const UpdatePublishedTime = () => {
   const [form] = Form.useForm();
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
   const [afterLocal, setAfterLocal] = useLocalStorage(PUB_TIME_AFTER, 3);
-  const [gapTimeLocal, setGapTimeLocal] = useLocalStorage(GAP_TIME, 5);
+  const [gapFromLocal, setGapFromTimeLocal] = useLocalStorage(GAP_FROM, 5);
+  const [gapToLocal, setGapToTimeLocal] = useLocalStorage(GAP_TO, 5);
 
   const handleSubmit = async (values: FormValues) => {
-    const { after, gapTime, file } = values;
+    const { after, gapFrom, gapTo, file } = values;
     setAfterLocal(after);
-    setGapTimeLocal(gapTime);
+    setGapFromTimeLocal(gapFrom);
+    setGapToTimeLocal(gapTo);
     const fileOrigin = _get(file[0], 'originFileObj') as unknown as File;
 
     const workbook = XLSX.read(await fileOrigin.arrayBuffer(), {
@@ -36,9 +40,10 @@ const UpdatePublishedTime = () => {
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data: WooCommerce[] = XLSX.utils.sheet_to_json(wordSheet);
 
-    let startTime = dayjs().add(after, 'minute');
+    let publishedDate = dayjs().add(after, 'minute');
     const result = data.map((row, index) => {
-      const publishedDate = startTime.add(gapTime * index, 'minute');
+      const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;
+      publishedDate = publishedDate.add(gapSeconds, 'second');
 
       return {
         ...row,
@@ -51,7 +56,8 @@ const UpdatePublishedTime = () => {
 
   useEffect(() => {
     form.setFieldValue('after', Number(afterLocal));
-    form.setFieldValue('gapTime', Number(gapTimeLocal));
+    form.setFieldValue('gapFrom', Number(gapFromLocal));
+    form.setFieldValue('gapTo', gapToLocal);
   }, []);
 
   return (
@@ -59,19 +65,41 @@ const UpdatePublishedTime = () => {
       <h1 style={{ textAlign: 'center' }}>Published Time Tool</h1>
       <Form onFinish={handleSubmit} layout='vertical' form={form}>
         <Form.Item<FormValues>
-          label='After (minutes)'
+          label='After'
           name='after'
           rules={[{ required: true, message: 'Please input after time!' }]}
         >
           <InputNumber min={0} style={{ width: '100%' }} />
         </Form.Item>
-        <Form.Item<FormValues>
-          label='Gap Time (minutes)'
-          name='gapTime'
-          rules={[{ required: true, message: 'Please input gap time!' }]}
-        >
-          <InputNumber min={0} style={{ width: '100%' }} />
-        </Form.Item>
+        <Row gutter={[20, 20]}>
+          <Col span={12}>
+            <Form.Item<FormValues>
+              label='Gap Time From'
+              name='gapFrom'
+              rules={[{ required: true, message: 'Please input gap time!' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder='From'
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<FormValues>
+              label='Gap Time To'
+              name='gapTo'
+              rules={[{ required: true, message: 'Please input gap time!' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder='From'
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
         <Form.Item<FormValues>
           name='file'
           valuePropName='fileList'
