@@ -16,7 +16,10 @@ import {
   Spin,
   Table,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocalStorage } from 'usehooks-ts';
+
+const INITIAL_DATA = 'INITIAL_DATA';
 
 export interface InitialFileValues {
   Name: string;
@@ -32,6 +35,7 @@ const InitialFile = () => {
   const [dataFile, setDataFile] = useState<
     Omit<InitialFileValues, 'website'>[]
   >([]);
+  const [dataLocal, setDataLocal] = useLocalStorage(INITIAL_DATA, '[]');
   const watchShopId = Form.useWatch('website', form);
 
   const categoriesOptions = useMemo(() => {
@@ -77,6 +81,7 @@ const InitialFile = () => {
       message.error('Product name already exist!');
     } else {
       setDataFile((prev) => [...prev, data]);
+      setDataLocal(JSON.stringify([...dataFile, data]));
       form.setFieldValue('Name', '');
       form.setFieldValue('Images', '');
       message.success('Product added successfully!');
@@ -86,6 +91,10 @@ const InitialFile = () => {
   const removeRecordByName = (name: string) => {
     setDataFile((prev) => prev.filter((item) => item.Name !== name));
   };
+
+  useEffect(() => {
+    setDataFile(JSON.parse(dataLocal) || []);
+  }, []);
 
   return (
     <div>
@@ -208,7 +217,10 @@ const InitialFile = () => {
             type='primary'
             style={{ marginTop: '10px' }}
             htmlType='button'
-            onClick={() => handleDownloadFile(dataFile, 'initial-file')}
+            onClick={() => {
+              handleDownloadFile(dataFile, 'initial-file');
+              setDataLocal('[]');
+            }}
             block
           >
             <DownloadOutlined /> Download
