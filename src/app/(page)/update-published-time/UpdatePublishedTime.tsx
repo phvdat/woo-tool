@@ -43,7 +43,9 @@ const UpdatePublishedTime = () => {
     let publishedDate = dayjs().add(after, 'minute');
     const result = data.map((row, index) => {
       const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;
-      publishedDate = publishedDate.add(gapSeconds, 'second');
+      if (index != 0) {
+        publishedDate = publishedDate.add(gapSeconds, 'second');
+      }
 
       return {
         ...row,
