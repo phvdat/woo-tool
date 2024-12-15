@@ -1,4 +1,4 @@
-import { WooWatermarkPayload } from '@/app/api/woo/watermark-config/route';
+import { WooWebsitePayload } from '@/app/api/woo/website-config/route';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import {
@@ -14,52 +14,53 @@ import {
 } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
-import UpdateWatermarkList from './UpdateWatermarkListModal';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import UpdateWebsiteListModal from './UpdateWebsiteListModal';
+import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 
-interface WatermarkWebsiteItem {
-  watermark: WooWatermarkPayload;
+interface WebsiteWebsiteItem {
+  website: WooWebsitePayload;
+  refresh: any
 }
 
-const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
+const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
   const items: DescriptionsProps['items'] = [
     {
       key: '1',
       label: 'Logo url',
-      children: watermark.logoUrl,
+      children: website.logoUrl,
     },
     {
       key: '2',
       label: 'Shop name',
-      children: watermark.shopName,
+      children: website.shopName,
     },
     {
       key: '3',
       label: 'Quantity',
-      children: watermark.quality,
+      children: website.quality,
     },
     {
       key: '4',
       label: 'Logo Width',
-      children: watermark.logoWidth,
+      children: website.logoWidth,
     },
     {
       key: '5',
       label: 'Logo Height',
-      children: watermark.logoHeight,
+      children: website.logoHeight,
     },
     {
       key: '6',
       label: 'Image Width',
-      children: watermark.imageWidth,
+      children: website.imageWidth,
     },
     {
       key: '7',
       label: 'Image Height',
-      children: watermark.imageHeight,
+      children: website.imageHeight,
     },
   ];
-  const { mutate } = useWatermarkConfig();
+  const { mutate } = useConfigWebsite();
   const [messageApi, contextHolder] = message.useMessage();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -72,7 +73,7 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
         type: 'success',
         content: 'Delete category successfully!',
       });
-      await mutate();
+      await refresh();
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
@@ -80,14 +81,14 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
     setLoading(false);
   };
   return (
-    <Col span={24} lg={{ span: 12 }} key={watermark._id}>
+    <Col span={24} lg={{ span: 12 }} key={website._id}>
       {contextHolder}
       <Card>
-        <Descriptions title={watermark.shopName} items={items} column={1} />
+        <Descriptions title={website.shopName} items={items} column={1} />
         <Flex justify='end' gap={20}>
           <Popconfirm
             title='Delete the category?'
-            onConfirm={() => handleDeleteCategory(watermark._id || '')}
+            onConfirm={() => handleDeleteCategory(website._id || '')}
             okText='Yes'
             cancelText='No'
           >
@@ -95,7 +96,7 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
               Delete
             </Button>
           </Popconfirm>
-          <UpdateWatermarkList _id={watermark._id} initialForm={watermark} />
+          <UpdateWebsiteListModal _id={website._id} initialForm={website} />
         </Flex>
         {error ? <Alert message={error} type='error' /> : null}
       </Card>
@@ -103,4 +104,4 @@ const WatermarkWebsiteItem = ({ watermark }: WatermarkWebsiteItem) => {
   );
 };
 
-export default WatermarkWebsiteItem;
+export default WebsiteItem;

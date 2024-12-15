@@ -4,7 +4,7 @@ export const endpoint = {
   wooConfig: '/api/woo/woo-config',
   wooCreate: '/api/woo/create-woo-result',
   categoryConfig: '/api/woo/categories-config',
-  watermarkConfig: '/api/woo/watermark-config',
+  websiteConfigList: '/api/woo/website-config',
 
   openaiGenerate: '/api/openai-generate',
   crawlList: '/api/crawl/list-url',

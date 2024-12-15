@@ -1,6 +1,6 @@
 'use client';
 import { useCategories } from '@/app/hooks/useCategories';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import { WooFixedOption } from '@/helper/woo';
@@ -46,15 +46,15 @@ const UpdateCategoryModal = ({
   const [form] = Form.useForm<CategoryFormValue>();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const { watermarkConfig } = useWatermarkConfig();
+  const { websiteConfigList } = useConfigWebsite();
 
   const watermarkOptions = useMemo(() => {
-    if (!watermarkConfig) return [];
-    return watermarkConfig.map((watermark) => ({
-      label: watermark.shopName,
-      value: watermark._id,
+    if (!websiteConfigList) return [];
+    return websiteConfigList.map((website) => ({
+      label: website.shopName,
+      value: website._id,
     }));
-  }, [watermarkConfig]);
+  }, [websiteConfigList]);
 
   const createCategory = async (values: CategoryFormValue) => {
     try {
@@ -172,7 +172,7 @@ const UpdateCategoryModal = ({
                 rules={[
                   {
                     required: true,
-                    message: 'Please select watermark for website!',
+                    message: 'Please select website for website!',
                   },
                 ]}
               >

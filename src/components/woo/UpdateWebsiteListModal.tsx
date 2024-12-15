@@ -1,5 +1,5 @@
 'use client';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';
 import {
@@ -15,14 +15,16 @@ import {
   message,
 } from 'antd';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
 interface AddNewCategoryProps {
-  initialForm?: WatermarkFormValue;
+  initialForm?: WebsiteFormValue;
   _id?: string;
+  refresh?: any
 }
 
-export interface WatermarkFormValue {
+export interface WebsiteFormValue {
   logoUrl: string;
   logoWidth: number;
   logoHeight: number;
@@ -32,34 +34,38 @@ export interface WatermarkFormValue {
   quality: number;
 }
 
-const defaultFormValue: WatermarkFormValue = {
+const defaultFormValue: WebsiteFormValue = {
   logoUrl: '',
   logoWidth: 1000,
   logoHeight: 1000,
   imageWidth: 1000,
   imageHeight: 1000,
   shopName: '',
-  quality: 70,
+  quality: 80,
 };
-const UpdateWatermarkListModal = ({
+const UpdateWebsiteListModal = ({
   initialForm = defaultFormValue,
   _id,
+  refresh
 }: AddNewCategoryProps) => {
-  const { mutate } = useWatermarkConfig();
+  const { data } = useSession();
+  
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form] = Form.useForm<WatermarkFormValue>();
+  const [form] = Form.useForm<WebsiteFormValue>();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const createWatermark = async (values: WatermarkFormValue) => {
+  const createWebsite = async (values: WebsiteFormValue) => {
+    const payload = {...values, owner: data?.user?.email}
+    console.log(payload)
     try {
-      await axios.post(endpoint.watermarkConfig, values);
+      await axios.post(endpoint.websiteConfigList, payload);
       messageApi.open({
         type: 'success',
         content: 'Create category successfully!',
       });
-      await mutate();
+      refresh && await refresh();
       setIsModalOpen(false);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
@@ -67,14 +73,14 @@ const UpdateWatermarkListModal = ({
     }
   };
 
-  const updateWatermark = async (_id: string, values: WatermarkFormValue) => {
+  const updateWebsite = async (_id: string, values: WebsiteFormValue) => {
     try {
-      await axios.put(endpoint.watermarkConfig, { _id, ...values });
+      await axios.put(endpoint.websiteConfigList, { _id, ...values });
       messageApi.open({
         type: 'success',
         content: 'Update category successfully!',
       });
-      await mutate();
+      await refresh();
       setIsModalOpen(false);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
@@ -82,13 +88,13 @@ const UpdateWatermarkListModal = ({
     }
   };
 
-  const onSubmit = async (values: WatermarkFormValue) => {
+  const onSubmit = async (values: WebsiteFormValue) => {
     setLoading(true);
     setError('');
     if (_id) {
-      await updateWatermark(_id, values);
+      await updateWebsite(_id, values);
     } else {
-      await createWatermark(values);
+      await createWebsite(values);
     }
     setLoading(false);
   };
@@ -96,7 +102,7 @@ const UpdateWatermarkListModal = ({
     <>
       {contextHolder}
       <Button onClick={() => setIsModalOpen(true)}>
-        {_id ? 'Edit' : 'Add new Watermark List'}
+        {_id ? 'Edit' : 'Add new Website List'}
       </Button>
       <Modal
         title='Category'
@@ -115,7 +121,7 @@ const UpdateWatermarkListModal = ({
           initialValues={initialForm}
         >
           <Card>
-            <Form.Item<WatermarkFormValue>
+            <Form.Item<WebsiteFormValue>
               name='logoUrl'
               label='Logo URL'
               rules={[{ required: true, message: 'Please input Logo URL!' }]}
@@ -124,7 +130,7 @@ const UpdateWatermarkListModal = ({
             </Form.Item>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item<WatermarkFormValue>
+                <Form.Item<WebsiteFormValue>
                   name='shopName'
                   label='Shop Name'
                   rules={[
@@ -135,7 +141,7 @@ const UpdateWatermarkListModal = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item<WatermarkFormValue>
+                <Form.Item<WebsiteFormValue>
                   name='quality'
                   label='Quality'
                   rules={[{ required: true, message: 'Please input Quality!' }]}
@@ -145,7 +151,7 @@ const UpdateWatermarkListModal = ({
               </Col>
 
               <Col span={12}>
-                <Form.Item<WatermarkFormValue>
+                <Form.Item<WebsiteFormValue>
                   name='logoWidth'
                   label='Logo Width'
                   rules={[
@@ -156,7 +162,7 @@ const UpdateWatermarkListModal = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item<WatermarkFormValue>
+                <Form.Item<WebsiteFormValue>
                   name='logoHeight'
                   label='Logo Height'
                   rules={[
@@ -168,7 +174,7 @@ const UpdateWatermarkListModal = ({
               </Col>
 
               <Col span={12}>
-                <Form.Item<WatermarkFormValue>
+                <Form.Item<WebsiteFormValue>
                   name='imageWidth'
                   label='Image Width'
                   rules={[
@@ -179,7 +185,7 @@ const UpdateWatermarkListModal = ({
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item<WatermarkFormValue>
+                <Form.Item<WebsiteFormValue>
                   name='imageHeight'
                   label='Image Height'
                   rules={[
@@ -205,4 +211,4 @@ const UpdateWatermarkListModal = ({
   );
 };
 
-export default UpdateWatermarkListModal;
+export default UpdateWebsiteListModal;

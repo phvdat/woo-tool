@@ -1,25 +1,29 @@
-import { WatermarkFormValue } from '@/components/woo/UpdateWatermarkListModal';
+import { WebsiteFormValue } from '@/components/woo/UpdateWebsiteListModal';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-const WATERMARK_COLLECTION = 'watermark-websites';
+const WEBSITES_COLLECTION = 'watermark-websites';
 
-export interface WooWatermarkPayload extends WatermarkFormValue {
+export interface WooWebsitePayload extends WebsiteFormValue {
   _id?: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const searchParams = new URL(request.url).searchParams;
+  const userEmail = searchParams.get('userEmail') || '';
   let { db } = await connectToDatabase();
-  const response = await db.collection(WATERMARK_COLLECTION).find().toArray();
+  const response = await db.collection(WEBSITES_COLLECTION).find({
+    owner: { $regex: userEmail, $options: 'i' }
+  }).toArray();
   return Response.json(response, { status: 200 });
 }
 
 export async function POST(request: Request) {
   try {
-    const payload: WooWatermarkPayload = await request.json();
+    const payload: WooWebsitePayload = await request.json();
     const { _id, ...rest } = payload;
     let { db } = await connectToDatabase();
-    const response = await db.collection(WATERMARK_COLLECTION).insertOne(rest);
+    const response = await db.collection(WEBSITES_COLLECTION).insertOne(rest);
     return Response.json(response, { status: 200 });
   } catch (error) {
     console.log(error);
@@ -29,11 +33,11 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const payload: WooWatermarkPayload = await request.json();
+  const payload: WooWebsitePayload = await request.json();
   const { _id, ...rest } = payload;
   let { db } = await connectToDatabase();
   const response = await db
-    .collection(WATERMARK_COLLECTION)
+    .collection(WEBSITES_COLLECTION)
     .updateOne({ _id: new ObjectId(_id) }, { $set: rest });
   return Response.json(response, { status: 200 });
 }
@@ -44,7 +48,7 @@ export async function DELETE(request: Request) {
 
   let { db } = await connectToDatabase();
   const response = await db
-    .collection(WATERMARK_COLLECTION)
+    .collection(WEBSITES_COLLECTION)
     .findOneAndDelete({ _id: new ObjectId(_id) });
   return Response.json(response, { status: 200 });
 }

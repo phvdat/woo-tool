@@ -4,7 +4,7 @@ const navigation = {
   openaiContent: '/openai-content',
   managementUser: '/management-users',
   configCategories: '/woo/config-categories',
-  configWatermark: '/woo/config-watermark',
+  configWebsite: '/woo/config-website',
   crawlTool: '/crawl-tool',
   updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',

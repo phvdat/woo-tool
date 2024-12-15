@@ -27,8 +27,8 @@ const Header = () => {
           key: navigation.configCategories,
         },
         {
-          label: <Link href='/woo/config-watermark'>Config Watermark</Link>,
-          key: navigation.configWatermark,
+          label: <Link href='/woo/config-website'>Config Website</Link>,
+          key: navigation.configWebsite,
         },
       ],
     },

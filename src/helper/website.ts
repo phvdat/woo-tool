@@ -7,7 +7,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import moment from 'moment';
 import sharp from 'sharp';
 
-interface CreateWatermarkParam {
+interface CreateWebsiteParam {
   logoWidth: number;
   logoHeight: number;
   imageWidth: number;
@@ -22,7 +22,7 @@ interface CreateWatermarkParam {
 
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
 
-export async function CreateWatermark({
+export async function CreateWebsite({
   logoWidth,
   logoHeight,
   imageWidth,
@@ -33,7 +33,7 @@ export async function CreateWatermark({
   name: originName,
   fit,
   logoResponse,
-}: CreateWatermarkParam) {
+}: CreateWebsiteParam) {
   const imagesFolderPath = `public/media`;
   mkdirSync(imagesFolderPath, { recursive: true });
 

@@ -1,4 +1,4 @@
-import { CreateWatermark } from '@/helper/watermark';
+import { CreateWebsite } from '@/helper/website';
 import { createWooRecord, WooFixedOption } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
@@ -8,7 +8,7 @@ import moment from 'moment';
 import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
 import { WooCategoryPayload } from '../categories-config/route';
-import { WooWatermarkPayload } from '../watermark-config/route';
+import { WooWebsitePayload } from '../website-config/route';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import { getSocket } from '@/config/socket';
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   ) as WooCategoryPayload;
   const watermarkObject = JSON.parse(
     _toString(payload.get('watermarkObject'))
-  ) as WooWatermarkPayload;
+  ) as WooWebsitePayload;
   const telegramId = payload.get('telegramId') as string;
   const publicTime = Number(payload.get('publicTime'));
   const gapMinutes = Number(payload.get('gapMinutes'));
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       }
       const imageUrls: string[] = rowData['Images'].split(',');
 
-      const urlImageList = await CreateWatermark({
+      const urlImageList = await CreateWebsite({
         imageHeight: Number(watermarkObject.imageHeight),
         imageWidth: Number(watermarkObject.imageWidth),
         logoHeight: Number(watermarkObject.logoHeight),

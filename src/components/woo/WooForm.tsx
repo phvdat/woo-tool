@@ -1,7 +1,7 @@
 'use client';
 import { useCategories } from '@/app/hooks/useCategories';
 import { useUser } from '@/app/hooks/useUser';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import { getSocket } from '@/config/socket';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
@@ -57,7 +57,7 @@ const WooForm = () => {
   const [error, setError] = useState<string>('');
 
   const { categories } = useCategories();
-  const { watermarkConfig } = useWatermarkConfig();
+  const { websiteConfigList } = useConfigWebsite();
   const watchShopId = Form.useWatch('watermarkWebsite', form);
 
   const categoriesOptions = useMemo(() => {
@@ -72,12 +72,12 @@ const WooForm = () => {
   }, [categories, watchShopId]);
 
   const watermarkOptions = useMemo(() => {
-    if (!watermarkConfig) return [];
-    return watermarkConfig.map((watermark) => ({
-      label: watermark.shopName,
-      value: watermark._id,
+    if (!websiteConfigList) return [];
+    return websiteConfigList.map((website) => ({
+      label: website.shopName,
+      value: website._id,
     }));
-  }, [watermarkConfig]);
+  }, [websiteConfigList]);
 
   const onFinish = async (value: WooFormValue) => {
     const socketId = dayjs().unix();
@@ -89,7 +89,7 @@ const WooForm = () => {
     const fileOrigin = _get(file[0], 'originFileObj');
 
     const categoriesObject = categories?.find((item) => item._id === category);
-    const watermarkObject = watermarkConfig?.find(
+    const watermarkObject = websiteConfigList?.find(
       (item) => item._id === value.watermarkWebsite
     );
     setDataFile([]);
@@ -181,8 +181,8 @@ const WooForm = () => {
               name='watermarkWebsite'
               label={
                 <span>
-                  Watermark Website{' '}
-                  <Link href='/woo/config-watermark' type='warning'>
+                  Website Website{' '}
+                  <Link href='/woo/config-website' type='warning'>
                     <SettingOutlined />
                   </Link>
                 </span>
@@ -190,12 +190,12 @@ const WooForm = () => {
               rules={[
                 {
                   required: true,
-                  message: 'Please select watermark for website!',
+                  message: 'Please select website for website!',
                 },
               ]}
             >
               <Select
-                placeholder='Select Watermark Website'
+                placeholder='Select Website Website'
                 options={watermarkOptions}
                 showSearch
                 filterOption={(input, option) =>

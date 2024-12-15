@@ -1,7 +1,7 @@
-import { WooCategoryPayload } from '@/app/api/woo/categories-config/route';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
-import { endpoint } from '@/constant/endpoint';
-import { handleErrorMongoDB } from '@/helper/common';
+import { WooCategoryPayload } from "@/app/api/woo/categories-config/route";
+import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
+import { endpoint } from "@/constant/endpoint";
+import { handleErrorMongoDB } from "@/helper/common";
 import {
   Alert,
   Button,
@@ -11,36 +11,37 @@ import {
   Row,
   Typography,
   message,
-} from 'antd';
-import axios from 'axios';
-import { useState } from 'react';
-import { mutate } from 'swr';
-import UpdateCategory, { TypeUpdateCategory } from './UpdateCategoryModal';
+} from "antd";
+import axios from "axios";
+import { useState } from "react";
+import { mutate } from "swr";
+import UpdateCategory, { TypeUpdateCategory } from "./UpdateCategoryModal";
 const { Text } = Typography;
 
 interface CategoryItem {
   category: WooCategoryPayload;
+  accessAble: boolean;
 }
 
-const CategoryItem = ({ category }: CategoryItem) => {
+const CategoryItem = ({ category, accessAble }: CategoryItem) => {
   const [messageApi, contextHolder] = message.useMessage();
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { watermarkConfig } = useWatermarkConfig();
+  const { websiteConfigList } = useConfigWebsite();
 
-  const shop = watermarkConfig?.find(
-    (watermark) => watermark._id === category.shopID
+  const shop = websiteConfigList?.find(
+    (website) => website._id === category.shopID
   );
   const handleDeleteCategory = async (_id: string) => {
     setLoading(true);
     try {
       await axios.delete(endpoint.categoryConfig, { params: { _id } });
       messageApi.open({
-        type: 'success',
-        content: 'Delete category successfully!',
+        type: "success",
+        content: "Delete category successfully!",
       });
-      await mutate([endpoint.categoryConfig, '']);
+      await mutate([endpoint.categoryConfig, ""]);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
@@ -50,7 +51,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
   return (
     <>
       {contextHolder}
-      <Row key={category._id} style={{ width: '100%' }} gutter={[20, 20]}>
+      <Row key={category._id} style={{ width: "100%" }} gutter={[20, 20]}>
         <Col xs={{ span: 8 }} lg={{ span: 6 }}>
           <Text>{category.templateName}</Text>
         </Col>
@@ -61,22 +62,27 @@ const CategoryItem = ({ category }: CategoryItem) => {
           <Text>{shop?.shopName}</Text>
         </Col>
         <Col xs={{ span: 24 }} lg={{ span: 6 }}>
-          <Flex justify='end' gap={20}>
-            <Popconfirm
-              title='Delete the category?'
-              onConfirm={() => handleDeleteCategory(category._id || '')}
-              okText='Yes'
-              cancelText='No'
-            >
-              <Button danger loading={loading} type='primary'>
-                Delete
-              </Button>
-            </Popconfirm>
-            <UpdateCategory
-              _id={category._id}
-              initialForm={category}
-              label={TypeUpdateCategory.EDIT_CATEGORY}
-            />
+          <Flex justify="end" gap={20}>
+            {accessAble ? (
+              <>
+                <Popconfirm
+                  title="Delete the category?"
+                  onConfirm={() => handleDeleteCategory(category._id || "")}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button danger loading={loading} type="primary">
+                    Delete
+                  </Button>
+                </Popconfirm>
+                <UpdateCategory
+                  _id={category._id}
+                  initialForm={category}
+                  label={TypeUpdateCategory.EDIT_CATEGORY}
+                />
+              </>
+            ) : null}
+
             <UpdateCategory
               _id={category._id}
               initialForm={{
@@ -88,7 +94,7 @@ const CategoryItem = ({ category }: CategoryItem) => {
           </Flex>
         </Col>
       </Row>
-      {error ? <Alert message={error} type='error' /> : null}
+      {error ? <Alert message={error} type="error" /> : null}
     </>
   );
 };

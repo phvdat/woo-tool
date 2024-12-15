@@ -1,7 +1,7 @@
 'use client';
 
 import { useCategories } from '@/app/hooks/useCategories';
-import { useWatermarkConfig } from '@/app/hooks/useWatermarkConfig';
+import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import InitialFileTable from '@/components/create-initial-file/InitialFileTable';
 import { handleDownloadFile } from '@/helper/woo';
 import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
@@ -30,7 +30,7 @@ export interface InitialFileValues {
 
 const InitialFile = () => {
   const [form] = Form.useForm();
-  const { watermarkConfig, isLoading: websiteLoading } = useWatermarkConfig();
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const [dataFile, setDataFile] = useState<
     Omit<InitialFileValues, 'website'>[]
@@ -50,12 +50,12 @@ const InitialFile = () => {
   }, [categories, watchShopId]);
 
   const websiteOptions = useMemo(() => {
-    if (!watermarkConfig) return [];
-    return watermarkConfig.map((watermark) => ({
-      label: watermark.shopName,
-      value: watermark._id,
+    if (!websiteConfigList) return [];
+    return websiteConfigList.map((website) => ({
+      label: website.shopName,
+      value: website._id,
     }));
-  }, [watermarkConfig]);
+  }, [websiteConfigList]);
 
   const handlePasteName = () => {
     navigator.clipboard.readText().then((text) => {
@@ -75,7 +75,7 @@ const InitialFile = () => {
 
   const handleSubmit = async (values: InitialFileValues) => {
     const { website, ...data } = values;
-    const name = data.Name;
+    const name = data.Name.replaceAll(/\n/, '').trim();
     const isExistProductName = dataFile.find((item) => item.Name === name);
     if (isExistProductName) {
       message.error('Product name already exist!');
