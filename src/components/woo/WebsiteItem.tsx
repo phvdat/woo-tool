@@ -15,7 +15,6 @@ import {
 import axios from 'axios';
 import { useState } from 'react';
 import UpdateWebsiteListModal from './UpdateWebsiteListModal';
-import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 
 interface WebsiteWebsiteItem {
   website: WooWebsitePayload;
@@ -60,18 +59,17 @@ const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
       children: website.imageHeight,
     },
   ];
-  const { mutate } = useConfigWebsite();
   const [messageApi, contextHolder] = message.useMessage();
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleDeleteCategory = async (_id: string) => {
+  const handleDeleteWebsite = async (_id: string) => {
     setLoading(true);
     try {
-      await axios.delete(endpoint.categoryConfig, { params: { _id } });
+      await axios.delete(endpoint.websiteConfigList, { params: { _id } });
       messageApi.open({
         type: 'success',
-        content: 'Delete category successfully!',
+        content: 'Delete website successfully!',
       });
       await refresh();
     } catch (error) {
@@ -88,7 +86,7 @@ const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
         <Flex justify='end' gap={20}>
           <Popconfirm
             title='Delete the category?'
-            onConfirm={() => handleDeleteCategory(website._id || '')}
+            onConfirm={() => handleDeleteWebsite(website._id || '')}
             okText='Yes'
             cancelText='No'
           >
