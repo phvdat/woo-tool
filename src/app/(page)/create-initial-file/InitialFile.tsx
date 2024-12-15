@@ -75,7 +75,7 @@ const InitialFile = () => {
 
   const handleSubmit = async (values: InitialFileValues) => {
     const { website, ...data } = values;
-    const name = data.Name.replaceAll(/\n/, '').trim();
+    const name = data.Name.replace(/\n/g, '').trim();
     const isExistProductName = dataFile.find((item) => item.Name === name);
     if (isExistProductName) {
       message.error('Product name already exist!');
