@@ -47,6 +47,7 @@ const WooForm = () => {
   const { user, isLoading } = useUser(data?.user?.email || '');
   const [progress, setProgress] = useState<number>(0);
   const [socketId, setSocketId] = useState<number>();
+  const [currentProcess, setCurrentProcess] = useState<string>('');
 
   const socket = useMemo(() => {
     const socket = getSocket();
@@ -84,6 +85,7 @@ const WooForm = () => {
     setSocketId(socketId);
     setError('');
     setProgress(0);
+    setCurrentProcess('');
     setLoading(true);
     const { file, category } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
@@ -131,7 +133,8 @@ const WooForm = () => {
   useEffect(() => {
     socket.on('woo-progress', (payload) => {
       if (_get(payload, 'socketId') !== socketId) return;
-      setProgress(_get(payload, 'progress'));
+      setProgress(_get(payload, 'progress.percent'));
+      setCurrentProcess(_get(payload, 'progress.currentProcess'));
     });
     socket.on('woo-error', (payload) => {
       if (Number(_get(payload, 'socketId')) !== socketId) return;
@@ -247,10 +250,13 @@ const WooForm = () => {
       </Card>
 
       {progress ? (
-        <Progress
-          percent={progress}
-          strokeColor={{ from: '#108ee9', to: '#87d068' }}
-        />
+        <>
+          <Progress
+            percent={progress}
+            strokeColor={{ from: '#108ee9', to: '#87d068' }}
+          />
+          <p>Current line(Excel): {currentProcess + 2}</p>
+        </>
       ) : null}
 
       <Flex justify='center' gap={16} style={{ marginTop: 24 }}>

@@ -106,7 +106,11 @@ export async function POST(request: Request) {
         gapMinutes * 60 + Math.floor(Math.random() * 20),
         'seconds'
       );
-      const progress = Math.floor((result.length / data.length) * 100);
+      const progress = {
+        percent: Math.floor((result.length / data.length) * 100),
+        currentProcess: result.length,
+      };
+
       socket.emit('woo-progress', {
         progress,
         socketId,
