@@ -28,6 +28,14 @@ export interface InitialFileValues {
   website: string;
 }
 
+function convertToAcronym(input: string) {
+  return input
+    .split(/[-\s]+/) // Tách chuỗi thành mảng phân cách bởi khoang cách hoặc -
+    .map((word) => word[0]) // Lấy ký tự đầu tiên của mỗi từ
+    .join('') // Ghép các ký tự lại thành chuỗi
+    .toLowerCase(); // Chuyển thành chữ thường
+}
+
 const InitialFile = () => {
   const [form] = Form.useForm();
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
@@ -190,11 +198,17 @@ const InitialFile = () => {
                   placeholder='Select Category'
                   options={categoriesOptions}
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '')
+                  filterOption={(input, option) => {
+                    const searchFull = (option?.label ?? '')
                       .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                      .includes(input.toLowerCase());
+                    const searchAcronym = convertToAcronym(
+                      option?.label ?? ''
+                    ).includes(input.toLowerCase());
+                    console.log(convertToAcronym(option?.label ?? ''));
+
+                    return searchFull || searchAcronym;
+                  }}
                 />
               </Form.Item>
             </Col>

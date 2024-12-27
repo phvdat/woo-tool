@@ -49,6 +49,10 @@ const Header = () => {
       ),
       key: navigation.createInitialFile,
     },
+    {
+      label: <Link href={navigation.trackingChecker}>Tracking Checker</Link>,
+      key: navigation.trackingChecker,
+    },
   ];
 
   const dropdownItems: MenuProps['items'] = [

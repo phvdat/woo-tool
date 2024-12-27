@@ -8,5 +8,6 @@ const navigation = {
   crawlTool: '/crawl-tool',
   updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',
+  trackingChecker: '/tracking-checker',
 };
 export { navigation };
