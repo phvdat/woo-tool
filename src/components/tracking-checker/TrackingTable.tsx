@@ -54,6 +54,11 @@ const TrackingTable = ({ data }: { data: TrackingOrderCombined[] }) => {
         ],
         filterSearch: true,
         onFilter: (value, record) => record.item_trackings === value,
+        render: (value) => (
+          <a href={`https://t.17track.net/en#nums=${value}`} target='_blank'>
+            {value}
+          </a>
+        ),
       },
       {
         title: 'Tracking Status',
