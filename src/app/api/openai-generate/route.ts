@@ -45,11 +45,11 @@ export async function POST(request: Request) {
     const result: WooCommerce[] = [];
     for (const row of data) {
       const rowData = row as any;
-      const keyWord: string = rowData['Name'];
+      const productName: string = rowData['Name'];
       const categoryRaw = rowData['Categories'];
       const category = categoryRaw.split('>').pop().trim();
       const question = promptQuestion
-        .replaceAll('{product-name}', `"${keyWord}"`)
+        .replaceAll('{product-name}', productName)
         .replaceAll('{category}', category)
         .replaceAll('{website}', website);
       console.log(question);
