@@ -79,7 +79,7 @@ export async function POST(request: Request) {
           (item) => item.category === rowData['Categories']
         ) as unknown as WooFixedOption;
       }
-      if (!categoryObjectByRow || !categoriesObject) {
+      if (!categoryObjectByRow && !categoriesObject) {
         throw new Error('Missing category');
       }
       const imageUrls: string[] = rowData['Images'].split(',');
@@ -101,12 +101,15 @@ export async function POST(request: Request) {
         'YYYY-MM-DD HH:mm:ss'
       );
       result.push(
-        createWooRecord(categoryObjectByRow || categoriesObject, {
-          ...rowData,
-          publishedDate: formattedPublishedDate,
-          images: urlImageList.join(','),
-          name: name,
-        })
+        createWooRecord(
+          categoryObjectByRow || (categoriesObject as WooFixedOption),
+          {
+            ...rowData,
+            publishedDate: formattedPublishedDate,
+            images: urlImageList.join(','),
+            name: name,
+          }
+        )
       );
       publishedDate = publishedDate.add(
         gapMinutes * 60 + Math.floor(Math.random() * 20),

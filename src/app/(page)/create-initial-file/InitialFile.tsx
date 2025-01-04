@@ -125,45 +125,6 @@ const InitialFile = () => {
               }}
             />
           )}
-
-          <Form.Item<InitialFileValues>
-            label='Name'
-            name='Name'
-            rules={[{ required: true, message: 'Please input product name' }]}
-          >
-            <Input
-              suffix={
-                <Button
-                  type='default'
-                  icon={<CopyOutlined />}
-                  onClick={() => handlePasteName()}
-                >
-                  Paste
-                </Button>
-              }
-              allowClear
-            />
-          </Form.Item>
-
-          <Form.Item<InitialFileValues>
-            label='Images'
-            name='Images'
-            rules={[{ required: true, message: 'Please input product images' }]}
-          >
-            <Input
-              suffix={
-                <Button
-                  type='default'
-                  icon={<CopyOutlined />}
-                  onClick={() => handlePasteImages()}
-                >
-                  Paste Multiple
-                </Button>
-              }
-              allowClear
-            />
-          </Form.Item>
-
           <Row gutter={16}>
             <Col span={24} sm={{ span: 12 }}>
               <Form.Item<InitialFileValues>
@@ -206,13 +167,49 @@ const InitialFile = () => {
                       option?.label ?? ''
                     ).includes(input.toLowerCase());
                     console.log(convertToAcronym(option?.label ?? ''));
-
                     return searchFull || searchAcronym;
                   }}
                 />
               </Form.Item>
             </Col>
           </Row>
+          <Form.Item<InitialFileValues>
+            label='Name'
+            name='Name'
+            rules={[{ required: true, message: 'Please input product name' }]}
+          >
+            <Input
+              suffix={
+                <Button
+                  type='default'
+                  icon={<CopyOutlined />}
+                  onClick={() => handlePasteName()}
+                >
+                  Paste
+                </Button>
+              }
+              allowClear
+            />
+          </Form.Item>
+
+          <Form.Item<InitialFileValues>
+            label={
+              <>
+                Images &nbsp;
+                <Button
+                  type='default'
+                  icon={<CopyOutlined />}
+                  onClick={() => handlePasteImages()}
+                >
+                  Paste Multiple
+                </Button>
+              </>
+            }
+            name='Images'
+            rules={[{ required: true, message: 'Please input product images' }]}
+          >
+            <Input.TextArea rows={4} allowClear />
+          </Form.Item>
 
           <Form.Item>
             <Button htmlType='submit' block>
