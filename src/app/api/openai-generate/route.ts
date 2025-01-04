@@ -26,6 +26,7 @@ export async function POST(request: Request) {
   const file = payload.get('file') as File;
   const telegramId = payload.get('telegramId') as string;
   const promptQuestion = payload.get('promptQuestion') as string;
+  const website = payload.get('website') as string;
   const apiKey = payload.get('apiKey') as string;
   const publicTime = Number(payload.get('publicTime'));
   const gapMinutes = Number(payload.get('gapMinutes'));
@@ -49,14 +50,15 @@ export async function POST(request: Request) {
       const category = categoryRaw.split('>').pop().trim();
       const question = promptQuestion
         .replaceAll('{product-name}', `"${keyWord}"`)
-        .replaceAll('{category}', category);
+        .replaceAll('{category}', category)
+        .replaceAll('{website}', website);
       console.log(question);
 
       const responseChatGPT = await sendMessage(question, apiKey);
       const Description = rowData['Description'];
       const finalDescription = Description.replace(
         '(content)',
-        `<p>${responseChatGPT}</p>`
+        `<div>${responseChatGPT}</div>`
       );
 
       const formattedPublishedDate = publishedDate.format(

@@ -2,7 +2,7 @@
 import { useUser } from '@/app/hooks/useUser';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
-import { Alert, Button, Card, Form, Progress, Upload } from 'antd';
+import { Alert, Button, Card, Form, Progress, Select, Upload } from 'antd';
 import axios from 'axios';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
@@ -10,9 +10,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { GAP_MINUTES, PUBLIC_TIME } from '../woo/WooForm';
 import { getSocket } from '@/config/socket';
 import dayjs from 'dayjs';
+import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 
 interface OpenaiFormValues {
   promptQuestion: string;
+  website: string;
   apiKey: string;
   file: FileList;
 }
@@ -24,6 +26,16 @@ const OpenaiContentForm = () => {
     const socket = getSocket();
     return socket.connect();
   }, []);
+
+  const { websiteConfigList } = useConfigWebsite();
+
+  const watermarkOptions = useMemo(() => {
+    if (!websiteConfigList) return [];
+    return websiteConfigList.map((website) => ({
+      label: website.shopName,
+      value: website.shopName,
+    }));
+  }, [websiteConfigList]);
 
   const [loading, setLoading] = useState<boolean>(false);
   const { data } = useSession();
@@ -45,6 +57,7 @@ const OpenaiContentForm = () => {
         formData.append('telegramId', user.telegramId);
         formData.append('promptQuestion', user.promptQuestion);
         formData.append('apiKey', user.apiKey);
+        formData.append('website', value.website);
         formData.append(
           'publicTime',
           (user?.publicTime || PUBLIC_TIME).toString()
@@ -99,6 +112,19 @@ const OpenaiContentForm = () => {
             strokeColor={{ from: '#108ee9', to: '#87d068' }}
           />
         ) : null}
+        <Form.Item<OpenaiFormValues>
+          name='website'
+          label={<span>Website Website</span>}
+        >
+          <Select
+            placeholder='Select Website Website'
+            options={watermarkOptions}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+          />
+        </Form.Item>
 
         <Button htmlType='submit' loading={loading} block type='primary'>
           Process

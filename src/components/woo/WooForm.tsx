@@ -96,11 +96,12 @@ const WooForm = () => {
     );
     setDataFile([]);
 
-    if (fileOrigin && categoriesObject && watermarkObject) {
+    if (fileOrigin && watermarkObject) {
       try {
         const formData = new FormData();
         formData.append('file', fileOrigin);
-        formData.append('categoriesObject', JSON.stringify(categoriesObject));
+        categoriesObject &&
+          formData.append('categoriesObject', JSON.stringify(categoriesObject));
         formData.append('watermarkObject', JSON.stringify(watermarkObject));
         formData.append('telegramId', value.telegramId);
         formData.append(
@@ -138,7 +139,7 @@ const WooForm = () => {
     });
     socket.on('woo-error', (payload) => {
       if (Number(_get(payload, 'socketId')) !== socketId) return;
-      console.log(_get(payload, 'error'));
+      console.log('devvvv', _get(payload, 'error'));
       const errorMessage = `${_get(payload, 'error.status')} - ${_get(
         payload,
         'error.config.url'
@@ -220,7 +221,6 @@ const WooForm = () => {
                   </Link>{' '}
                 </span>
               }
-              rules={[{ required: true, message: 'Please select category!' }]}
             >
               <Select
                 placeholder='Select Category'

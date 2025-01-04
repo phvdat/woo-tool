@@ -34,9 +34,12 @@ export async function POST(request: Request) {
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
-  const categoriesObject = JSON.parse(
-    _toString(payload.get('categoriesObject'))
-  ) as WooCategoryPayload;
+  const categoriesObject = payload.get('categoriesObject')
+    ? (JSON.parse(
+        _toString(payload.get('categoriesObject'))
+      ) as WooCategoryPayload)
+    : null;
+
   const watermarkObject = JSON.parse(
     _toString(payload.get('watermarkObject'))
   ) as WooWebsitePayload;
@@ -75,6 +78,9 @@ export async function POST(request: Request) {
         categoryObjectByRow = categoriesList.find(
           (item) => item.category === rowData['Categories']
         ) as unknown as WooFixedOption;
+      }
+      if (!categoryObjectByRow || !categoriesObject) {
+        throw new Error('Missing category');
       }
       const imageUrls: string[] = rowData['Images'].split(',');
 
