@@ -9,5 +9,8 @@ const navigation = {
   updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',
   trackingChecker: '/tracking-checker',
+  pro: {
+    groqAI: '/pro-features/groq-ai',
+  },
 };
 export { navigation };

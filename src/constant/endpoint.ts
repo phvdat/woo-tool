@@ -9,4 +9,8 @@ export const endpoint = {
   openaiGenerate: '/api/openai-generate',
   crawlList: '/api/crawl/list-url',
   crawlDetail: '/api/crawl/detail-product',
+
+  pro: {
+    groqAI: '/api/pro-features/groqai-generate',
+  },
 };

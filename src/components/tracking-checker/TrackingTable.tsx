@@ -1,5 +1,5 @@
 'use client';
-import { TrackingOrderCombined } from '@/app/(page)/tracking-checker/TrackingChecker';
+import { TrackingOrderCombined } from '@/app/(page)/(standard-features)/tracking-checker/TrackingChecker';
 import { Col, Row, Table, TableProps } from 'antd';
 import dayjs from 'dayjs';
 import { uniqBy } from 'lodash';

@@ -1,4 +1,4 @@
-import { InitialFileValues } from '@/app/(page)/create-initial-file/InitialFile';
+import { InitialFileValues } from '@/app/(page)/(standard-features)/create-initial-file/InitialFile';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Button, message, Popconfirm, Table, TableProps } from 'antd';
 

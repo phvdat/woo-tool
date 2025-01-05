@@ -1,7 +1,7 @@
 import {
   LenfuLOrdersSheet,
   TrackingOrderCombined,
-} from '@/app/(page)/tracking-checker/TrackingChecker';
+} from '@/app/(page)/(standard-features)/tracking-checker/TrackingChecker';
 import { isEmpty } from 'lodash';
 
 // hàm làm sạch dữ liêu
