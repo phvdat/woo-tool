@@ -202,7 +202,7 @@ const UpdateCategoryModal = ({
             name='description'
             label='Description for this category'
           >
-            <TextArea rows={4} placeholder='Html content' />
+            <TextArea rows={8} placeholder='Html content' />
           </Form.Item>
 
           <Form.Item>

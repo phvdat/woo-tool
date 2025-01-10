@@ -1,6 +1,15 @@
 'use client';
 import React, { use, useEffect, useState } from 'react';
-import { Form, InputNumber, Upload, Button, message, Col, Row } from 'antd';
+import {
+  Form,
+  InputNumber,
+  Upload,
+  Button,
+  message,
+  Col,
+  Row,
+  Switch,
+} from 'antd';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { handleDownloadFile } from '@/helper/woo';
@@ -19,7 +28,17 @@ interface FormValues {
   gapFrom: number;
   gapTo: number;
   file: FileList;
+  mixed: boolean;
 }
+
+function shuffle(array: any[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 const UpdatePublishedTime = () => {
   const [form] = Form.useForm();
   const [dataFile, setDataFile] = useState<WooCommerce[]>([]);
@@ -28,7 +47,7 @@ const UpdatePublishedTime = () => {
   const [gapToLocal, setGapToTimeLocal] = useLocalStorage(GAP_TO, 5);
 
   const handleSubmit = async (values: FormValues) => {
-    const { after, gapFrom, gapTo, file } = values;
+    const { after, gapFrom, gapTo, file, mixed } = values;
     setAfterLocal(after);
     setGapFromTimeLocal(gapFrom);
     setGapToTimeLocal(gapTo);
@@ -39,9 +58,12 @@ const UpdatePublishedTime = () => {
     });
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data: WooCommerce[] = XLSX.utils.sheet_to_json(wordSheet);
-
+    let dataMixed: WooCommerce[] = data;
+    if (mixed) {
+      dataMixed = shuffle(data);
+    }
     let publishedDate = dayjs().add(after, 'minute');
-    const result = data.map((row, index) => {
+    const result = dataMixed.map((row, index) => {
       const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;
       if (index != 0) {
         publishedDate = publishedDate.add(gapSeconds, 'second');
@@ -60,6 +82,7 @@ const UpdatePublishedTime = () => {
     form.setFieldValue('after', Number(afterLocal));
     form.setFieldValue('gapFrom', Number(gapFromLocal));
     form.setFieldValue('gapTo', gapToLocal);
+    form.setFieldValue('mixed', true);
   }, []);
 
   return (
@@ -118,6 +141,13 @@ const UpdatePublishedTime = () => {
               Upload Excel
             </Button>
           </Upload>
+        </Form.Item>
+        <Form.Item<FormValues>
+          name='mixed'
+          valuePropName='checked'
+          label='Mixed'
+        >
+          <Switch defaultChecked />
         </Form.Item>
         <Form.Item>
           <Button type='primary' htmlType='submit'>

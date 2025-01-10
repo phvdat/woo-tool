@@ -106,7 +106,7 @@ const InitialFile = () => {
 
   return (
     <div>
-      <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
+      <div style={{ padding: '20px', maxWidth: '1000px', margin: 'auto' }}>
         <Form
           name='initial-file'
           onFinish={handleSubmit}
@@ -152,7 +152,11 @@ const InitialFile = () => {
             <Col span={24} sm={{ span: 12 }}>
               <Form.Item<InitialFileValues>
                 name='Categories'
-                label='Choose Category'
+                label={
+                  <span style={{ color: 'red' }}>
+                    Select Category (Be cautious)
+                  </span>
+                }
                 rules={[{ required: true, message: 'Please select category!' }]}
               >
                 <Select
@@ -174,22 +178,23 @@ const InitialFile = () => {
             </Col>
           </Row>
           <Form.Item<InitialFileValues>
-            label='Name'
-            name='Name'
-            rules={[{ required: true, message: 'Please input product name' }]}
-          >
-            <Input
-              suffix={
+            label={
+              <>
+                Name &nbsp;
                 <Button
                   type='default'
                   icon={<CopyOutlined />}
                   onClick={() => handlePasteName()}
+                  style={{ backgroundColor: '#007BFF' }}
                 >
                   Paste
                 </Button>
-              }
-              allowClear
-            />
+              </>
+            }
+            name='Name'
+            rules={[{ required: true, message: 'Please input product name' }]}
+          >
+            <Input allowClear />
           </Form.Item>
 
           <Form.Item<InitialFileValues>
@@ -200,6 +205,7 @@ const InitialFile = () => {
                   type='default'
                   icon={<CopyOutlined />}
                   onClick={() => handlePasteImages()}
+                  style={{ backgroundColor: '#FFC107' }}
                 >
                   Paste Multiple
                 </Button>
@@ -212,7 +218,12 @@ const InitialFile = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button htmlType='submit' block>
+            <Button
+              htmlType='submit'
+              block
+              type='primary'
+              style={{ width: '100%', backgroundColor: 'green' }}
+            >
               Add Row
             </Button>
           </Form.Item>
