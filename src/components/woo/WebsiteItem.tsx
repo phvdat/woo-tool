@@ -18,7 +18,7 @@ import UpdateWebsiteListModal from './UpdateWebsiteListModal';
 
 interface WebsiteWebsiteItem {
   website: WooWebsitePayload;
-  refresh: any
+  refresh: any;
 }
 
 const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
@@ -94,7 +94,11 @@ const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
               Delete
             </Button>
           </Popconfirm>
-          <UpdateWebsiteListModal _id={website._id} initialForm={website} />
+          <UpdateWebsiteListModal
+            _id={website._id}
+            initialForm={website}
+            refresh={refresh}
+          />
         </Flex>
         {error ? <Alert message={error} type='error' /> : null}
       </Card>

@@ -13,7 +13,7 @@ const { Title } = Typography;
 const ConfigCategories = () => {
   const { data } = useSession();
   const [webSite, setWebSite] = useState('');
-  const { categories, isLoading } = useCategories(webSite);
+  const { categories, isLoading, mutate } = useCategories(webSite);
   const { websiteConfigList } = useConfigWebsite(data?.user?.email || '');
   const options =
     websiteConfigList?.map((item) => ({
@@ -48,11 +48,15 @@ const ConfigCategories = () => {
               key={item._id}
               category={item}
               accessAble={webSite !== ''}
+              refresh={mutate}
             />
           </List.Item>
         )}
       />
-      <UpdateCategory label={TypeUpdateCategory.ADD_CATEGORY} />
+      <UpdateCategory
+        label={TypeUpdateCategory.ADD_CATEGORY}
+        refresh={mutate}
+      />
     </Flex>
   );
 };

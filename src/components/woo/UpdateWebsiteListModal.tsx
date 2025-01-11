@@ -21,7 +21,7 @@ import { useState } from 'react';
 interface AddNewCategoryProps {
   initialForm?: WebsiteFormValue;
   _id?: string;
-  refresh?: any
+  refresh: () => void;
 }
 
 export interface WebsiteFormValue {
@@ -46,10 +46,10 @@ const defaultFormValue: WebsiteFormValue = {
 const UpdateWebsiteListModal = ({
   initialForm = defaultFormValue,
   _id,
-  refresh
+  refresh,
 }: AddNewCategoryProps) => {
   const { data } = useSession();
-  
+
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<WebsiteFormValue>();
@@ -57,15 +57,15 @@ const UpdateWebsiteListModal = ({
   const [loading, setLoading] = useState<boolean>(false);
 
   const createWebsite = async (values: WebsiteFormValue) => {
-    const payload = {...values, owner: data?.user?.email}
-    console.log(payload)
+    const payload = { ...values, owner: data?.user?.email };
+    console.log(payload);
     try {
       await axios.post(endpoint.websiteConfigList, payload);
       messageApi.open({
         type: 'success',
         content: 'Create category successfully!',
       });
-      refresh && await refresh();
+      refresh && (await refresh());
       setIsModalOpen(false);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
@@ -80,9 +80,12 @@ const UpdateWebsiteListModal = ({
         type: 'success',
         content: 'Update category successfully!',
       });
-      await refresh();
+      refresh();
+      console.log('thanh cong');
       setIsModalOpen(false);
     } catch (error) {
+      console.log('errrr ???', error);
+
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
     }

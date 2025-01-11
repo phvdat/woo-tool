@@ -34,12 +34,14 @@ interface UpdateCategoryProps {
   initialForm?: CategoryFormValue;
   _id?: string;
   label: TypeUpdateCategory;
+  refresh: any;
 }
 
 const UpdateCategoryModal = ({
   initialForm,
   _id,
   label,
+  refresh,
 }: UpdateCategoryProps) => {
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,6 +66,7 @@ const UpdateCategoryModal = ({
         content: 'Create category successfully!',
       });
       setIsModalOpen(false);
+      refresh();
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
@@ -78,6 +81,7 @@ const UpdateCategoryModal = ({
         content: 'Update category successfully!',
       });
       setIsModalOpen(false);
+      refresh();
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
