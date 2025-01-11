@@ -105,9 +105,8 @@ export async function POST(request: Request) {
           categoryObjectByRow || (categoriesObject as WooFixedOption),
           {
             ...rowData,
-            publishedDate: formattedPublishedDate,
-            images: urlImageList.join(','),
-            name: name,
+            'Published Date': formattedPublishedDate,
+            Images: urlImageList.join(','),
           }
         )
       );

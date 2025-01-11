@@ -27,7 +27,6 @@ export interface WooCommerce {
   'Sale price': string;
   'Regular price': string;
   Categories: string;
-  Tags: string;
   'Shipping class': string;
   Images: string;
   'Download limit': string;

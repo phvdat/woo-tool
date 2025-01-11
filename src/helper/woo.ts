@@ -12,9 +12,10 @@ export interface WooFixedOption {
   shopID?: string;
 }
 export interface WooDynamicOption {
-  name: string;
-  publishedDate: string;
-  images: string;
+  Name: string;
+  'Published Date': string;
+  Images: string;
+  [key: string]: string;
 }
 
 const regexTagsReplace = /[^a-zA-Z0-9]+/g;
@@ -40,20 +41,23 @@ export function createWooRecord(
     category,
     description = '',
   }: WooFixedOption,
-  { name, images, publishedDate }: WooDynamicOption
+  wooDynamic: WooDynamicOption
 ): WooCommerce {
   const categoryChild = category.split('>').pop()?.trim();
   const record: WooCommerce = {
     ID: '',
     Type: 'simple',
     SKU: generateSKU(SKUPrefix),
-    Name: name,
+    ...wooDynamic,
     Published: published,
-    'Published Date': publishedDate,
+    Description: description,
+    Categories: category,
+    'Sale price': salePrice,
+    'Regular price': regularPrice,
+    'Meta: rank_math_focus_keyword': `${wooDynamic.Name},${categoryChild}`,
     'Is featured?': '0',
     'Visibility in catalog': 'visible',
     'Short description': '',
-    Description: description,
     'Date sale price starts': '',
     'Date sale price ends': '',
     'Tax status': 'taxable',
@@ -69,12 +73,7 @@ export function createWooRecord(
     'Height (cm)': '',
     'Allow customer reviews?': '1',
     'Purchase note': '',
-    'Sale price': salePrice,
-    'Regular price': regularPrice,
-    Categories: category,
-    Tags: name.replaceAll(regexTagsReplace, ','),
     'Shipping class': '',
-    Images: images,
     'Download limit': '',
     'Download expiry days': '',
     Parent: '',
@@ -84,7 +83,6 @@ export function createWooRecord(
     'External URL': '',
     'Button text': '',
     Position: '0',
-    'Meta: rank_math_focus_keyword': `${name},${categoryChild}`,
   };
   return record;
 }
