@@ -1,4 +1,5 @@
 import { getSocket } from '@/config/socket';
+import deepSeek from '@/services/deepseek';
 import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
 import dayjs from 'dayjs';
@@ -54,11 +55,11 @@ export async function POST(request: Request) {
         .replaceAll('{website}', website);
       console.log(question);
 
-      const responseChatGPT = await sendMessage(question, apiKey);
+      const responseChatGPT = await deepSeek(question, apiKey);
       const Description = rowData['Description'];
       const finalDescription = Description.replace(
         '(content)',
-        `<div>${responseChatGPT}</div>`
+        `<p>${responseChatGPT}</p>`
       );
 
       const formattedPublishedDate = publishedDate.format(
