@@ -1,10 +1,11 @@
 'use client';
 import { useUser } from '@/app/hooks/useUser';
 import { UsersFormValues } from '@/components/management-users/ManagementUsersForm';
+import ManagementStorage from '@/components/setting/ManagementStorage';
 import { endpoint } from '@/constant/endpoint';
 import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
-import { Button, Divider, Form, Input, InputNumber } from 'antd';
+import { Button, Divider, Flex, Form, Input, InputNumber } from 'antd';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -119,12 +120,13 @@ const Setting = ({ isAdmin }: SettingProps) => {
         <Button type='primary' htmlType='submit' loading={loading}>
           Save
         </Button>
-        {isAdmin && (
-          <Button href={navigation.managementUser} style={{ marginLeft: 24 }}>
-            Management Users
-          </Button>
-        )}
       </Form>
+      {isAdmin && (
+        <Flex vertical style={{ marginTop: 20 }} gap={20}>
+          <Button href={navigation.managementUser}>Management Users</Button>
+          <ManagementStorage />
+        </Flex>
+      )}
     </div>
   );
 };
