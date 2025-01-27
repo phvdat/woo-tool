@@ -2,7 +2,16 @@
 import { useUser } from '@/app/hooks/useUser';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
-import { Alert, Button, Card, Form, Progress, Select, Upload } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  Progress,
+  Select,
+  Switch,
+  Upload,
+} from 'antd';
 import axios from 'axios';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
@@ -17,6 +26,7 @@ interface OpenaiFormValues {
   website: string;
   apiKey: string;
   file: FileList;
+  mixed: boolean;
 }
 
 const OpenaiContentForm = () => {
@@ -47,13 +57,14 @@ const OpenaiContentForm = () => {
     setSocketId(socketId);
     setProgress(0);
     setLoading(true);
-    const { file } = value;
+    const { file, mixed } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
 
     if (fileOrigin && user) {
       try {
         const formData = new FormData();
         formData.append('file', fileOrigin);
+        formData.append('mixed', String(mixed));
         formData.append('telegramId', user.telegramId);
         formData.append('promptQuestion', user.promptQuestion);
         formData.append('apiKey', user.apiKey);
@@ -62,10 +73,8 @@ const OpenaiContentForm = () => {
           'publicTime',
           (user?.publicTime || PUBLIC_TIME).toString()
         );
-        formData.append(
-          'gapMinutes',
-          (user?.gapMinutes || GAP_MINUTES).toString()
-        );
+        formData.append('gapFrom', (user?.gapFrom || GAP_MINUTES).toString());
+        formData.append('gapTo', (user?.gapTo || GAP_MINUTES).toString());
         formData.append('socketId', socketId.toString());
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
@@ -124,6 +133,14 @@ const OpenaiContentForm = () => {
               (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
             }
           />
+        </Form.Item>
+
+        <Form.Item<OpenaiFormValues>
+          name='mixed'
+          valuePropName='checked'
+          label='Mixed'
+        >
+          <Switch defaultChecked />
         </Form.Item>
 
         <Button htmlType='submit' loading={loading} block type='primary'>

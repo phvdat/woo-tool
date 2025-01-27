@@ -5,7 +5,16 @@ import ManagementStorage from '@/components/setting/ManagementStorage';
 import { endpoint } from '@/constant/endpoint';
 import { navigation } from '@/constant/navigation';
 import { handleErrorMongoDB } from '@/helper/common';
-import { Button, Divider, Flex, Form, Input, InputNumber } from 'antd';
+import {
+  Button,
+  Col,
+  Divider,
+  Flex,
+  Form,
+  Input,
+  InputNumber,
+  Row,
+} from 'antd';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -84,17 +93,34 @@ const Setting = ({ isAdmin }: SettingProps) => {
           />
         </Form.Item>
 
-        <Form.Item<UsersFormValues>
-          name='gapMinutes'
-          label='Gap Minutes'
-          shouldUpdate
-        >
-          <InputNumber
-            type='text'
-            placeholder='Enter gap minutes for public product'
-            style={{ width: '100%' }}
-          />
-        </Form.Item>
+        <Row gutter={[20, 20]}>
+          <Col span={12}>
+            <Form.Item<UsersFormValues>
+              label='Gap Time From'
+              name='gapFrom'
+              rules={[{ required: true, message: 'Please input gap time!' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder='From'
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item<UsersFormValues>
+              label='Gap Time To'
+              name='gapTo'
+              rules={[{ required: true, message: 'Please input gap time!' }]}
+            >
+              <InputNumber
+                min={0}
+                style={{ width: '100%' }}
+                placeholder='From'
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Divider />
 

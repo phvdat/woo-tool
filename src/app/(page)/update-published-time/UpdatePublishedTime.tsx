@@ -1,23 +1,23 @@
 'use client';
-import React, { use, useEffect, useState } from 'react';
-import {
-  Form,
-  InputNumber,
-  Upload,
-  Button,
-  message,
-  Col,
-  Row,
-  Switch,
-} from 'antd';
-import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import { normFile, publishedTimeHelper } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
-import { normFile } from '@/helper/common';
+import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Col,
+  Form,
+  InputNumber,
+  message,
+  Row,
+  Switch,
+  Upload,
+} from 'antd';
+import { shuffle } from 'lodash';
 import _get from 'lodash/get';
-import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+import * as XLSX from 'xlsx';
 
 const PUB_TIME_AFTER = 'PUB_TIME_AFTER';
 const GAP_FROM = 'GAP_FROM';
@@ -29,14 +29,6 @@ interface FormValues {
   gapTo: number;
   file: FileList;
   mixed: boolean;
-}
-
-function shuffle(array: any[]) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
 }
 
 const UpdatePublishedTime = () => {
@@ -59,21 +51,11 @@ const UpdatePublishedTime = () => {
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data: WooCommerce[] = XLSX.utils.sheet_to_json(wordSheet);
     let dataMixed: WooCommerce[] = data;
+
     if (mixed) {
       dataMixed = shuffle(data);
     }
-    let publishedDate = dayjs().add(after, 'minute');
-    const result = dataMixed.map((row, index) => {
-      const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;
-      if (index != 0) {
-        publishedDate = publishedDate.add(gapSeconds, 'second');
-      }
-
-      return {
-        ...row,
-        'Published Date': publishedDate.format('YYYY-MM-DD HH:mm:ss'),
-      };
-    });
+    const result = publishedTimeHelper(dataMixed, after, gapFrom, gapTo);
     setDataFile(result);
     message.success('File processed successfully!');
   };

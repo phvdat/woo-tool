@@ -1,9 +1,9 @@
 import { getSocket } from '@/config/socket';
+import { publishedTimeHelper } from '@/helper/common';
 import deepSeek from '@/services/deepseek';
-import { sendMessage } from '@/services/send-message';
 import { WooCommerce } from '@/types/woo';
-import dayjs from 'dayjs';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
+import { shuffle } from 'lodash';
 import _get from 'lodash/get';
 import _toString from 'lodash/toString';
 import moment from 'moment';
@@ -29,10 +29,11 @@ export async function POST(request: Request) {
   const promptQuestion = payload.get('promptQuestion') as string;
   const website = payload.get('website') as string;
   const apiKey = payload.get('apiKey') as string;
+  const mixed = payload.get('mixed') as string;
   const publicTime = Number(payload.get('publicTime'));
-  const gapMinutes = Number(payload.get('gapMinutes'));
+  const gapFrom = Number(payload.get('gapFrom'));
+  const gapTo = Number(payload.get('gapTo'));
   const socketId = Number(payload.get('socketId'));
-  let publishedDate = dayjs().add(publicTime, 'minute');
 
   try {
     const workbook = XLSX.read(await file.arrayBuffer(), {
@@ -62,23 +63,27 @@ export async function POST(request: Request) {
         `<p>${responseChatGPT}</p>`
       );
 
-      const formattedPublishedDate = publishedDate.format(
-        'YYYY-MM-DD HH:mm:ss'
-      );
       result.push({
         ...rowData,
         Description: finalDescription,
-        'Published Date': formattedPublishedDate,
       });
-      publishedDate = publishedDate.add(
-        gapMinutes * 60 + Math.floor(Math.random() * 20),
-        'seconds'
-      );
       const progress = Math.floor((result.length / data.length) * 100);
       socket.emit('openai-progress', { progress, socketId });
     }
+    let resultMixed = result;
+
+    if (mixed === 'true') {
+      resultMixed = shuffle(resultMixed);
+    }
+
+    const resultPublished = publishedTimeHelper(
+      resultMixed,
+      publicTime,
+      gapFrom,
+      gapTo
+    );
     // create excel from result and send file to telegram id by bot
-    const ws = XLSX.utils.json_to_sheet(result);
+    const ws = XLSX.utils.json_to_sheet(resultPublished);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
