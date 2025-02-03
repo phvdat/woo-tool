@@ -1,4 +1,4 @@
-import { CreateWebsite } from '@/helper/website';
+import { addWatermark } from '@/helper/website';
 import { createWooRecord, WooFixedOption } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
@@ -66,7 +66,9 @@ export async function POST(request: Request) {
     const logoResponse = await axios.get(watermarkObject.logoUrl, {
       responseType: 'arraybuffer',
     });
+    let i = 0;
     for (const row of data) {
+      i += 1;
       const rowData = row as any;
       const name: string = rowData['Name'];
       const fit = rowData['Fit'];
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
       }
       const imageUrls: string[] = rowData['Images'].split(',');
 
-      const urlImageList = await CreateWebsite({
+      const urlImageList = await addWatermark({
         imageHeight: Number(watermarkObject.imageHeight),
         imageWidth: Number(watermarkObject.imageWidth),
         logoHeight: Number(watermarkObject.logoHeight),
@@ -100,16 +102,20 @@ export async function POST(request: Request) {
       const formattedPublishedDate = publishedDate.format(
         'YYYY-MM-DD HH:mm:ss'
       );
-      result.push(
-        createWooRecord(
-          categoryObjectByRow || (categoriesObject as WooFixedOption),
-          {
-            ...rowData,
-            'Published Date': formattedPublishedDate,
-            Images: urlImageList.join(','),
-          }
-        )
-      );
+      if (!urlImageList) {
+        socket.emit('image-get-failed', { line: i, socketId });
+      } else {
+        result.push(
+          createWooRecord(
+            categoryObjectByRow || (categoriesObject as WooFixedOption),
+            {
+              ...rowData,
+              'Published Date': formattedPublishedDate,
+              Images: urlImageList?.join(','),
+            }
+          )
+        );
+      }
       publishedDate = publishedDate.add(
         gapMinutes * 60 + Math.floor(Math.random() * 20),
         'seconds'

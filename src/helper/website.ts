@@ -22,7 +22,7 @@ interface CreateWebsiteParam {
 
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
 
-export async function CreateWebsite({
+export async function addWatermark({
   logoWidth,
   logoHeight,
   imageWidth,
@@ -86,6 +86,6 @@ export async function CreateWebsite({
     deleteFolderRecursive(imagesFolderPath);
     return imageUrlList;
   } catch (error) {
-    throw error;
+    console.log('create website', error);
   }
 }

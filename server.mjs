@@ -24,6 +24,9 @@ app.prepare().then(() => {
     socket.on('openai-progress', (payload) => {
       io.emit('openai-progress', payload);
     });
+    socket.on('image-get-failed', (payload) => {
+      io.emit('image-get-failed', payload);
+    });
   });
 
   httpServer

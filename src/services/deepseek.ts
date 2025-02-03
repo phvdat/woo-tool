@@ -11,7 +11,7 @@ async function deepSeek(message: string, apiKey: string) {
     model: 'deepseek-chat',
   });
 
-  const content = completion.choices[0].message.content;
+  const content = completion.choices[0].message.content?.replaceAll('**', '');
   return content;
 }
 

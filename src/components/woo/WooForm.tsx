@@ -48,7 +48,7 @@ const WooForm = () => {
   const [progress, setProgress] = useState<number>(0);
   const [socketId, setSocketId] = useState<number>();
   const [currentProcess, setCurrentProcess] = useState<string>('');
-
+  const [errorImageIndex, setErrorImageIndex] = useState('');
   const socket = useMemo(() => {
     const socket = getSocket();
     return socket.connect();
@@ -136,6 +136,10 @@ const WooForm = () => {
       if (_get(payload, 'socketId') !== socketId) return;
       setProgress(_get(payload, 'progress.percent'));
       setCurrentProcess(_get(payload, 'progress.currentProcess'));
+    });
+    socket.on('image-get-failed', (payload) => {
+      if (_get(payload, 'socketId') !== socketId) return;
+      setErrorImageIndex(errorImageIndex + ' ' + _get(payload, 'line'));
     });
     socket.on('woo-error', (payload) => {
       if (Number(_get(payload, 'socketId')) !== socketId) return;
@@ -275,6 +279,13 @@ const WooForm = () => {
       </Flex>
       {error && (
         <Alert message={error} type='error' style={{ marginTop: 24 }} />
+      )}
+      {errorImageIndex && (
+        <Alert
+          message={'Image error' + errorImageIndex}
+          type='error'
+          style={{ marginTop: 24 }}
+        />
       )}
     </Form>
   );
