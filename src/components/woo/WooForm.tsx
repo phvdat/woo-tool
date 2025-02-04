@@ -108,10 +108,8 @@ const WooForm = () => {
           'publicTime',
           (user?.publicTime || PUBLIC_TIME).toString()
         );
-        formData.append(
-          'gapMinutes',
-          (user?.gapMinutes || GAP_MINUTES).toString()
-        );
+        formData.append('gapFrom', (user?.gapFrom || GAP_MINUTES).toString());
+        formData.append('gapTo', (user?.gapTo || GAP_MINUTES).toString());
         formData.append('socketId', socketId.toString());
         const { data } = await axios.post<WooCommerce[]>(
           endpoint.wooCreate,

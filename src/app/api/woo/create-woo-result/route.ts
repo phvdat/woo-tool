@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 import axios from 'axios';
 import { getSocket } from '@/config/socket';
 import { connectToDatabase } from '@/lib/mongodb';
+import { publishedTimeHelper } from '@/helper/common';
 
 const CATEGORIES_COLLECTION = 'categories';
 
@@ -45,9 +46,9 @@ export async function POST(request: Request) {
   ) as WooWebsitePayload;
   const telegramId = payload.get('telegramId') as string;
   const publicTime = Number(payload.get('publicTime'));
-  const gapMinutes = Number(payload.get('gapMinutes'));
+  const gapFrom = Number(payload.get('gapFrom'));
+  const gapTo = Number(payload.get('gapTo'));
   const socketId = Number(payload.get('socketId'));
-  let publishedDate = dayjs().add(publicTime, 'minute');
   const categoriesList = await db
     .collection(CATEGORIES_COLLECTION)
     .find({ shopID: { $regex: watermarkObject._id, $options: 'i' } })
@@ -99,9 +100,6 @@ export async function POST(request: Request) {
         logoResponse,
       });
 
-      const formattedPublishedDate = publishedDate.format(
-        'YYYY-MM-DD HH:mm:ss'
-      );
       if (!urlImageList) {
         socket.emit('image-get-failed', { line: i, socketId });
       } else {
@@ -110,16 +108,11 @@ export async function POST(request: Request) {
             categoryObjectByRow || (categoriesObject as WooFixedOption),
             {
               ...rowData,
-              'Published Date': formattedPublishedDate,
               Images: urlImageList?.join(','),
             }
           )
         );
       }
-      publishedDate = publishedDate.add(
-        gapMinutes * 60 + Math.floor(Math.random() * 20),
-        'seconds'
-      );
       const progress = {
         percent: Math.floor((result.length / data.length) * 100),
         currentProcess: result.length,
@@ -130,8 +123,14 @@ export async function POST(request: Request) {
         socketId,
       });
     }
+    const resultPublished = publishedTimeHelper(
+      result,
+      publicTime,
+      gapFrom,
+      gapTo
+    );
     // create excel from result and send file to telegram id by bot
-    const ws = XLSX.utils.json_to_sheet(result);
+    const ws = XLSX.utils.json_to_sheet(resultPublished);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
