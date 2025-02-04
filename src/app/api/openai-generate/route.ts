@@ -1,5 +1,6 @@
 import { getSocket } from '@/config/socket';
 import { publishedTimeHelper } from '@/helper/common';
+import chatgpt from '@/services/chatgpt';
 import deepSeek from '@/services/deepseek';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
@@ -56,7 +57,8 @@ export async function POST(request: Request) {
         .replaceAll('{website}', website);
       console.log(question);
 
-      const responseChatGPT = await deepSeek(question, apiKey);
+      // const responseChatGPT = await deepSeek(question, apiKey);
+      const responseChatGPT = await chatgpt(question, apiKey);
       const Description = rowData['Description'];
       const finalDescription = Description.replace(
         '(content)',
