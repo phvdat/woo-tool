@@ -14,6 +14,15 @@ import axios from 'axios';
 import { getSocket } from '@/config/socket';
 import { connectToDatabase } from '@/lib/mongodb';
 import { publishedTimeHelper } from '@/helper/common';
+import axiosRetry from 'axios-retry';
+
+axiosRetry(axios, {
+  retries: 3, // Số lần thử lại tối đa
+  retryDelay: (retryCount) => retryCount * 2000, // Tăng thời gian chờ giữa mỗi lần retry
+  retryCondition: (error) => {
+    return error.response?.status === 520 || !error.response; // Chỉ retry khi lỗi 520 hoặc không có phản hồi
+  },
+});
 
 const CATEGORIES_COLLECTION = 'categories';
 

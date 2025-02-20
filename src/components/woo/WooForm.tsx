@@ -86,6 +86,7 @@ const WooForm = () => {
     setError('');
     setProgress(0);
     setCurrentProcess('');
+    setErrorImageIndex('');
     setLoading(true);
     const { file, category } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
