@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
     const date = moment().format('YYYY-MM-DD-HH-mm-ss');
-    const fileName = `woo-openai-${date}.csv`;
+    const fileName = `${website.replace('.com', '')}-AI-${date}.csv`;
     writeFileSync(fileName, buffer);
     const stream = createReadStream(fileName);
     bot

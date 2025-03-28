@@ -110,7 +110,15 @@ const OpenaiContentForm = () => {
           getValueFromEvent={normFile}
           rules={[{ required: true, message: 'Please upload file!' }]}
         >
-          <Upload maxCount={1} style={{ width: '100%' }}>
+          <Upload
+            maxCount={1}
+            style={{ width: '100%' }}
+            onChange={(info) => {
+              const name = _get(info, 'file.originFileObj.name', '');
+              const website = name.split('-')[0] + '.com';
+              form.setFieldValue('website', website);
+            }}
+          >
             <Button block>Upload file excel</Button>
           </Upload>
         </Form.Item>

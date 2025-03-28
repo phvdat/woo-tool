@@ -1,6 +1,11 @@
+import { getSocket } from '@/config/socket';
+import { publishedTimeHelper } from '@/helper/common';
 import { addWatermark } from '@/helper/website';
 import { createWooRecord, WooFixedOption } from '@/helper/woo';
+import { connectToDatabase } from '@/lib/mongodb';
 import { WooCommerce } from '@/types/woo';
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import _get from 'lodash/get';
 import _toString from 'lodash/toString';
@@ -9,12 +14,6 @@ import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
 import { WooCategoryPayload } from '../categories-config/route';
 import { WooWebsitePayload } from '../website-config/route';
-import dayjs from 'dayjs';
-import axios from 'axios';
-import { getSocket } from '@/config/socket';
-import { connectToDatabase } from '@/lib/mongodb';
-import { publishedTimeHelper } from '@/helper/common';
-import axiosRetry from 'axios-retry';
 
 axiosRetry(axios, {
   retries: 3, // Số lần thử lại tối đa
@@ -144,9 +143,9 @@ export async function POST(request: Request) {
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
     const date = moment().format('YYYY-MM-DD-HH-mm-ss');
-    const fileName = `woo-${
+    const fileName = `${
       watermarkObject.shopName.split('.')[0]
-    }-${date}.csv`;
+    }-WOO-${date}.csv`;
     writeFileSync(fileName, buffer);
     const stream = createReadStream(fileName);
     bot
