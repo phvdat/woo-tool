@@ -4,7 +4,6 @@ import { storage } from '@/lib/firebase';
 import axios from 'axios';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
-import moment from 'moment';
 import sharp from 'sharp';
 
 interface CreateWebsiteParam {
@@ -71,11 +70,13 @@ export async function addWatermark({
           .composite([{ input: resizedLogo, gravity: 'center' }])
           .jpeg({ quality })
           .toBuffer();
-        writeFileSync(imagePath, buffer);
+        writeFileSync(imagePath, buffer as any as string);
         await addMetadata({ name, shopName, imagePath });
         // upload imagePath to firebase storage
-        const date = moment().format('YYYY-MM');
-        const storageRef = ref(storage, `${imageName}`);
+        const storageRef = ref(
+          storage,
+          `${shopName.replace('.com', '')}/${imageName}`
+        );
         const fileImage = readFileSync(imagePath);
         const blob = new Blob([fileImage], { type: 'image/jpeg' });
         await uploadBytes(storageRef, blob);
@@ -89,5 +90,6 @@ export async function addWatermark({
     return imageUrlList;
   } catch (error) {
     console.log('create website', error);
+    return images;
   }
 }
