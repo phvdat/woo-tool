@@ -4,7 +4,11 @@ import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import InitialFileTable from '@/components/create-initial-file/InitialFileTable';
 import { handleDownloadFile } from '@/helper/woo';
-import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
+import {
+  CopyOutlined,
+  DownloadOutlined,
+  RollbackOutlined,
+} from '@ant-design/icons';
 import {
   Button,
   Col,
@@ -16,6 +20,7 @@ import {
   Spin,
   Table,
 } from 'antd';
+import _capitalize from 'lodash/capitalize';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -81,6 +86,11 @@ const InitialFile = () => {
     });
   };
 
+  const setPrevCategory = () => {
+    const prevCategory = dataFile[dataFile.length - 1]?.Categories || '';
+    form.setFieldValue('Categories', prevCategory);
+  };
+
   const handleSubmit = async (values: InitialFileValues) => {
     const { website, ...data } = values;
     const name = data.Name.replace(/\n/g, '').trim();
@@ -92,6 +102,7 @@ const InitialFile = () => {
       setDataLocal(JSON.stringify([...dataFile, data]));
       form.setFieldValue('Name', '');
       form.setFieldValue('Images', '');
+      form.setFieldValue('Categories', '');
       message.success('Product added successfully!');
     }
   };
@@ -162,6 +173,7 @@ const InitialFile = () => {
                 <Select
                   placeholder='Select Category'
                   options={categoriesOptions}
+                  suffixIcon={<RollbackOutlined onClick={setPrevCategory} />}
                   showSearch
                   filterOption={(input, option) => {
                     const searchFull = (option?.label ?? '')
@@ -194,7 +206,25 @@ const InitialFile = () => {
             name='Name'
             rules={[{ required: true, message: 'Please input product name' }]}
           >
-            <Input allowClear />
+            <Input
+              allowClear
+              suffix={
+                <Button
+                  onClick={() => {
+                    form.setFieldValue(
+                      'Name',
+                      form
+                        .getFieldValue('Name')
+                        .split(' ')
+                        .map(_capitalize)
+                        .join(' ')
+                    );
+                  }}
+                >
+                  Capitalize
+                </Button>
+              }
+            />
           </Form.Item>
 
           <Form.Item<InitialFileValues>

@@ -23,6 +23,12 @@ export function publishedTimeHelper(
   gapFrom: number,
   gapTo: number
 ) {
+  if (after == 0 && gapFrom == 0 && gapTo == 0) {
+    return data.map((row) => {
+      delete row['Published Date'];
+      return row;
+    });
+  }
   let publishedDate = dayjs().add(after, 'minute');
   const result = data.map((row, index) => {
     const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;

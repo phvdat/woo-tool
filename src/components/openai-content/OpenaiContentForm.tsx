@@ -69,12 +69,9 @@ const OpenaiContentForm = () => {
         formData.append('promptQuestion', user.promptQuestion);
         formData.append('apiKey', user.apiKey);
         formData.append('website', value.website);
-        formData.append(
-          'publicTime',
-          (user?.publicTime || PUBLIC_TIME).toString()
-        );
-        formData.append('gapFrom', (user?.gapFrom || GAP_MINUTES).toString());
-        formData.append('gapTo', (user?.gapTo || GAP_MINUTES).toString());
+        formData.append('publicTime', (user?.publicTime || 0).toString());
+        formData.append('gapFrom', (user?.gapFrom || 0).toString());
+        formData.append('gapTo', (user?.gapTo || 0).toString());
         formData.append('socketId', socketId.toString());
         await axios.post(endpoint.openaiGenerate, formData);
       } catch (error: any) {
