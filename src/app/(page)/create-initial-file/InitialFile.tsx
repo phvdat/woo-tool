@@ -72,7 +72,7 @@ const InitialFile = () => {
 
   const handlePasteName = () => {
     navigator.clipboard.readText().then((text) => {
-      form.setFieldValue('Name', text);
+      form.setFieldValue('Name', text.replace(/\n/g, '').trim());
     });
   };
 
@@ -173,7 +173,18 @@ const InitialFile = () => {
                 <Select
                   placeholder='Select Category'
                   options={categoriesOptions}
-                  suffixIcon={<RollbackOutlined onClick={setPrevCategory} />}
+                  suffixIcon={
+                    <RollbackOutlined
+                      autoCapitalize=''
+                      onClick={setPrevCategory}
+                      style={{
+                        fontSize: '20px',
+                        padding: '2px 12px',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                      }}
+                    />
+                  }
                   showSearch
                   filterOption={(input, option) => {
                     const searchFull = (option?.label ?? '')
@@ -210,6 +221,7 @@ const InitialFile = () => {
               allowClear
               suffix={
                 <Button
+                  tabIndex={-1}
                   onClick={() => {
                     form.setFieldValue(
                       'Name',
