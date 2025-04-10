@@ -3,6 +3,7 @@
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import InitialFileTable from '@/components/create-initial-file/InitialFileTable';
+import { convertToAcronym } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import {
   CopyOutlined,
@@ -31,14 +32,6 @@ export interface InitialFileValues {
   Images: string;
   Categories: string;
   website: string;
-}
-
-function convertToAcronym(input: string) {
-  return input
-    .split(/[-\s]+/) // Tách chuỗi thành mảng phân cách bởi khoang cách hoặc -
-    .map((word) => word[0]) // Lấy ký tự đầu tiên của mỗi từ
-    .join('') // Ghép các ký tự lại thành chuỗi
-    .toLowerCase(); // Chuyển thành chữ thường
 }
 
 const InitialFile = () => {

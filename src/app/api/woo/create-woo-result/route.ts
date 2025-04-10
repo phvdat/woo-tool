@@ -159,8 +159,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.log('error api woo', error);
     socket.emit('woo-error', { error, socketId });
-    return Response.json(error, {
-      status: _get(error, 'response.status', 500),
-    });
+    throw error;
   }
 }

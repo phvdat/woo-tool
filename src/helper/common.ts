@@ -43,3 +43,11 @@ export function publishedTimeHelper(
   });
   return result;
 }
+
+export function convertToAcronym(input: string) {
+  return input
+    .split(/[-\s]+/) // Tách chuỗi thành mảng phân cách bởi khoang cách hoặc -
+    .map((word) => word[0]) // Lấy ký tự đầu tiên của mỗi từ
+    .join('') // Ghép các ký tự lại thành chuỗi
+    .toLowerCase(); // Chuyển thành chữ thường
+}
