@@ -157,12 +157,13 @@ function ConvertHACFile() {
             renderItem={(item, index) => (
               <List.Item>
                 <Row style={{ width: '100%' }} gutter={12}>
-                  <Col span={24} sm={{ span: 12 }}>
+                  <Col span={24} lg={{ span: 12 }}>
                     <Flex style={{ width: '100%' }} gap={12} wrap>
                       <Button
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => handleDelete(index)}
+                        style={{ flex: 1 }}
                       >
                         Xoá
                       </Button>
@@ -172,6 +173,7 @@ function ConvertHACFile() {
                         onChange={(value) => handleCategoryChange(index, value)}
                         options={categoriesOptions}
                         showSearch
+                        style={{ flex: 3 }}
                         filterOption={(input, option) => {
                           const searchFull = (option?.label ?? '')
                             .toLowerCase()
@@ -190,14 +192,20 @@ function ConvertHACFile() {
                         onChange={(e) =>
                           handleNameChange(index, e.target.value)
                         }
-                        style={{ maxWidth: '500px', minWidth: 200 }}
+                        style={{ width: '100%' }}
                       />
                     </Flex>
                   </Col>
-                  <Col span={24} sm={{ span: 12 }}>
+                  <Col span={24} lg={{ span: 12 }}>
                     <Flex gap={12}>
                       {item.Images.split(',').map((img: string, idx) => (
-                        <Image src={img} width={100} height={100} key={idx} />
+                        <Image
+                          src={img}
+                          width={100}
+                          height={100}
+                          key={idx}
+                          alt='product'
+                        />
                       ))}
                     </Flex>
                   </Col>

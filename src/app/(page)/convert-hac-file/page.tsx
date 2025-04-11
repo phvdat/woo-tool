@@ -1,7 +1,7 @@
 import ConvertHACFile from './ConvertHACFile';
 
-async function CrawlToolPage() {
+async function ConvertHACFilePage() {
   return <ConvertHACFile />;
 }
 
-export default CrawlToolPage;
+export default ConvertHACFilePage;
