@@ -9,7 +9,7 @@ const navigation = {
   updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',
   trackingChecker: '/tracking-checker',
-  convertHACFile: '/convert-hac-file',
+  convertFile: '/convert-file',
   excelSplitter: '/excel-splitter',
 };
 export { navigation };

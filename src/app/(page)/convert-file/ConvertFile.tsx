@@ -2,34 +2,28 @@
 
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
-import { convertToAcronym, normFile } from '@/helper/common';
+import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import { normFile } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
-import { DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Col,
-  Flex,
-  Form,
-  Image,
-  Input,
-  List,
-  Row,
-  Select,
-  Space,
-  Spin,
-  Upload,
-} from 'antd';
-import { useMemo, useState } from 'react';
+import { DownloadOutlined } from '@ant-design/icons';
+import { Button, Col, Form, Row, Select, Spin, Upload } from 'antd';
+import { useMemo } from 'react';
+import { FixedSizeList as List } from 'react-window';
+import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
-interface Product {
+import ProductItem from './ProductItem';
+
+const CONVERT_DATA = 'CONVERT_DATA';
+export interface Product {
   key: number;
   Name: string;
   Images: string;
   Categories: string;
 }
-function ConvertHACFile() {
+function ConvertFile() {
+  const matches = useMediaQuery('(min-width: 992px)');
   const [form] = Form.useForm();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch('website', form);
@@ -63,9 +57,9 @@ function ConvertHACFile() {
       key: file.uid + index,
       Name: row.Name,
       Images: row.Images,
-      Categories: '', // Mặc định chưa chọn
+      Categories: row?.Categories || '',
     }));
-    setProducts((prev) => [...prev, ...formatted]);
+    setProducts([...products, ...formatted]);
   };
 
   const handleNameChange = (index: number, value: string) => {
@@ -80,8 +74,15 @@ function ConvertHACFile() {
     setProducts(newProducts);
   };
 
+  const handleImagesChange = (index: number, value: string) => {
+    const newProducts = [...products];
+    newProducts[index].Images = value;
+    setProducts(newProducts);
+  };
+
   const handleDelete = (index: number) => {
     const newProducts = products.filter((_, i) => i !== index);
+    setProducts(newProducts);
     setProducts(newProducts);
   };
 
@@ -91,7 +92,7 @@ function ConvertHACFile() {
         margin: '20px auto',
       }}
     >
-      <h1>Convert HAC File</h1>
+      <h1>Convert File</h1>
       <Form name='initial-file' layout='vertical' form={form}>
         {(categoriesLoading || websiteLoading) && (
           <Spin
@@ -151,75 +152,42 @@ function ConvertHACFile() {
       {products.length > 0 && (
         <>
           <List
-            style={{ marginTop: 24 }}
-            bordered
-            dataSource={products}
-            renderItem={(item, index) => (
-              <List.Item>
-                <Row style={{ width: '100%' }} gutter={12}>
-                  <Col span={24} lg={{ span: 12 }}>
-                    <Flex style={{ width: '100%' }} gap={12} wrap>
-                      <Button
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDelete(index)}
-                        style={{ flex: 1 }}
-                      >
-                        Xoá
-                      </Button>
-
-                      <Select
-                        placeholder='Select Category'
-                        onChange={(value) => handleCategoryChange(index, value)}
-                        options={categoriesOptions}
-                        showSearch
-                        style={{ flex: 3 }}
-                        filterOption={(input, option) => {
-                          const searchFull = (option?.label ?? '')
-                            .toLowerCase()
-                            .includes(input.toLowerCase());
-                          const searchAcronym = convertToAcronym(
-                            option?.label ?? ''
-                          ).includes(input.toLowerCase());
-                          console.log(convertToAcronym(option?.label ?? ''));
-                          return searchFull || searchAcronym;
-                        }}
-                      ></Select>
-                      <Input.TextArea
-                        placeholder='Product Name'
-                        rows={2}
-                        value={item.Name}
-                        onChange={(e) =>
-                          handleNameChange(index, e.target.value)
-                        }
-                        style={{ width: '100%' }}
-                      />
-                    </Flex>
-                  </Col>
-                  <Col span={24} lg={{ span: 12 }}>
-                    <Flex gap={12}>
-                      {item.Images.split(',').map((img: string, idx) => (
-                        <Image
-                          src={img}
-                          width={100}
-                          height={100}
-                          key={idx}
-                          alt='product'
-                        />
-                      ))}
-                    </Flex>
-                  </Col>
-                </Row>
-              </List.Item>
-            )}
-          />
+            style={{
+              border: '1px solid #d9d9d9',
+              borderRadius: 4,
+            }}
+            height={800}
+            itemSize={matches ? 124 : 248}
+            itemCount={products.length}
+            overscanCount={5}
+            itemData={{
+              products: products,
+              handleNameChange,
+              handleCategoryChange,
+              handleDelete,
+              categoriesOptions,
+              handleImagesChange,
+            }}
+            width={'100%'}
+          >
+            {ProductItem}
+          </List>
           <Button
             type='primary'
             icon={<DownloadOutlined />}
-            onClick={() => handleDownloadFile(products, 'Converted')}
+            onClick={() => {
+              handleDownloadFile(products, 'Converted');
+            }}
             style={{ marginTop: 16 }}
           >
-            Download Updated Excel
+            Download ({products.length} items)
+          </Button>
+          <Button
+            danger
+            onClick={() => setProducts([])}
+            style={{ marginLeft: 16 }}
+          >
+            Clear All
           </Button>
         </>
       )}
@@ -227,4 +195,4 @@ function ConvertHACFile() {
   );
 }
 
-export default ConvertHACFile;
+export default ConvertFile;

@@ -61,8 +61,8 @@ const Header = () => {
       key: navigation.excelSplitter,
     },
     {
-      label: <Link href={navigation.convertHACFile}>Convert File</Link>,
-      key: navigation.convertHACFile,
+      label: <Link href={navigation.convertFile}>Convert File</Link>,
+      key: navigation.convertFile,
     },
   ];
 
