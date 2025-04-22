@@ -12,7 +12,7 @@ interface ProductItemProps {
   data: {
     handleNameChange: (index: number, value: string) => void;
     handleCategoryChange: (index: number, value: string) => void;
-    handleDelete: (index: number) => void;
+    handleDelete: (productKey: string) => void;
     categoriesOptions: any;
     products: Product[];
     handleImagesChange: (index: number, value: string) => void;
@@ -51,7 +51,7 @@ const ProductItem = function ProductItem({
             <Button
               danger
               icon={<DeleteOutlined />}
-              onClick={() => handleDelete(index)}
+              onClick={() => handleDelete(products[index].key)}
               style={{ flex: 1 }}
               tabIndex={-1}
             >

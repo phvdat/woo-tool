@@ -6,16 +6,17 @@ import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { normFile } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import { DownloadOutlined } from '@ant-design/icons';
-import { Button, Col, Form, Row, Select, Spin, Upload } from 'antd';
+import { Button, Col, Flex, Form, Row, Select, Spin, Upload } from 'antd';
 import { useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
 import ProductItem from './ProductItem';
+import DuplicatedChecker from './DuplicatedChecker';
 
 const CONVERT_DATA = 'CONVERT_DATA';
 export interface Product {
-  key: number;
+  key: string;
   Name: string;
   Images: string;
   Categories: string;
@@ -80,8 +81,10 @@ function ConvertFile() {
     setProducts(newProducts);
   };
 
-  const handleDelete = (index: number) => {
-    const newProducts = products.filter((_, i) => i !== index);
+  const handleDelete = (productKey: string) => {
+    const newProducts = products.filter(
+      (product) => product.key !== productKey
+    );
     setProducts(newProducts);
     setProducts(newProducts);
   };
@@ -151,6 +154,19 @@ function ConvertFile() {
       </Form>
       {products.length > 0 && (
         <>
+          <Flex justify='space-between' style={{ marginBottom: 16 }}>
+            <DuplicatedChecker
+              products={products}
+              handleDelete={handleDelete}
+            />
+            <Button
+              danger
+              onClick={() => setProducts([])}
+              style={{ marginLeft: 16 }}
+            >
+              Clear All
+            </Button>
+          </Flex>
           <List
             style={{
               border: '1px solid #d9d9d9',
@@ -181,13 +197,6 @@ function ConvertFile() {
             style={{ marginTop: 16 }}
           >
             Download ({products.length} items)
-          </Button>
-          <Button
-            danger
-            onClick={() => setProducts([])}
-            style={{ marginLeft: 16 }}
-          >
-            Clear All
           </Button>
         </>
       )}
