@@ -6,14 +6,29 @@ import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { normFile } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import { DownloadOutlined } from '@ant-design/icons';
-import { Button, Col, Flex, Form, Row, Select, Spin, Upload } from 'antd';
+import {
+  Button,
+  Col,
+  Flex,
+  Form,
+  Row,
+  Select,
+  Spin,
+  Typography,
+  Upload,
+} from 'antd';
 import { useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
-import ProductItem from './ProductItem';
-import DuplicatedChecker from './DuplicatedChecker';
+import CateKeywordConfig, {
+  CATE_KEYWORD_LOCAL_KEY,
+} from '@/components/convert-file/CateKeywordConfig';
+import DuplicatedChecker from '@/components/convert-file/DuplicatedChecker';
+import ProductItem from '@/components/convert-file/ProductItem';
+import detectCategory from '@/helper/detect-category';
 
+const { Title } = Typography;
 const CONVERT_DATA = 'CONVERT_DATA';
 export interface Product {
   key: string;
@@ -25,6 +40,9 @@ function ConvertFile() {
   const matches = useMediaQuery('(min-width: 992px)');
   const [form] = Form.useForm();
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
+  const [cateKeyword] = useLocalStorage<{
+    [key: string]: string[];
+  }>(CATE_KEYWORD_LOCAL_KEY, {});
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch('website', form);
@@ -53,12 +71,11 @@ function ConvertFile() {
     });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const productsData = XLSX.utils.sheet_to_json(worksheet);
-
     const formatted = productsData.map((row: any, index) => ({
       key: file.uid + index,
       Name: row.Name,
       Images: row.Images,
-      Categories: row?.Categories || '',
+      Categories: row?.Categories || detectCategory(row.Name, cateKeyword),
     }));
     setProducts([...products, ...formatted]);
   };
@@ -95,7 +112,9 @@ function ConvertFile() {
         margin: '20px auto',
       }}
     >
-      <h1>Convert File</h1>
+      <Title level={4} style={{ textAlign: 'center' }}>
+        Convert File &nbsp;
+      </Title>
       <Form name='initial-file' layout='vertical' form={form}>
         {(categoriesLoading || websiteLoading) && (
           <Spin
@@ -129,6 +148,15 @@ function ConvertFile() {
                   (option?.label ?? '')
                     .toLowerCase()
                     .includes(input.toLowerCase())
+                }
+                suffixIcon={
+                  watchShopId ? (
+                    <CateKeywordConfig
+                      categoriesOptions={categoriesOptions.map(
+                        (item) => item.value
+                      )}
+                    />
+                  ) : null
                 }
               />
             </Form.Item>

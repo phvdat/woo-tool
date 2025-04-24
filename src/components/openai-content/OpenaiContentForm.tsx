@@ -1,25 +1,14 @@
 'use client';
 import { useUser } from '@/app/hooks/useUser';
+import { getSocket } from '@/config/socket';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
-import {
-  Alert,
-  Button,
-  Card,
-  Form,
-  Progress,
-  Select,
-  Switch,
-  Upload,
-} from 'antd';
+import { Button, Card, Form, Progress, Switch, Upload } from 'antd';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
-import { GAP_MINUTES, PUBLIC_TIME } from '../woo/WooForm';
-import { getSocket } from '@/config/socket';
-import dayjs from 'dayjs';
-import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 
 interface OpenaiFormValues {
   promptQuestion: string;
@@ -37,16 +26,6 @@ const OpenaiContentForm = () => {
     return socket.connect();
   }, []);
 
-  const { websiteConfigList } = useConfigWebsite();
-
-  const watermarkOptions = useMemo(() => {
-    if (!websiteConfigList) return [];
-    return websiteConfigList.map((website) => ({
-      label: website.shopName,
-      value: website.shopName,
-    }));
-  }, [websiteConfigList]);
-
   const [loading, setLoading] = useState<boolean>(false);
   const { data } = useSession();
   const { user, isLoading } = useUser(data?.user?.email || '');
@@ -60,6 +39,9 @@ const OpenaiContentForm = () => {
     const { file, mixed } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
 
+    const fileName = value.file[0].name;
+    const website = fileName.split('-')[0];
+
     if (fileOrigin && user) {
       try {
         const formData = new FormData();
@@ -68,7 +50,7 @@ const OpenaiContentForm = () => {
         formData.append('telegramId', user.telegramId);
         formData.append('promptQuestion', user.promptQuestion);
         formData.append('apiKey', user.apiKey);
-        formData.append('website', value.website);
+        formData.append('website', website);
         formData.append('publicTime', (user?.publicTime || 0).toString());
         formData.append('gapFrom', (user?.gapFrom || 0).toString());
         formData.append('gapTo', (user?.gapTo || 0).toString());
@@ -98,6 +80,9 @@ const OpenaiContentForm = () => {
       onFinish={onFinish}
       layout='vertical'
       disabled={loading || isLoading}
+      initialValues={{
+        mixed: true,
+      }}
     >
       <Card>
         <Form.Item<OpenaiFormValues>
@@ -107,15 +92,7 @@ const OpenaiContentForm = () => {
           getValueFromEvent={normFile}
           rules={[{ required: true, message: 'Please upload file!' }]}
         >
-          <Upload
-            maxCount={1}
-            style={{ width: '100%' }}
-            onChange={(info) => {
-              const name = _get(info, 'file.originFileObj.name', '');
-              const website = name.split('-')[0] + '.com';
-              form.setFieldValue('website', website);
-            }}
-          >
+          <Upload maxCount={1} style={{ width: '100%' }}>
             <Button block>Upload file excel</Button>
           </Upload>
         </Form.Item>
@@ -126,26 +103,13 @@ const OpenaiContentForm = () => {
             strokeColor={{ from: '#108ee9', to: '#87d068' }}
           />
         ) : null}
-        <Form.Item<OpenaiFormValues>
-          name='website'
-          label={<span>Website Website</span>}
-        >
-          <Select
-            placeholder='Select Website Website'
-            options={watermarkOptions}
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-          />
-        </Form.Item>
 
         <Form.Item<OpenaiFormValues>
           name='mixed'
           valuePropName='checked'
           label='Mixed'
         >
-          <Switch defaultChecked />
+          <Switch />
         </Form.Item>
 
         <Button htmlType='submit' loading={loading} block type='primary'>

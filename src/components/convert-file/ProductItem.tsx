@@ -1,4 +1,5 @@
 'use client';
+import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { convertToAcronym } from '@/helper/common';
 import {
   DeleteOutlined,
@@ -7,7 +8,6 @@ import {
 } from '@ant-design/icons';
 import { Button, Col, Divider, Flex, Image, Input, Row, Select } from 'antd';
 import React, { useState } from 'react';
-import { Product } from './ConvertFile';
 interface ProductItemProps {
   data: {
     handleNameChange: (index: number, value: string) => void;

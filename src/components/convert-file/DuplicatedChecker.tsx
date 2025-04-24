@@ -1,3 +1,4 @@
+import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import {
   Button,
   Card,
@@ -10,7 +11,6 @@ import {
 } from 'antd';
 import Meta from 'antd/es/card/Meta';
 import { useState } from 'react';
-import { Product } from './ConvertFile';
 
 interface DuplicatedCheckerProps {
   products: Product[];
