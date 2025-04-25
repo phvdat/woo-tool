@@ -103,7 +103,6 @@ function ConvertFile() {
       (product) => product.key !== productKey
     );
     setProducts(newProducts);
-    setProducts(newProducts);
   };
 
   return (
@@ -132,7 +131,18 @@ function ConvertFile() {
           <Col span={24} sm={{ span: 12 }}>
             <Form.Item
               name='website'
-              label='Website'
+              label={
+                <>
+                  Website &nbsp;
+                  {watchShopId ? (
+                    <CateKeywordConfig
+                      categoriesOptions={categoriesOptions.map(
+                        (item) => item.value
+                      )}
+                    />
+                  ) : null}
+                </>
+              }
               rules={[
                 {
                   required: true,
@@ -148,15 +158,6 @@ function ConvertFile() {
                   (option?.label ?? '')
                     .toLowerCase()
                     .includes(input.toLowerCase())
-                }
-                suffixIcon={
-                  watchShopId ? (
-                    <CateKeywordConfig
-                      categoriesOptions={categoriesOptions.map(
-                        (item) => item.value
-                      )}
-                    />
-                  ) : null
                 }
               />
             </Form.Item>

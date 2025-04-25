@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { SettingFilled } from '@ant-design/icons';
-import { Button, Form, Input, Modal } from 'antd';
+import { Button, Form, Input, message, Modal } from 'antd';
 import { useState } from 'react';
 interface CateKeywordConfigProps {
   categoriesOptions: string[];
@@ -22,6 +22,7 @@ const CateKeywordConfig = ({ categoriesOptions }: CateKeywordConfigProps) => {
         [key]: value?.split(',').map((item) => item.trim()),
       };
     }, {});
+    message.success('Save successfully!');
     setCateKeyword(data);
   };
 
@@ -41,7 +42,15 @@ const CateKeywordConfig = ({ categoriesOptions }: CateKeywordConfigProps) => {
           onFinish={handleSubmit}
           layout='vertical'
           form={form}
-          initialValues={cateKeyword}
+          initialValues={Object.entries(cateKeyword).reduce(
+            (acc, [key, value]) => {
+              return {
+                ...acc,
+                [key]: value.join(','),
+              };
+            },
+            {}
+          )}
         >
           {categoriesOptions.map((category, index) => (
             <Form.Item

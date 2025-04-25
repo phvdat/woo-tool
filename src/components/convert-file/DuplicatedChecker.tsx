@@ -22,13 +22,18 @@ const DuplicatedChecker = ({
   handleDelete,
 }: DuplicatedCheckerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const categoriesList: string[] = Array.from(
     new Set(products.map((product) => product.Categories))
-  );
+  ).sort((a, b) => {
+    const cateA = a.split('>').pop();
+    const cateB = b.split('>').pop();
+    return cateA && cateB ? cateA.localeCompare(cateB) : 0;
+  });
 
   const tabItems: TabsProps['items'] = categoriesList.map((category) => ({
     key: category,
-    label: category.split('>').pop()?.toString(),
+    label: category?.split('>').pop()?.toString(),
     children: (
       <ProductGallery
         products={products.filter((product) => product.Categories === category)}
@@ -77,21 +82,23 @@ const ProductGallery = ({
           xs={{ span: 12 }}
           key={product.key}
         >
-          <Popconfirm
-            title='Delete the Product'
-            description='Are you sure to delete this product?'
-            onConfirm={() => handleDelete(product.key)}
-            okText='Yes'
-            cancelText='No'
+          <Card
+            hoverable
+            style={{ width: 240 }}
+            cover={
+              <Popconfirm
+                title='Delete the Product'
+                description='Are you sure to delete this product?'
+                onConfirm={() => handleDelete(product.key)}
+                okText='Yes'
+                cancelText='No'
+              >
+                <img alt='product' src={product.Images.split(',')[0]} />
+              </Popconfirm>
+            }
           >
-            <Card
-              hoverable
-              style={{ width: 240 }}
-              cover={<img alt='product' src={product.Images.split(',')[0]} />}
-            >
-              <Meta description={product.Name} />
-            </Card>
-          </Popconfirm>
+            <Meta description={product.Name} />
+          </Card>
         </Col>
       ))}
     </Row>
