@@ -11,6 +11,7 @@ import {
   Col,
   Flex,
   Form,
+  message,
   Row,
   Select,
   Spin,
@@ -221,6 +222,13 @@ function ConvertFile() {
             type='primary'
             icon={<DownloadOutlined />}
             onClick={() => {
+              const isCategoryValid = products.every(
+                (product) => product.Categories
+              );
+              if (!isCategoryValid) {
+                message.error('Please fill all category');
+                return;
+              }
               handleDownloadFile(products, 'Converted');
             }}
             style={{ marginTop: 16 }}

@@ -2,8 +2,10 @@
 
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
+import { CATE_KEYWORD_LOCAL_KEY } from '@/components/convert-file/CateKeywordConfig';
 import InitialFileTable from '@/components/create-initial-file/InitialFileTable';
 import { convertToAcronym } from '@/helper/common';
+import detectCategory from '@/helper/detect-category';
 import { handleDownloadFile } from '@/helper/woo';
 import {
   CopyOutlined,
@@ -41,6 +43,9 @@ const InitialFile = () => {
   const [dataFile, setDataFile] = useState<
     Omit<InitialFileValues, 'website'>[]
   >([]);
+  const [cateKeyword] = useLocalStorage<{
+    [key: string]: string[];
+  }>(CATE_KEYWORD_LOCAL_KEY, {});
   const [dataLocal, setDataLocal] = useLocalStorage(INITIAL_DATA, '[]');
   const watchShopId = Form.useWatch('website', form);
 
@@ -65,7 +70,10 @@ const InitialFile = () => {
 
   const handlePasteName = () => {
     navigator.clipboard.readText().then((text) => {
-      form.setFieldValue('Name', text.replace(/\n/g, '').trim());
+      const name = text.replace(/\n/g, '').trim();
+      form.setFieldValue('Name', name);
+      const category = detectCategory(name, cateKeyword);
+      form.setFieldValue('Categories', category);
     });
   };
 
@@ -211,6 +219,10 @@ const InitialFile = () => {
             rules={[{ required: true, message: 'Please input product name' }]}
           >
             <Input
+              onChange={(e) => {
+                const category = detectCategory(e.target.value, cateKeyword);
+                form.setFieldValue('Categories', category);
+              }}
               allowClear
               suffix={
                 <Button
