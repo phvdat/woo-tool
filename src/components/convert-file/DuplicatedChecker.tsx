@@ -8,9 +8,11 @@ import {
   Row,
   Tabs,
   TabsProps,
+  Typography,
 } from 'antd';
 import Meta from 'antd/es/card/Meta';
 import { useState } from 'react';
+const { Text } = Typography;
 
 interface DuplicatedCheckerProps {
   products: Product[];
@@ -97,7 +99,7 @@ const ProductGallery = ({
               </Popconfirm>
             }
           >
-            <Meta description={product.Name} />
+            <Meta description={<Text copyable>{product.Name}</Text>} />
           </Card>
         </Col>
       ))}

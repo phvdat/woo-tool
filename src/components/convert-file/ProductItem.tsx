@@ -10,12 +10,12 @@ import { Button, Col, Divider, Flex, Image, Input, Row, Select } from 'antd';
 import React, { useState } from 'react';
 interface ProductItemProps {
   data: {
-    handleNameChange: (index: number, value: string) => void;
-    handleCategoryChange: (index: number, value: string) => void;
+    handleNameChange: (productKey: string, value: string) => void;
+    handleCategoryChange: (productKey: string, value: string) => void;
     handleDelete: (productKey: string) => void;
     categoriesOptions: any;
     products: Product[];
-    handleImagesChange: (index: number, value: string) => void;
+    handleImagesChange: (productKey: string, value: string) => void;
   };
   index: number;
   style: any;
@@ -33,14 +33,16 @@ const ProductItem = function ProductItem({
   style,
 }: ProductItemProps) {
   const [isEdit, setIsEdit] = useState<boolean>(false);
+
+  const currentProduct = products[index];
   const setPrevCategory = () => {
-    const prevCategory =
-      products[index - 1]?.Categories || products[index]?.Categories;
-    handleCategoryChange(index, prevCategory);
+    const prevProduct = products[index - 1];
+    const prevCategory = prevProduct?.Categories || currentProduct.Categories;
+    handleCategoryChange(currentProduct.key, prevCategory);
   };
 
   return (
-    <div style={style} key={products[index].key}>
+    <div style={style} key={currentProduct.key}>
       <Row
         style={{
           width: '100%',
@@ -51,7 +53,7 @@ const ProductItem = function ProductItem({
             <Button
               danger
               icon={<DeleteOutlined />}
-              onClick={() => handleDelete(products[index].key)}
+              onClick={() => handleDelete(currentProduct.key)}
               style={{ flex: 1 }}
               tabIndex={-1}
             >
@@ -59,9 +61,11 @@ const ProductItem = function ProductItem({
             </Button>
 
             <Select
-              value={products[index].Categories}
+              value={currentProduct.Categories}
               placeholder='Select Category'
-              onChange={(value) => handleCategoryChange(index, value)}
+              onChange={(value) =>
+                handleCategoryChange(currentProduct.key, value)
+              }
               options={categoriesOptions}
               showSearch
               suffixIcon={
@@ -84,15 +88,16 @@ const ProductItem = function ProductItem({
                 const searchAcronym = convertToAcronym(
                   option?.label ?? ''
                 ).includes(input.toLowerCase());
-                console.log(convertToAcronym(option?.label ?? ''));
                 return searchFull || searchAcronym;
               }}
             ></Select>
             <Input.TextArea
               placeholder='Product Name'
               rows={2}
-              value={products[index].Name}
-              onChange={(e) => handleNameChange(index, e.target.value)}
+              value={currentProduct.Name}
+              onChange={(e) =>
+                handleNameChange(currentProduct.key, e.target.value)
+              }
               style={{ width: '100%' }}
             />
           </Flex>
@@ -103,11 +108,11 @@ const ProductItem = function ProductItem({
               <Input.TextArea
                 placeholder='Image Urls'
                 rows={4}
-                value={products[index].Images.replaceAll(',', '\n')}
+                value={currentProduct.Images.replaceAll(',', '\n')}
                 style={{ width: '100%' }}
                 onChange={(e) =>
                   handleImagesChange(
-                    index,
+                    currentProduct.key,
                     e.target.value.replaceAll('\n', ',')
                   )
                 }
@@ -115,7 +120,7 @@ const ProductItem = function ProductItem({
               />
             ) : (
               <>
-                {products[index].Images?.split(',').map(
+                {currentProduct.Images?.split(',').map(
                   (img: string, idx: number) => (
                     <Image
                       src={img}

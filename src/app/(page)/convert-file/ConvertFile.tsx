@@ -11,6 +11,7 @@ import {
   Col,
   Flex,
   Form,
+  Input,
   message,
   Row,
   Select,
@@ -18,7 +19,7 @@ import {
   Typography,
   Upload,
 } from 'antd';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
@@ -47,6 +48,7 @@ function ConvertFile() {
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch('website', form);
+  const [searchProduct, setSearchProduct] = useState<Product[] | null>(null);
 
   const categoriesOptions = useMemo(() => {
     const categoriesByShop = categories?.filter(
@@ -66,6 +68,7 @@ function ConvertFile() {
       value: website._id,
     }));
   }, [websiteConfigList]);
+
   const beforeUploadTrackingFile = async (file: any) => {
     const workbook = XLSX.read(await file.arrayBuffer(), {
       type: 'array',
@@ -81,22 +84,44 @@ function ConvertFile() {
     setProducts([...products, ...formatted]);
   };
 
-  const handleNameChange = (index: number, value: string) => {
-    const newProducts = [...products];
-    newProducts[index].Name = value;
+  const handleNameChange = (productKey: string, value: string) => {
+    const newProducts = products.map((product) =>
+      product.key === productKey ? { ...product, Name: value } : product
+    );
     setProducts(newProducts);
+
+    const newSearchProduct = searchProduct?.map((product) =>
+      product.key === productKey ? { ...product, Name: value } : product
+    );
+    setSearchProduct(newSearchProduct || null);
   };
 
-  const handleCategoryChange = (index: number, value: string) => {
-    const newProducts = [...products];
-    newProducts[index].Categories = value;
+  const handleCategoryChange = (productKey: string, value: string) => {
+    const newProducts = products.map((product) => {
+      return product.key === productKey
+        ? { ...product, Categories: value }
+        : product;
+    });
     setProducts(newProducts);
+
+    const newSearchProduct = searchProduct?.map((product) => {
+      return product.key === productKey
+        ? { ...product, Categories: value }
+        : product;
+    });
+    setSearchProduct(newSearchProduct || null);
   };
 
-  const handleImagesChange = (index: number, value: string) => {
-    const newProducts = [...products];
-    newProducts[index].Images = value;
+  const handleImagesChange = (productKey: string, value: string) => {
+    const newProducts = products.map((product) =>
+      product.key === productKey ? { ...product, Images: value } : product
+    );
     setProducts(newProducts);
+
+    const newSearchProduct = searchProduct?.map((product) =>
+      product.key === productKey ? { ...product, Images: value } : product
+    );
+    setSearchProduct(newSearchProduct || null);
   };
 
   const handleDelete = (productKey: string) => {
@@ -104,6 +129,20 @@ function ConvertFile() {
       (product) => product.key !== productKey
     );
     setProducts(newProducts);
+
+    const newSearchProduct = searchProduct?.filter(
+      (product) => product.key !== productKey
+    );
+    setSearchProduct(newSearchProduct || null);
+  };
+
+  const handleSearch = (value: string) => {
+    const newProducts = products.filter(
+      (product) =>
+        product.Name.toLowerCase().includes(value.toLowerCase()) ||
+        product.Categories.toLowerCase().includes(value.toLowerCase())
+    );
+    setSearchProduct(newProducts);
   };
 
   return (
@@ -181,6 +220,16 @@ function ConvertFile() {
             </Form.Item>
           </Col>
         </Row>
+        <Form.Item name='search' label='Search'>
+          <Input
+            placeholder='Search'
+            style={{ marginBottom: 16 }}
+            allowClear
+            onChange={(e) => {
+              handleSearch(e.target.value);
+            }}
+          />
+        </Form.Item>
       </Form>
       {products.length > 0 && (
         <>
@@ -204,10 +253,10 @@ function ConvertFile() {
             }}
             height={800}
             itemSize={matches ? 124 : 248}
-            itemCount={products.length}
+            itemCount={searchProduct ? searchProduct.length : products.length}
             overscanCount={5}
             itemData={{
-              products: products,
+              products: searchProduct || products,
               handleNameChange,
               handleCategoryChange,
               handleDelete,
