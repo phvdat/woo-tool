@@ -16,6 +16,7 @@ interface ProductItemProps {
     categoriesOptions: any;
     products: Product[];
     handleImagesChange: (productKey: string, value: string) => void;
+    handleDuplicateRow: (productKey: string) => void;
   };
   index: number;
   style: any;
@@ -28,6 +29,7 @@ const ProductItem = function ProductItem({
     handleDelete,
     categoriesOptions,
     products,
+    handleDuplicateRow,
   },
   index,
   style,
@@ -42,7 +44,7 @@ const ProductItem = function ProductItem({
   };
 
   return (
-    <div style={style} key={currentProduct.key}>
+    <div style={{ ...style, overflowY: 'auto' }} key={currentProduct.key}>
       <Row
         style={{
           width: '100%',
@@ -119,7 +121,7 @@ const ProductItem = function ProductItem({
                 onBlur={() => setIsEdit(false)}
               />
             ) : (
-              <>
+              <Flex gap={12} wrap>
                 {currentProduct.Images?.split(',').map(
                   (img: string, idx: number) => (
                     <Image
@@ -132,13 +134,18 @@ const ProductItem = function ProductItem({
                     />
                   )
                 )}
-                <EditOutlined onClick={() => setIsEdit((prev) => !prev)} />
-              </>
+              </Flex>
             )}
+            <Button onClick={() => setIsEdit((prev) => !prev)}>
+              <EditOutlined />
+            </Button>
+            <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
+              Duplicate
+            </Button>
           </Flex>
         </Col>
       </Row>
-      <Divider style={{ margin: 0 }} />
+      <Divider style={{ margin: 0, borderColor: '#7cb305' }} />
     </div>
   );
 };

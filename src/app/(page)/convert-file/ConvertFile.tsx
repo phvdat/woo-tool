@@ -136,6 +136,19 @@ function ConvertFile() {
     setSearchProduct(newSearchProduct || null);
   };
 
+  const handleDuplicateRow = (productKey: string) => {
+    const index = products.findIndex((product) => product.key === productKey);
+    const newProducts = [
+      ...products.slice(0, index + 1),
+      {
+        ...products[index],
+        key: products[index].key + Date.now(),
+      },
+      ...products.slice(index + 1),
+    ];
+    setProducts(newProducts);
+  };
+
   const handleSearch = (value: string) => {
     const newProducts = products.filter(
       (product) =>
@@ -252,7 +265,7 @@ function ConvertFile() {
               borderRadius: 4,
             }}
             height={800}
-            itemSize={matches ? 124 : 248}
+            itemSize={matches ? 125 : 250}
             itemCount={searchProduct ? searchProduct.length : products.length}
             overscanCount={5}
             itemData={{
@@ -262,6 +275,7 @@ function ConvertFile() {
               handleDelete,
               categoriesOptions,
               handleImagesChange,
+              handleDuplicateRow,
             }}
             width={'100%'}
           >
