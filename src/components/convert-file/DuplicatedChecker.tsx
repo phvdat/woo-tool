@@ -75,6 +75,7 @@ const ProductGallery = ({
   const productsSortByName = products.sort((a, b) =>
     a.Name.localeCompare(b.Name)
   );
+
   return (
     <Row gutter={[16, 16]}>
       {productsSortByName.map((product) => (
@@ -95,7 +96,7 @@ const ProductGallery = ({
                 okText='Yes'
                 cancelText='No'
               >
-                <img alt='product' src={product.Images.split(',')[0]} />
+                <img alt='product' src={product.Images?.split(',')[0]} />
               </Popconfirm>
             }
           >
