@@ -87,7 +87,7 @@ const ProductGallery = ({
         >
           <Card
             hoverable
-            style={{ width: 240 }}
+            style={{ maxWidth: 240 }}
             cover={
               <Popconfirm
                 title='Delete the Product'

@@ -105,7 +105,7 @@ const ProductItem = function ProductItem({
           </Flex>
         </Col>
         <Col span={24} lg={{ span: 12 }} style={{ padding: 12 }}>
-          <Flex gap={12}>
+          <Flex gap={12} wrap>
             {isEdit ? (
               <Input.TextArea
                 placeholder='Image Urls'
