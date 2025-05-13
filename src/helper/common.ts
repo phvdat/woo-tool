@@ -1,3 +1,4 @@
+import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import dayjs from 'dayjs';
 import _get from 'lodash/get';
 
@@ -50,4 +51,25 @@ export function convertToAcronym(input: string) {
     .map((word) => word[0]) // Lấy ký tự đầu tiên của mỗi từ
     .join('') // Ghép các ký tự lại thành chuỗi
     .toLowerCase(); // Chuyển thành chữ thường
+}
+
+export function getMatchColor(
+  name: string,
+  existingProducts: Product[]
+): string {
+  const nameWords = name.toLowerCase().split(/\s+/);
+  let maxMatch = 0;
+
+  for (const existingProduct of existingProducts) {
+    const existingWords = existingProduct.Name.toLowerCase().split(/\s+/);
+    const matchCount = nameWords.filter((word) =>
+      existingWords.includes(word)
+    ).length;
+    maxMatch = Math.max(maxMatch, matchCount);
+  }
+
+  if (maxMatch >= 5) return 'red';
+  if (maxMatch === 4) return 'orange';
+  if (maxMatch === 3) return 'gold';
+  return 'black';
 }

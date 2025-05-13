@@ -1,4 +1,6 @@
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
+import { endpoint } from '@/constant/endpoint';
+import { getMatchColor } from '@/helper/common';
 import {
   Button,
   Card,
@@ -11,7 +13,9 @@ import {
   Typography,
 } from 'antd';
 import Meta from 'antd/es/card/Meta';
-import { useState } from 'react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import SearchProductDialog from './SearchProductDialog';
 const { Text } = Typography;
 
 interface DuplicatedCheckerProps {
@@ -34,7 +38,6 @@ const DuplicatedChecker = ({
     if (!cateB) return -1;
     return cateA && cateB ? cateA.localeCompare(cateB) : 0;
   });
-  console.log(categoriesList);
 
   const tabItems: TabsProps['items'] = categoriesList.map((category) => ({
     key: category,
@@ -75,38 +78,65 @@ const ProductGallery = ({
   products: Product[];
   handleDelete: (index: string) => void;
 }) => {
+  const [existingProducts, setExistingProducts] = useState<Product[]>([]);
   const productsSortByName = products.sort((a, b) =>
     a.Name.localeCompare(b.Name)
   );
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get(endpoint.productData);
+        const data: Product[] = res.data;
+        setExistingProducts(data);
+      } catch (error) {
+        console.error('Error fetching existing names', error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   return (
     <Row gutter={[16, 16]}>
-      {productsSortByName.map((product) => (
-        <Col
-          xl={{ span: 6 }}
-          md={{ span: 8 }}
-          xs={{ span: 12 }}
-          key={product.key}
-        >
-          <Card
-            hoverable
-            style={{ maxWidth: 240 }}
-            cover={
-              <Popconfirm
-                title='Delete the Product'
-                description='Are you sure to delete this product?'
-                onConfirm={() => handleDelete(product.key)}
-                okText='Yes'
-                cancelText='No'
-              >
-                <img alt='product' src={product.Images?.split(',')[0]} />
-              </Popconfirm>
-            }
+      {productsSortByName.map((product) => {
+        const titleColor = getMatchColor(product.Name, existingProducts);
+        return (
+          <Col
+            xl={{ span: 6 }}
+            md={{ span: 8 }}
+            xs={{ span: 12 }}
+            key={product.key}
           >
-            <Meta description={<Text copyable>{product.Name}</Text>} />
-          </Card>
-        </Col>
-      ))}
+            <Card
+              hoverable
+              style={{ maxWidth: 240 }}
+              cover={
+                <Popconfirm
+                  title='Delete the Product'
+                  description='Are you sure to delete this product?'
+                  onConfirm={() => handleDelete(product.key)}
+                  okText='Yes'
+                  cancelText='No'
+                >
+                  <img alt='product' src={product.Images?.split(',')[0]} />
+                </Popconfirm>
+              }
+            >
+              <Meta
+                description={
+                  <Text copyable style={{ color: titleColor }}>
+                    {product.Name}
+                  </Text>
+                }
+              />
+              <SearchProductDialog
+                product={product}
+                existingProducts={existingProducts}
+              />
+            </Card>
+          </Col>
+        );
+      })}
     </Row>
   );
 };

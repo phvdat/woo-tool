@@ -29,6 +29,8 @@ import CateKeywordConfig, {
 import DuplicatedChecker from '@/components/convert-file/DuplicatedChecker';
 import ProductItem from '@/components/convert-file/ProductItem';
 import detectCategory from '@/helper/detect-category';
+import axios from 'axios';
+import { endpoint } from '@/constant/endpoint';
 
 const { Title } = Typography;
 const CONVERT_DATA = 'CONVERT_DATA';
@@ -158,6 +160,28 @@ function ConvertFile() {
     setSearchProduct(newProducts);
   };
 
+  const uploadProductsToServer = async (products: Product[]) => {
+    try {
+      const res = await axios.post(endpoint.productData, products);
+
+      if (res.status === 200) {
+        message.success('Products uploaded successfully');
+      }
+    } catch (error) {
+      console.error(error);
+      message.error('Error uploading products');
+    }
+  };
+  const handleSubmit = async () => {
+    const isCategoryValid = products.every((product) => product.Categories);
+    if (!isCategoryValid) {
+      message.error('Please fill all category');
+      return;
+    }
+    handleDownloadFile(products, 'Converted');
+    await uploadProductsToServer(products);
+  };
+
   return (
     <div
       style={{
@@ -284,16 +308,7 @@ function ConvertFile() {
           <Button
             type='primary'
             icon={<DownloadOutlined />}
-            onClick={() => {
-              const isCategoryValid = products.every(
-                (product) => product.Categories
-              );
-              if (!isCategoryValid) {
-                message.error('Please fill all category');
-                return;
-              }
-              handleDownloadFile(products, 'Converted');
-            }}
+            onClick={handleSubmit}
             style={{ marginTop: 16 }}
           >
             Download ({products.length} items)
