@@ -1,16 +1,21 @@
 'use client';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { normFile } from '@/helper/common';
-import { handleDownloadFile } from '@/helper/woo';
+import { generateCSVBlob, handleDownloadFile } from '@/helper/woo';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Form, Input, InputNumber, Upload } from 'antd';
+import JSZip from 'jszip';
 import _get from 'lodash/get';
+import moment from 'moment';
 import { useEffect } from 'react';
+import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const SPLIT_NAME_LOCAL_KEY = 'splitName';
 
 const ExcelSplitter = () => {
+  const matches = useMediaQuery('(min-width: 992px)');
   const [form] = Form.useForm();
   const [websiteNames, setWebsiteNames] = useLocalStorage(
     SPLIT_NAME_LOCAL_KEY,
@@ -27,18 +32,44 @@ const ExcelSplitter = () => {
     });
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(wordSheet);
-    splitAndExport(data, values.websiteNames);
+    if (matches) {
+      splitAndExport(data, values.websiteNames);
+    } else {
+      splitAndExportMobile(data, values.websiteNames);
+    }
   };
 
   const splitAndExport = (data: any, websiteNames: string) => {
     const websiteNamesList = websiteNames.split(',').map((item) => item.trim());
     const chunkSize = Math.ceil(data.length / websiteNamesList.length);
     for (let i = 0; i < websiteNamesList.length; i++) {
+      setTimeout(() => {
+        const start = i * chunkSize;
+        const end = (i + 1) * chunkSize;
+        const chunk = data.slice(start, end);
+        handleDownloadFile(chunk, websiteNamesList[i]);
+      }, i * 1500); // delay 1.5s
+    }
+  };
+
+  const splitAndExportMobile = async (data: any[], websiteNames: string) => {
+    const websiteNamesList = websiteNames.split(',').map((item) => item.trim());
+    const chunkSize = Math.ceil(data.length / websiteNamesList.length);
+    const zip = new JSZip();
+    const date = moment().format('YYYY-MM-DD-HH-mm-ss');
+
+    for (let i = 0; i < websiteNamesList.length; i++) {
       const start = i * chunkSize;
       const end = (i + 1) * chunkSize;
       const chunk = data.slice(start, end);
-      handleDownloadFile(chunk, websiteNamesList[i]);
+      const csvBlob = await generateCSVBlob(chunk);
+      const fileName = `${websiteNamesList[i]}-${date}.csv`;
+      zip.file(fileName, csvBlob);
     }
+
+    zip.generateAsync({ type: 'blob' }).then((content) => {
+      saveAs(content, `export-${date}.zip`);
+    });
   };
 
   useEffect(() => {

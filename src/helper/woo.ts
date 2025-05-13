@@ -1,6 +1,7 @@
 import { WooCommerce } from '@/types/woo';
 import moment from 'moment';
 import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 export interface WooFixedOption {
   SKUPrefix: string;
@@ -87,17 +88,23 @@ export function createWooRecord(
   return record;
 }
 
+export const generateCSVBlob = async (data: any[]) => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  const wbout = XLSX.write(wb, { bookType: 'csv', type: 'array' });
+  return new Blob([wbout], { type: 'text/csv;charset=utf-8' });
+};
+
 export async function handleDownloadFile(dataFile: any[], fileName?: string) {
   const date = moment().format('YYYY-MM-DD-HH-mm-ss');
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(dataFile);
   XLSX.utils.book_append_sheet(wb, ws, 'Sheet 1');
   const wbout = XLSX.write(wb, { bookType: 'csv', type: 'array' });
-  const blob = new Blob([wbout], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${fileName || 'woo'}-${date}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
+  const blob = new Blob([wbout], {
+    type: 'text/csv;charset=utf-8;',
+  });
+  const finalFileName = `${fileName || 'woo'}-${date}.csv`;
+  saveAs(blob, finalFileName);
 }
