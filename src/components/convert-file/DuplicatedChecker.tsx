@@ -30,12 +30,15 @@ const DuplicatedChecker = ({
   ).sort((a, b) => {
     const cateA = a.split('>').pop();
     const cateB = b.split('>').pop();
+    if (!cateA) return 1;
+    if (!cateB) return -1;
     return cateA && cateB ? cateA.localeCompare(cateB) : 0;
   });
+  console.log(categoriesList);
 
   const tabItems: TabsProps['items'] = categoriesList.map((category) => ({
     key: category,
-    label: category?.split('>').pop()?.toString(),
+    label: category?.split('>').pop()?.toString() || 'MISSING CATEGORY',
     children: (
       <ProductGallery
         products={products.filter((product) => product.Categories === category)}
