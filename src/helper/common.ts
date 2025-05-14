@@ -53,23 +53,153 @@ export function convertToAcronym(input: string) {
     .toLowerCase(); // Chuyển thành chữ thường
 }
 
-export function getMatchColor(
+function normalizeWords(name: string): string[] {
+  return name
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word && !COMMON_WORDS.includes(word));
+}
+export function getMatchedWords(
   name: string,
   existingProducts: Product[]
-): string {
-  const nameWords = name.toLowerCase().split(/\s+/);
-  let maxMatch = 0;
+): string[] {
+  const nameWords = normalizeWords(name);
+  const matchedWords = new Set<string>();
 
   for (const existingProduct of existingProducts) {
-    const existingWords = existingProduct.Name.toLowerCase().split(/\s+/);
-    const matchCount = nameWords.filter((word) =>
-      existingWords.includes(word)
-    ).length;
-    maxMatch = Math.max(maxMatch, matchCount);
+    const existingWords = normalizeWords(existingProduct.Name);
+    for (const word of nameWords) {
+      if (existingWords.includes(word)) {
+        matchedWords.add(word);
+      }
+    }
   }
 
-  if (maxMatch >= 5) return 'red';
-  if (maxMatch === 4) return 'orange';
-  if (maxMatch === 3) return 'gold';
-  return 'black';
+  return Array.from(matchedWords);
 }
+
+const COMMON_WORDS = [
+  'hoodie',
+  'tshirt',
+  'shirt',
+  'tee',
+  'unisex',
+  'women',
+  'men',
+  'kids',
+  'cotton',
+  'sleeve',
+  'short',
+  'long',
+  'graphic',
+  'print',
+  'crewneck',
+  'sweatshirt',
+  'jacket',
+  'sweater',
+  'vintage',
+  'zip',
+  'fashion',
+  'style',
+  'oversized',
+  '3d',
+
+  // sports (NHL, NFL, MLB)
+  'nhl',
+  'nfl',
+  'mlb',
+  'hockey',
+  'football',
+  'baseball',
+  'basketball',
+  'puck',
+  'ice',
+  'stick',
+  'bat',
+  'glove',
+  'helmet',
+  'jersey',
+  'touchdown',
+  'cap',
+  'hat',
+  'ball',
+
+  // sneakers / shoes
+  'af1',
+  'airmax',
+  'air',
+  'max',
+  'aj1',
+  '1',
+  'jordan',
+  'force',
+  'retro',
+  'low',
+  'mid',
+  'high',
+  'stansmith',
+  'stan smith',
+  'adidas',
+  'nike',
+  'sneaker',
+  'sneakers',
+  'shoes',
+
+  // accessories / lifestyle
+  'tumbler',
+  'mug',
+  'cup',
+  'bottle',
+  'accessory',
+  'stanley',
+
+  // editions / time
+  '2025',
+  '2024',
+  'limited',
+  'edition',
+  'premium',
+  'official',
+  'authentic',
+  'new',
+  'special',
+  'custom',
+  'name',
+  'number',
+
+  // colors
+  'black',
+  'white',
+  'blue',
+  'red',
+  'green',
+  'yellow',
+  'orange',
+  'purple',
+  'pink',
+  'grey',
+  'brown',
+  'gold',
+  'silver',
+  'metal',
+  'day',
+  'personalized',
+
+  'and',
+  'or',
+  'of',
+  'the',
+  'a',
+  'an',
+  'in',
+  'on',
+  'at',
+  'to',
+  'by',
+  'for',
+  'with',
+  'from',
+  'x',
+
+  'I',
+];

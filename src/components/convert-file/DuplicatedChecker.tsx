@@ -1,10 +1,10 @@
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { endpoint } from '@/constant/endpoint';
-import { getMatchColor } from '@/helper/common';
 import {
   Button,
   Card,
   Col,
+  message,
   Modal,
   Popconfirm,
   Row,
@@ -16,6 +16,7 @@ import Meta from 'antd/es/card/Meta';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import SearchProductDialog from './SearchProductDialog';
+import { getMatchedWords } from '@/helper/common';
 const { Text } = Typography;
 
 interface DuplicatedCheckerProps {
@@ -99,7 +100,7 @@ const ProductGallery = ({
   return (
     <Row gutter={[16, 16]}>
       {productsSortByName.map((product) => {
-        const titleColor = getMatchColor(product.Name, existingProducts);
+        const matchedWords = getMatchedWords(product.Name, existingProducts);
         return (
           <Col
             xl={{ span: 6 }}
@@ -124,13 +125,19 @@ const ProductGallery = ({
             >
               <Meta
                 description={
-                  <Text copyable style={{ color: titleColor }}>
-                    {product.Name}
+                  <Text
+                    onClick={() => {
+                      navigator.clipboard.writeText(product.Name);
+                      message.success('Copy successfully');
+                    }}
+                  >
+                    {renderHighlightedName(product.Name, matchedWords)}
                   </Text>
                 }
               />
               <SearchProductDialog
                 product={product}
+                name={renderHighlightedName(product.Name, matchedWords)}
                 existingProducts={existingProducts}
               />
             </Card>
@@ -140,3 +147,27 @@ const ProductGallery = ({
     </Row>
   );
 };
+
+function renderHighlightedName(
+  name: string,
+  matchedWords: string[]
+): React.ReactNode {
+  const parts = name.split(/\s+/);
+
+  return parts.map((word, index) => {
+    const lower = word.toLowerCase();
+    const isMatched = matchedWords.includes(lower);
+    return (
+      <span
+        key={index}
+        style={{
+          fontWeight: isMatched ? 'bold' : 'normal',
+          backgroundColor: isMatched ? 'rgba(255, 215, 0, 0.3)' : undefined,
+          marginRight: 4,
+        }}
+      >
+        {word}{' '}
+      </span>
+    );
+  });
+}

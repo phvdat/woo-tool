@@ -9,11 +9,13 @@ const { Text } = Typography;
 interface SearchProductDialogProps {
   product: Product;
   existingProducts: Product[];
+  name: React.ReactNode;
 }
 
 const SearchProductDialog = ({
   product,
   existingProducts,
+  name,
 }: SearchProductDialogProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [keyword, setKeyword] = useState(product.Name);
@@ -22,12 +24,16 @@ const SearchProductDialog = ({
   };
 
   const result = useMemo(() => {
-    return existingProducts.filter((item) => item.Name.includes(keyword));
+    return existingProducts.filter((item) =>
+      item.Name.toLowerCase().includes(keyword.toLowerCase())
+    );
   }, [existingProducts, keyword]);
 
   return (
     <div>
-      <SearchOutlined onClick={() => showModal()} />
+      <Button block style={{ marginTop: 10 }} onClick={() => showModal()}>
+        <SearchOutlined />
+      </Button>
       <Modal
         title='Search Product'
         open={isModalOpen}
@@ -36,24 +42,24 @@ const SearchProductDialog = ({
         width={'90%'}
         style={{ top: 30 }}
       >
-        <Input.Search
+        <Input
           placeholder='input search text'
-          enterButton='Search'
           size='large'
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
         <Row style={{ marginTop: 20 }} gutter={[16, 16]}>
-          <Col span={6}>
+          <Col xs={{ span: 12 }} lg={{ span: 6 }}>
             <img
               src={product.Images.split(',')[0]}
               alt='product'
               style={{ width: '100%' }}
             />
-            <Text>{product.Name}</Text>
+            <Text>{name}</Text>
           </Col>
           <Col
-            span={18}
+            xs={{ span: 12 }}
+            lg={{ span: 18 }}
             style={{
               border: '1px solid #d9d9d9',
               borderRadius: '4px',
@@ -74,9 +80,9 @@ const SearchResult = ({ result }: { result: Product[] }) => {
       {result.map((product) => {
         return (
           <Col
-            xl={{ span: 6 }}
-            md={{ span: 8 }}
-            xs={{ span: 12 }}
+            xl={{ span: 8 }}
+            md={{ span: 12 }}
+            xs={{ span: 24 }}
             key={product.key}
           >
             <Card
