@@ -43,12 +43,10 @@ const ExcelSplitter = () => {
     const websiteNamesList = websiteNames.split(',').map((item) => item.trim());
     const chunkSize = Math.ceil(data.length / websiteNamesList.length);
     for (let i = 0; i < websiteNamesList.length; i++) {
-      setTimeout(() => {
-        const start = i * chunkSize;
-        const end = (i + 1) * chunkSize;
-        const chunk = data.slice(start, end);
-        handleDownloadFile(chunk, websiteNamesList[i]);
-      }, i * 1500); // delay 1.5s
+      const start = i * chunkSize;
+      const end = (i + 1) * chunkSize;
+      const chunk = data.slice(start, end);
+      handleDownloadFile(chunk, websiteNamesList[i]);
     }
   };
 
