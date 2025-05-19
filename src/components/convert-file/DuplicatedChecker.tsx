@@ -16,7 +16,7 @@ import Meta from 'antd/es/card/Meta';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import SearchProductDialog from './SearchProductDialog';
-import { getMatchedWords } from '@/helper/common';
+import { getMatchedWordsForBestMatch } from '@/helper/common';
 const { Text } = Typography;
 
 interface DuplicatedCheckerProps {
@@ -87,7 +87,9 @@ const ProductGallery = ({
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get(endpoint.productData);
+        const res = await axios.get(endpoint.productData, {
+          params: { categories: products[0].Categories },
+        });
         const data: Product[] = res.data;
         setExistingProducts(data);
       } catch (error) {
@@ -100,7 +102,10 @@ const ProductGallery = ({
   return (
     <Row gutter={[16, 16]}>
       {productsSortByName.map((product) => {
-        const matchedWords = getMatchedWords(product.Name, existingProducts);
+        const matchedWords = getMatchedWordsForBestMatch(
+          product.Name,
+          existingProducts
+        );
         return (
           <Col
             xl={{ span: 6 }}

@@ -59,23 +59,29 @@ function normalizeWords(name: string): string[] {
     .split(/\s+/)
     .filter((word) => word && !COMMON_WORDS.includes(word));
 }
-export function getMatchedWords(
+
+export function getMatchedWordsForBestMatch(
   name: string,
   existingProducts: Product[]
 ): string[] {
   const nameWords = normalizeWords(name);
-  const matchedWords = new Set<string>();
+
+  let maxMatchCount = 0;
+  let bestMatchedWords: string[] = [];
 
   for (const existingProduct of existingProducts) {
     const existingWords = normalizeWords(existingProduct.Name);
-    for (const word of nameWords) {
-      if (existingWords.includes(word)) {
-        matchedWords.add(word);
-      }
+    const matchedWords = nameWords.filter((word) =>
+      existingWords.includes(word)
+    );
+
+    if (matchedWords.length > maxMatchCount) {
+      maxMatchCount = matchedWords.length;
+      bestMatchedWords = matchedWords;
     }
   }
 
-  return Array.from(matchedWords);
+  return bestMatchedWords;
 }
 
 const COMMON_WORDS = [
