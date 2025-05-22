@@ -255,12 +255,9 @@ const WooForm = () => {
               const websiteOption = watermarkOptions.find((item) =>
                 item.label.toLowerCase().includes(website)
               );
-              console.log(websiteOption);
-
-              form.setFieldValue(
-                'watermarkWebsite',
-                websiteOption?.value || ''
-              );
+              if (websiteOption) {
+                form.setFieldValue('watermarkWebsite', websiteOption?.value);
+              }
             }}
           >
             <Button block>Upload file excel</Button>

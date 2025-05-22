@@ -44,7 +44,10 @@ const ProductItem = function ProductItem({
   };
 
   return (
-    <div style={{ ...style, overflowY: 'auto' }} key={currentProduct.key}>
+    <div
+      style={{ ...style, overflowY: 'auto', border: '1px solid #ccc' }}
+      key={currentProduct.key}
+    >
       <Row
         style={{
           width: '100%',
@@ -52,16 +55,6 @@ const ProductItem = function ProductItem({
       >
         <Col span={24} lg={{ span: 12 }} style={{ padding: 12 }}>
           <Flex style={{ width: '100%' }} gap={12} wrap>
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => handleDelete(currentProduct.key)}
-              style={{ flex: 1 }}
-              tabIndex={-1}
-            >
-              Xoá
-            </Button>
-
             <Select
               value={currentProduct.Categories}
               placeholder='Select Category'
@@ -93,6 +86,16 @@ const ProductItem = function ProductItem({
                 return searchFull || searchAcronym;
               }}
             ></Select>
+
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(currentProduct.key)}
+              tabIndex={-1}
+            >
+              Xoá
+            </Button>
+
             <Input.TextArea
               placeholder='Product Name'
               rows={2}
@@ -145,7 +148,6 @@ const ProductItem = function ProductItem({
           </Flex>
         </Col>
       </Row>
-      <Divider style={{ margin: 0, borderColor: '#7cb305' }} />
     </div>
   );
 };

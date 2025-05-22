@@ -19,9 +19,9 @@ import {
   Typography,
   Upload,
 } from 'antd';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { useMediaQuery } from 'usehooks-ts';
+import { useDebounceValue, useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
 import CateKeywordConfig, {
   CATE_KEYWORD_LOCAL_KEY,
@@ -31,6 +31,7 @@ import ProductItem from '@/components/convert-file/ProductItem';
 import detectCategory from '@/helper/detect-category';
 import axios from 'axios';
 import { endpoint } from '@/constant/endpoint';
+import useDebounce from '@/app/hooks/useDebounce';
 
 const { Title } = Typography;
 const CONVERT_DATA = 'CONVERT_DATA';
@@ -44,6 +45,7 @@ function ConvertFile() {
   const matches = useMediaQuery('(min-width: 992px)');
   const [form] = Form.useForm();
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
+  const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [cateKeyword] = useLocalStorage<{
     [key: string]: string[];
   }>(CATE_KEYWORD_LOCAL_KEY, {});
@@ -51,7 +53,7 @@ function ConvertFile() {
   const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch('website', form);
   const [searchProduct, setSearchProduct] = useState<Product[] | null>(null);
-
+  const debounceProducts: Product[] = useDebounce(newProducts, 400);
   const categoriesOptions = useMemo(() => {
     const categoriesByShop = categories?.filter(
       (category) => category.shopID === watchShopId
@@ -72,6 +74,7 @@ function ConvertFile() {
   }, [websiteConfigList]);
 
   const beforeUploadTrackingFile = async (file: any) => {
+    setNewProducts([]);
     const workbook = XLSX.read(await file.arrayBuffer(), {
       type: 'array',
     });
@@ -83,7 +86,7 @@ function ConvertFile() {
       Images: row.Images,
       Categories: row?.Categories || detectCategory(row.Name, cateKeyword),
     }));
-    setProducts([...products, ...formatted]);
+    setNewProducts((prev) => [...prev, ...formatted]);
   };
 
   const handleNameChange = (productKey: string, value: string) => {
@@ -181,6 +184,13 @@ function ConvertFile() {
     handleDownloadFile(products, 'Converted');
     await uploadProductsToServer(products);
   };
+
+  useEffect(() => {
+    if (debounceProducts.length === 0) return;
+    console.log('set to local');
+
+    setProducts([...products, ...debounceProducts]);
+  }, [debounceProducts]);
 
   return (
     <div
@@ -289,7 +299,7 @@ function ConvertFile() {
               borderRadius: 4,
             }}
             height={800}
-            itemSize={matches ? 125 : 250}
+            itemSize={matches ? 127 : 252}
             itemCount={searchProduct ? searchProduct.length : products.length}
             overscanCount={5}
             itemData={{

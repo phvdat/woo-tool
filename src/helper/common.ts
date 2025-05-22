@@ -101,6 +101,7 @@ const COMMON_WORDS = [
   'print',
   'crewneck',
   'sweatshirt',
+  'hawaiian',
   'jacket',
   'sweater',
   'vintage',

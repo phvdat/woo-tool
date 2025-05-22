@@ -51,7 +51,7 @@ const SearchProductDialog = ({
         <Row style={{ marginTop: 20 }} gutter={[16, 16]}>
           <Col xs={{ span: 12 }} lg={{ span: 6 }}>
             <img
-              src={product.Images.split(',')[0]}
+              src={product.Images?.split(',')[0]}
               alt='product'
               style={{ width: '100%' }}
             />
