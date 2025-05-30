@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
       try {
         let { db } = await connectToDatabase();
         const response = await db.collection(USERS_COLLECTION).find().toArray();
-        const listEmail = response.map((item) => item.email);
+        const listEmail = response.map((item: any) => item.email);
         process.env.NEXT_PUBLIC_ADMIN_EMAIL &&
           listEmail.push(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
         if (

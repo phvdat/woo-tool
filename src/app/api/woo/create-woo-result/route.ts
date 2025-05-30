@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       let categoryObjectByRow = null;
       if (rowData['Categories']) {
         categoryObjectByRow = categoriesList.find(
-          (item) => item.category === rowData['Categories']
+          (item: any) => item.category === rowData['Categories']
         ) as unknown as WooFixedOption;
       }
       if (!categoryObjectByRow && !categoriesObject) {
