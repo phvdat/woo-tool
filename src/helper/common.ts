@@ -1,3 +1,4 @@
+import stringSimilarity from 'string-similarity';
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import dayjs from 'dayjs';
 import _get from 'lodash/get';
@@ -53,160 +54,22 @@ export function convertToAcronym(input: string) {
     .toLowerCase(); // Chuyển thành chữ thường
 }
 
-function normalizeWords(name: string): string[] {
-  return name
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((word) => word && !COMMON_WORDS.includes(word));
-}
-
 export function getMatchedWordsForBestMatch(
   name: string,
   existingProducts: Product[]
-): string[] {
-  const nameWords = normalizeWords(name);
-
-  let maxMatchCount = 0;
-  let bestMatchedWords: string[] = [];
+): string {
+  let bestSimilarity = 0;
+  let bestMatchedProducts: string = '';
 
   for (const existingProduct of existingProducts) {
-    const existingWords = normalizeWords(existingProduct.Name);
-    const matchedWords = nameWords.filter((word) =>
-      existingWords.includes(word)
+    const similarity = stringSimilarity.compareTwoStrings(
+      name.toLowerCase(),
+      existingProduct.Name.toLowerCase()
     );
-
-    if (matchedWords.length > maxMatchCount) {
-      maxMatchCount = matchedWords.length;
-      bestMatchedWords = matchedWords;
+    if (similarity >= bestSimilarity) {
+      bestSimilarity = similarity;
+      bestMatchedProducts = existingProduct.Name;
     }
   }
-
-  return bestMatchedWords;
+  return bestMatchedProducts;
 }
-
-const COMMON_WORDS = [
-  'hoodie',
-  'tshirt',
-  'shirt',
-  'tee',
-  'unisex',
-  'women',
-  'men',
-  'kids',
-  'cotton',
-  'sleeve',
-  'short',
-  'long',
-  'graphic',
-  'print',
-  'crewneck',
-  'sweatshirt',
-  'hawaiian',
-  'jacket',
-  'sweater',
-  'vintage',
-  'zip',
-  'fashion',
-  'style',
-  'oversized',
-  '3d',
-
-  // sports (NHL, NFL, MLB)
-  'nhl',
-  'nfl',
-  'mlb',
-  'hockey',
-  'football',
-  'baseball',
-  'basketball',
-  'puck',
-  'ice',
-  'stick',
-  'bat',
-  'glove',
-  'helmet',
-  'jersey',
-  'touchdown',
-  'cap',
-  'hat',
-  'ball',
-
-  // sneakers / shoes
-  'af1',
-  'airmax',
-  'air',
-  'max',
-  'aj1',
-  '1',
-  'jordan',
-  'force',
-  'retro',
-  'low',
-  'mid',
-  'high',
-  'stansmith',
-  'stan smith',
-  'adidas',
-  'nike',
-  'sneaker',
-  'sneakers',
-  'shoes',
-
-  // accessories / lifestyle
-  'tumbler',
-  'mug',
-  'cup',
-  'bottle',
-  'accessory',
-  'stanley',
-
-  // editions / time
-  '2025',
-  '2024',
-  'limited',
-  'edition',
-  'premium',
-  'official',
-  'authentic',
-  'new',
-  'special',
-  'custom',
-  'name',
-  'number',
-
-  // colors
-  'black',
-  'white',
-  'blue',
-  'red',
-  'green',
-  'yellow',
-  'orange',
-  'purple',
-  'pink',
-  'grey',
-  'brown',
-  'gold',
-  'silver',
-  'metal',
-  'day',
-  'personalized',
-
-  'and',
-  'or',
-  'of',
-  'the',
-  'a',
-  'an',
-  'in',
-  'on',
-  'at',
-  'to',
-  'by',
-  'for',
-  'with',
-  'from',
-  'x',
-
-  'I',
-];

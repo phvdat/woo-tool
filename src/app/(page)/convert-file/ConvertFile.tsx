@@ -2,8 +2,16 @@
 
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
+import useDebounce from '@/app/hooks/useDebounce';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import CateKeywordConfig, {
+  CATE_KEYWORD_LOCAL_KEY,
+} from '@/components/convert-file/CateKeywordConfig';
+import DuplicatedChecker from '@/components/convert-file/DuplicatedChecker';
+import ProductItem from '@/components/convert-file/ProductItem';
+import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
+import detectCategory from '@/helper/detect-category';
 import { handleDownloadFile } from '@/helper/woo';
 import { DownloadOutlined } from '@ant-design/icons';
 import {
@@ -19,19 +27,11 @@ import {
   Typography,
   Upload,
 } from 'antd';
+import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { useDebounceValue, useMediaQuery } from 'usehooks-ts';
+import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
-import CateKeywordConfig, {
-  CATE_KEYWORD_LOCAL_KEY,
-} from '@/components/convert-file/CateKeywordConfig';
-import DuplicatedChecker from '@/components/convert-file/DuplicatedChecker';
-import ProductItem from '@/components/convert-file/ProductItem';
-import detectCategory from '@/helper/detect-category';
-import axios from 'axios';
-import { endpoint } from '@/constant/endpoint';
-import useDebounce from '@/app/hooks/useDebounce';
 
 const { Title } = Typography;
 const CONVERT_DATA = 'CONVERT_DATA';

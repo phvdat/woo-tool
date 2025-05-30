@@ -1,7 +1,7 @@
 'use client';
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Card, Col, Input, Modal, Row, Typography } from 'antd';
+import { Button, Card, Col, Image, Input, Modal, Row, Typography } from 'antd';
 import Meta from 'antd/es/card/Meta';
 import { useMemo, useState } from 'react';
 const { Text } = Typography;
@@ -31,7 +31,7 @@ const SearchProductDialog = ({
 
   return (
     <div>
-      <Button block style={{ marginTop: 10 }} onClick={() => showModal()}>
+      <Button block onClick={() => showModal()}>
         <SearchOutlined />
       </Button>
       <Modal
@@ -50,7 +50,7 @@ const SearchProductDialog = ({
         />
         <Row style={{ marginTop: 20 }} gutter={[16, 16]}>
           <Col xs={{ span: 12 }} lg={{ span: 6 }}>
-            <img
+            <Image
               src={product.Images?.split(',')[0]}
               alt='product'
               style={{ width: '100%' }}
@@ -64,6 +64,8 @@ const SearchProductDialog = ({
               border: '1px solid #d9d9d9',
               borderRadius: '4px',
               padding: '8px',
+              maxHeight: '80vh',
+              overflowY: 'auto',
             }}
           >
             <SearchResult result={result} />
@@ -87,7 +89,9 @@ const SearchResult = ({ result }: { result: Product[] }) => {
           >
             <Card
               style={{ maxWidth: 240 }}
-              cover={<img alt='product' src={product.Images?.split(',')[0]} />}
+              cover={
+                <Image alt='product' src={product.Images?.split(',')[0]} />
+              }
             >
               <Meta description={<Text>{product.Name}</Text>} />
             </Card>

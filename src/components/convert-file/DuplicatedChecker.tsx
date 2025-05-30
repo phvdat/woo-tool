@@ -1,13 +1,18 @@
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { endpoint } from '@/constant/endpoint';
+import { getMatchedWordsForBestMatch } from '@/helper/common';
 import {
   Button,
   Card,
+  Carousel,
   Col,
+  Flex,
+  Image,
   message,
   Modal,
   Popconfirm,
   Row,
+  Spin,
   Tabs,
   TabsProps,
   Typography,
@@ -16,7 +21,6 @@ import Meta from 'antd/es/card/Meta';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import SearchProductDialog from './SearchProductDialog';
-import { getMatchedWordsForBestMatch } from '@/helper/common';
 const { Text } = Typography;
 
 interface DuplicatedCheckerProps {
@@ -79,6 +83,7 @@ const ProductGallery = ({
   products: Product[];
   handleDelete: (index: string) => void;
 }) => {
+  const [loading, setLoading] = useState(false);
   const [existingProducts, setExistingProducts] = useState<Product[]>([]);
   const productsSortByName = products.sort((a, b) =>
     a.Name.localeCompare(b.Name)
@@ -86,6 +91,7 @@ const ProductGallery = ({
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(endpoint.productData, {
           params: { categories: products[0].Categories },
@@ -94,21 +100,32 @@ const ProductGallery = ({
         setExistingProducts(data);
       } catch (error) {
         console.error('Error fetching existing names', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProducts();
   }, []);
 
+  if (loading) {
+    return (
+      <Flex justify='center' align='center' style={{ minHeight: '80vh' }}>
+        <Spin />
+      </Flex>
+    );
+  }
+
   return (
     <Row gutter={[16, 16]}>
       {productsSortByName.map((product) => {
-        const matchedWords = getMatchedWordsForBestMatch(
+        const matchedProduct = getMatchedWordsForBestMatch(
           product.Name,
           existingProducts
         );
         return (
           <Col
-            xl={{ span: 6 }}
+            xl={{ span: 4 }}
+            lg={{ span: 6 }}
             md={{ span: 8 }}
             xs={{ span: 12 }}
             key={product.key}
@@ -117,15 +134,11 @@ const ProductGallery = ({
               hoverable
               style={{ maxWidth: 240 }}
               cover={
-                <Popconfirm
-                  title='Delete the Product'
-                  description='Are you sure to delete this product?'
-                  onConfirm={() => handleDelete(product.key)}
-                  okText='Yes'
-                  cancelText='No'
-                >
-                  <img alt='product' src={product.Images?.split(',')[0]} />
-                </Popconfirm>
+                <Carousel>
+                  {product.Images.split(',').map((image, index) => (
+                    <Image src={image} alt={product.Name} key={index} />
+                  ))}
+                </Carousel>
               }
             >
               <Meta
@@ -136,15 +149,31 @@ const ProductGallery = ({
                       message.success('Copy successfully');
                     }}
                   >
-                    {renderHighlightedName(product.Name, matchedWords)}
+                    {renderHighlightedName(product.Name, matchedProduct)}
                   </Text>
                 }
               />
-              <SearchProductDialog
-                product={product}
-                name={renderHighlightedName(product.Name, matchedWords)}
-                existingProducts={existingProducts}
-              />
+              <Flex
+                justify='space-between'
+                align='center'
+                style={{ gap: 10, paddingTop: 10 }}
+              >
+                <SearchProductDialog
+                  product={product}
+                  name={renderHighlightedName(product.Name, matchedProduct)}
+                  existingProducts={existingProducts}
+                />
+
+                <Popconfirm
+                  title='Delete the Product'
+                  description='Are you sure to delete this product?'
+                  onConfirm={() => handleDelete(product.key)}
+                  okText='Yes'
+                  cancelText='No'
+                >
+                  <Button danger>Delete</Button>
+                </Popconfirm>
+              </Flex>
             </Card>
           </Col>
         );
@@ -155,19 +184,23 @@ const ProductGallery = ({
 
 function renderHighlightedName(
   name: string,
-  matchedWords: string[]
+  matchedProduct: string
 ): React.ReactNode {
+  if (!matchedProduct) {
+    return name;
+  }
   const parts = name.split(/\s+/);
+  const matchedParts = matchedProduct.toLowerCase().split(/\s+/);
 
   return parts.map((word, index) => {
     const lower = word.toLowerCase();
-    const isMatched = matchedWords.includes(lower);
+    const isMatched = matchedParts.includes(lower);
     return (
       <span
         key={index}
         style={{
           fontWeight: isMatched ? 'bold' : 'normal',
-          backgroundColor: isMatched ? 'rgba(255, 215, 0, 0.3)' : undefined,
+          color: isMatched ? 'red' : undefined,
           marginRight: 4,
         }}
       >
