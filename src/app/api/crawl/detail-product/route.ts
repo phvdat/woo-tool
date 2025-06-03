@@ -1,15 +1,13 @@
 import _get from 'lodash/get';
 import puppeteer from 'puppeteer-core';
 import { executablePath } from 'puppeteer';
-import TelegramBot from 'node-telegram-bot-api';
 import _toString from 'lodash/toString';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
+import { telegramBot } from '@/services/telegram';
 
-const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
-  polling: false,
-});
+const bot = telegramBot;
 
 export async function POST(request: Request) {
   const payload = await request.json();

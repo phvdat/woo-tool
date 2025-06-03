@@ -10,10 +10,10 @@ import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import _get from 'lodash/get';
 import _toString from 'lodash/toString';
 import moment from 'moment';
-import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
 import { WooCategoryPayload } from '../categories-config/route';
 import { WooWebsitePayload } from '../website-config/route';
+import { telegramBot } from '@/services/telegram';
 
 axiosRetry(axios, {
   retries: 3, // Số lần thử lại tối đa
@@ -34,9 +34,7 @@ interface SheetData {
   Contain?: string;
 }
 
-const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
-  polling: false,
-});
+const bot = telegramBot;
 
 export async function POST(request: Request) {
   let { db } = await connectToDatabase();

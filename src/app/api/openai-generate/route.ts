@@ -1,23 +1,19 @@
 import { getSocket } from '@/config/socket';
 import { publishedTimeHelper } from '@/helper/common';
 import chatgpt from '@/services/chatgpt';
-import deepSeek from '@/services/deepseek';
+import { telegramBot } from '@/services/telegram';
 import { WooCommerce } from '@/types/woo';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import { shuffle } from 'lodash';
 import _get from 'lodash/get';
-import _toString from 'lodash/toString';
 import moment from 'moment';
-import TelegramBot from 'node-telegram-bot-api';
 import * as XLSX from 'xlsx';
 interface SheetData {
   Name: string;
   Images: string;
 }
 
-const bot = new TelegramBot(_toString(process.env.TELEGRAM_BOT_TOKEN), {
-  polling: false,
-});
+const bot = telegramBot;
 
 const socket = getSocket();
 socket.connect();

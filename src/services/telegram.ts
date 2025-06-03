@@ -1,0 +1,23 @@
+import axios from 'axios';
+import FormData from 'form-data';
+import { createReadStream } from 'fs';
+
+export const telegramBot = {
+  sendDocument: async (
+    chatId: string,
+    stream: NodeJS.ReadableStream,
+    { caption }: { caption: string }
+  ) => {
+    const url = `${process.env.TELEGRAM_BOT_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}/sendDocument`;
+    const formData = new FormData();
+    formData.append('chat_id', chatId.toString());
+    formData.append('document', stream);
+    formData.append('caption', caption);
+    const response = await axios.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
