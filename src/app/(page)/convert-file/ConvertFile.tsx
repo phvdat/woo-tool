@@ -24,6 +24,7 @@ import {
   Row,
   Select,
   Spin,
+  Switch,
   Typography,
   Upload,
 } from 'antd';
@@ -33,7 +34,7 @@ import { FixedSizeList as List } from 'react-window';
 import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const CONVERT_DATA = 'CONVERT_DATA';
 export interface Product {
   key: string;
@@ -46,6 +47,7 @@ function ConvertFile() {
   const [form] = Form.useForm();
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
+  const [uploadAble, setUploadable] = useState(true);
   const [cateKeyword] = useLocalStorage<{
     [key: string]: string[];
   }>(CATE_KEYWORD_LOCAL_KEY, {});
@@ -182,7 +184,9 @@ function ConvertFile() {
       return;
     }
     handleDownloadFile(products, 'Converted');
-    await uploadProductsToServer(products);
+    if (uploadAble) {
+      await uploadProductsToServer(products);
+    }
   };
 
   useEffect(() => {
@@ -267,7 +271,7 @@ function ConvertFile() {
             </Form.Item>
           </Col>
         </Row>
-        <Form.Item name='search' label='Search'>
+        <Form.Item name='search'>
           <Input
             placeholder='Search'
             style={{ marginBottom: 16 }}
@@ -315,14 +319,22 @@ function ConvertFile() {
           >
             {ProductItem}
           </List>
-          <Button
-            type='primary'
-            icon={<DownloadOutlined />}
-            onClick={handleSubmit}
-            style={{ marginTop: 16 }}
-          >
-            Download ({products.length} items)
-          </Button>
+
+          <Flex gap={16} align='center' justify='space-between'>
+            <div>
+              <Text>Upload to server: </Text>
+              <Switch value={uploadAble} onChange={(e) => setUploadable(e)} />
+            </div>
+
+            <Button
+              type='primary'
+              icon={<DownloadOutlined />}
+              onClick={handleSubmit}
+              style={{ marginTop: 16 }}
+            >
+              Download ({products.length} items)
+            </Button>
+          </Flex>
         </>
       )}
     </div>

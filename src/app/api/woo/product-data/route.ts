@@ -12,6 +12,7 @@ export async function GET(request: Request) {
   const response = await db
     .collection(PRODUCT_DATA_COLLECTION)
     .find({ Categories: { $regex: categories, $options: 'i' } })
+    .sort({ createdAt: -1 })
     .toArray();
   return Response.json(response, { status: 200 });
 }

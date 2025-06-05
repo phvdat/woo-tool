@@ -81,7 +81,7 @@ const OpenaiContentForm = () => {
       layout='vertical'
       disabled={loading || isLoading}
       initialValues={{
-        mixed: true,
+        mixed: false,
       }}
     >
       <Card>
