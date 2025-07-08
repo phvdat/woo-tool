@@ -5,8 +5,20 @@ import {
   DeleteOutlined,
   EditOutlined,
   RollbackOutlined,
+  SplitCellsOutlined,
 } from '@ant-design/icons';
-import { Button, Col, Divider, Flex, Image, Input, Row, Select } from 'antd';
+import {
+  Button,
+  Col,
+  Divider,
+  Flex,
+  Image,
+  Input,
+  InputNumber,
+  Row,
+  Select,
+} from 'antd';
+import { isNumber, set } from 'lodash';
 import React, { useState } from 'react';
 interface ProductItemProps {
   data: {
@@ -17,6 +29,7 @@ interface ProductItemProps {
     products: Product[];
     handleImagesChange: (productKey: string, value: string) => void;
     handleDuplicateRow: (productKey: string) => void;
+    setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   };
   index: number;
   style: any;
@@ -30,11 +43,13 @@ const ProductItem = function ProductItem({
     categoriesOptions,
     products,
     handleDuplicateRow,
+    setProducts,
   },
   index,
   style,
 }: ProductItemProps) {
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [productSplit, setProductSplit] = useState<number>();
 
   const currentProduct = products[index];
   const setPrevCategory = () => {
@@ -42,10 +57,37 @@ const ProductItem = function ProductItem({
     const prevCategory = prevProduct?.Categories || currentProduct.Categories;
     handleCategoryChange(currentProduct.key, prevCategory);
   };
+  const handleSplitter = (key: string, productSplit: number) => {
+    const newProducts: any[] = [];
+
+    products.forEach((product) => {
+      if (product.key === key) {
+        const imageArray = product.Images.split(',');
+        const totalChunks = Math.ceil(imageArray.length / productSplit);
+
+        for (let i = 0; i < totalChunks; i++) {
+          const chunk = imageArray.slice(
+            i * productSplit,
+            (i + 1) * productSplit
+          );
+          const newProduct = {
+            ...product,
+            Images: chunk.join(','),
+            key: `${product.key}-${i}}`,
+          };
+          newProducts.push(newProduct);
+        }
+      } else {
+        newProducts.push(product);
+      }
+    });
+
+    setProducts(newProducts);
+  };
 
   return (
     <div
-      style={{ ...style, overflowY: 'auto', border: '1px solid #ccc' }}
+      style={{ ...style, border: '1px solid #ccc', overflowY: 'auto' }}
       key={currentProduct.key}
     >
       <Row
@@ -118,7 +160,7 @@ const ProductItem = function ProductItem({
                 onChange={(e) =>
                   handleImagesChange(
                     currentProduct.key,
-                    e.target.value.replaceAll('\n', ',')
+                    e.target.value.replaceAll('\n', ',').replaceAll(' ', '')
                   )
                 }
                 onBlur={() => setIsEdit(false)}
@@ -145,6 +187,21 @@ const ProductItem = function ProductItem({
             <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
               Duplicate
             </Button>
+            <div>
+              <InputNumber
+                placeholder='Products Split'
+                addonAfter={
+                  <SplitCellsOutlined
+                    onClick={() =>
+                      isNumber(productSplit) &&
+                      handleSplitter(currentProduct.key, productSplit)
+                    }
+                  />
+                }
+                onChange={(value) => setProductSplit(value as number)}
+                value={productSplit}
+              />
+            </div>
           </Flex>
         </Col>
       </Row>

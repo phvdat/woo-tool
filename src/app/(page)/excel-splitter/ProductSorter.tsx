@@ -85,7 +85,33 @@ export default function ProductSorter({
   };
 
   const handleDragEnd = (event: any) => {
+    const { active, over } = event;
     setActiveId(null);
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    const sourceCol = findColumn(activeId);
+    const targetCol = findColumn(overId);
+
+    if (!sourceCol || !targetCol) return;
+
+    // Nếu drag trong cùng 1 cột -> cần sắp xếp lại
+    if (sourceCol === targetCol) {
+      const oldIndex = columns[sourceCol].findIndex(
+        (item) => item.id === activeId
+      );
+      const newIndex = columns[sourceCol].findIndex(
+        (item) => item.id === overId
+      );
+      if (oldIndex !== newIndex && newIndex !== -1) {
+        setColumns((prev) => ({
+          ...prev,
+          [sourceCol]: arrayMove(prev[sourceCol], oldIndex, newIndex),
+        }));
+      }
+    }
   };
 
   const handleExportSingle = async (key: string) => {

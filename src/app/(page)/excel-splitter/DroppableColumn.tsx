@@ -21,7 +21,6 @@ export const SortableItem = ({ item }: { item: any }) => {
     margin: 10,
     flex: 1,
   };
-  console.log(item);
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
@@ -30,7 +29,7 @@ export const SortableItem = ({ item }: { item: any }) => {
           marginBottom: 12,
         }}
       >
-        <Flex gap={12}>
+        <Flex gap={12} justify='space-between'>
           <div>{item.Name}</div>
           <img width={100} height={100} src={item.Images.split(',')[0]} />
         </Flex>

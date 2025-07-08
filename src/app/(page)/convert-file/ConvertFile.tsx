@@ -82,13 +82,23 @@ function ConvertFile() {
     });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     const productsData = XLSX.utils.sheet_to_json(worksheet);
-    const formatted = productsData.map((row: any, index) => ({
-      key: file.uid + index,
-      Name: row.Name,
-      Images: row.Images,
-      Categories: row?.Categories || detectCategory(row.Name, cateKeyword),
-    }));
-    setNewProducts((prev) => [...prev, ...formatted]);
+
+    const formatted = productsData.map((row: any, index) => {
+      return {
+        key: file.uid + index,
+        Name: row?.Name,
+        Images: row?.Images,
+        Categories: row?.Categories || detectCategory(row.Name, cateKeyword),
+      };
+    });
+
+    console.log('file', file);
+    const newProducts = formatted.filter(
+      (product) => product.Name && product.Images
+    );
+    console.log('newProducts', newProducts);
+    console.log('formatted', formatted);
+    setNewProducts((prev) => [...prev, ...newProducts]);
   };
 
   const handleNameChange = (productKey: string, value: string) => {
@@ -191,8 +201,6 @@ function ConvertFile() {
 
   useEffect(() => {
     if (debounceProducts.length === 0) return;
-    console.log('set to local');
-
     setProducts([...products, ...debounceProducts]);
   }, [debounceProducts]);
 
@@ -289,6 +297,7 @@ function ConvertFile() {
               products={products}
               handleDelete={handleDelete}
             />
+            {products.length} items
             <Button
               danger
               onClick={() => setProducts([])}
@@ -314,6 +323,7 @@ function ConvertFile() {
               categoriesOptions,
               handleImagesChange,
               handleDuplicateRow,
+              setProducts,
             }}
             width={'100%'}
           >
