@@ -38,6 +38,7 @@ const SearchProductDialog = ({
         title='Search Product'
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
+        destroyOnClose={true}
         footer={null}
         width={'90%'}
         style={{ top: 30 }}
