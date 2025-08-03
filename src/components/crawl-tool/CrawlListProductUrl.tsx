@@ -23,7 +23,7 @@ function CrawlListProductUrl() {
     setErrorMessage('');
     setProductLinks([]);
     const { urls, productLinksSelector } = value;
-    const urlsArray = urls.split(',');
+    const urlsArray = urls.split('\n');
     const promises = urlsArray.map((url) => {
       return axios.get(endpoint.crawlList, {
         params: { url: trim(url), productLinksSelector },
@@ -44,7 +44,7 @@ function CrawlListProductUrl() {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(productLinks.join(','));
+    navigator.clipboard.writeText(productLinks.join('\n'));
     messageApi.open({
       type: 'success',
       content: 'Copy successfully',
@@ -59,14 +59,11 @@ function CrawlListProductUrl() {
         labelCol={{ style: { minWidth: 180 } }}
         labelAlign='left'
       >
-        <Form.Item<FormValues> label='Pages URL' name='urls'>
+        <Form.Item<FormValues> name='urls'>
           <Input.TextArea placeholder='Enter Pages URL' rows={4} />
         </Form.Item>
 
-        <Form.Item<FormValues>
-          label='Product links selector'
-          name='productLinksSelector'
-        >
+        <Form.Item<FormValues> name='productLinksSelector'>
           <Input placeholder='Enter image links selector' />
         </Form.Item>
         <Form.Item>
@@ -81,7 +78,11 @@ function CrawlListProductUrl() {
           <Button onClick={handleCopy} icon={<CopyFilled />}>
             Click to copy {productLinks.length} product links
           </Button>
-          <div>{productLinks.join(',')}</div>
+          <div>
+            {productLinks.map((link, index) => (
+              <div key={index}>{link}</div>
+            ))}
+          </div>
         </div>
       )}
     </div>

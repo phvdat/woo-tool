@@ -71,25 +71,16 @@ function CrawlProductDetail() {
         labelCol={{ style: { minWidth: 180 } }}
         labelAlign='left'
       >
-        <Form.Item<FormValues> label='Products URL' name='urls'>
+        <Form.Item<FormValues> name='urls'>
           <Input.TextArea placeholder='Enter products URL' rows={4} />
         </Form.Item>
-        <Form.Item<FormValues>
-          label='Product name selector'
-          name='selectorProductName'
-        >
+        <Form.Item<FormValues> name='selectorProductName'>
           <Input placeholder='Enter product name selector' />
         </Form.Item>
-        <Form.Item<FormValues>
-          label='Image links selector'
-          name='selectorImageLinks'
-        >
+        <Form.Item<FormValues> name='selectorImageLinks'>
           <Input placeholder='Enter image links selector' />
         </Form.Item>
-        <Form.Item<FormValues>
-          label='Select images index'
-          name='selectImagesIndex'
-        >
+        <Form.Item<FormValues> name='selectImagesIndex'>
           <Input placeholder='Enter select images index' />
         </Form.Item>
         <Form.Item>
