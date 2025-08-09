@@ -65,7 +65,6 @@ const DuplicatedChecker = ({
         style={{ top: 20 }}
         title='Duplicated Checker'
         open={isModalOpen}
-        destroyOnClose={true}
         footer={null}
         onCancel={() => setIsModalOpen(false)}
       >

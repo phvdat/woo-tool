@@ -95,7 +95,7 @@ const ProductItem = function ProductItem({
           width: '100%',
         }}
       >
-        <Col span={24} lg={{ span: 12 }} style={{ padding: 12 }}>
+        <Col span={24} lg={{ span: 8 }} style={{ padding: 12 }}>
           <Flex style={{ width: '100%' }} gap={12} wrap>
             <Select
               value={currentProduct.Categories}
@@ -149,8 +149,8 @@ const ProductItem = function ProductItem({
             />
           </Flex>
         </Col>
-        <Col span={24} lg={{ span: 12 }} style={{ padding: 12 }}>
-          <Flex gap={12} wrap>
+        <Col span={24} lg={{ span: 16 }} style={{ padding: 12 }}>
+          <Flex gap={12} wrap justify='space-between'>
             {isEdit ? (
               <Input.TextArea
                 placeholder='Image Urls'
@@ -181,27 +181,30 @@ const ProductItem = function ProductItem({
                 )}
               </Flex>
             )}
-            <Button onClick={() => setIsEdit((prev) => !prev)}>
-              <EditOutlined />
-            </Button>
-            <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
-              Duplicate
-            </Button>
-            <div>
-              <InputNumber
-                placeholder='Products Split'
-                addonAfter={
-                  <SplitCellsOutlined
-                    onClick={() =>
-                      isNumber(productSplit) &&
-                      handleSplitter(currentProduct.key, productSplit)
-                    }
-                  />
-                }
-                onChange={(value) => setProductSplit(value as number)}
-                value={productSplit}
-              />
-            </div>
+            <Flex gap={4} wrap>
+              <Button onClick={() => setIsEdit((prev) => !prev)}>
+                <EditOutlined />
+              </Button>
+              <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
+                Dup
+              </Button>
+              <div>
+                <InputNumber
+                  placeholder='Split'
+                  addonAfter={
+                    <SplitCellsOutlined
+                      onClick={() =>
+                        isNumber(productSplit) &&
+                        handleSplitter(currentProduct.key, productSplit)
+                      }
+                    />
+                  }
+                  onChange={(value) => setProductSplit(value as number)}
+                  value={productSplit}
+                  style={{ width: '90px' }}
+                />
+              </div>
+            </Flex>
           </Flex>
         </Col>
       </Row>
