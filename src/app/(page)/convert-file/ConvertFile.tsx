@@ -91,7 +91,7 @@ function ConvertFile() {
       formattedProduct.push({
         key: file.uid + i,
         Name: productsData[i].Name,
-        Images: productsData[i].Images,
+        Images: productsData[i].Images.replace(/,+$/, ''),
         Categories:
           productsData[i]?.Categories ||
           detectCategory(productsData[i].Name, cateKeyword),
