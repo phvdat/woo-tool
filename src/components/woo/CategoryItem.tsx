@@ -53,16 +53,13 @@ const CategoryItem = ({ category, accessAble, refresh }: CategoryItem) => {
     <>
       {contextHolder}
       <Row key={category._id} style={{ width: '100%' }} gutter={[20, 20]}>
-        <Col xs={{ span: 8 }} lg={{ span: 6 }}>
-          <Text>{category.templateName}</Text>
-        </Col>
-        <Col xs={{ span: 8 }} lg={{ span: 6 }}>
-          <Text>{category.category}</Text>
-        </Col>
-        <Col xs={{ span: 8 }} lg={{ span: 6 }}>
+        <Col xs={{ span: 16 }} lg={{ span: 8 }}>
           <Text>{shop?.shopName}</Text>
         </Col>
-        <Col xs={{ span: 24 }} lg={{ span: 6 }}>
+        <Col xs={{ span: 16 }} lg={{ span: 8 }}>
+          <Text>{category.category}</Text>
+        </Col>
+        <Col xs={{ span: 24 }} lg={{ span: 8 }}>
           <Flex justify='end' gap={20}>
             {accessAble ? (
               <>
@@ -89,7 +86,6 @@ const CategoryItem = ({ category, accessAble, refresh }: CategoryItem) => {
               _id={category._id}
               initialForm={{
                 ...category,
-                templateName: `${category.templateName} copy`,
               }}
               label={TypeUpdateCategory.DUPLICATE_CATEGORY}
               refresh={refresh}

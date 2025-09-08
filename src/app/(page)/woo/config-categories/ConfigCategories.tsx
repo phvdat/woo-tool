@@ -8,6 +8,8 @@ import UpdateCategory, {
 import { Flex, List, Radio, Typography } from 'antd';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import _toString from 'lodash/toString';
+import DuplicateAllCate from '@/components/woo/DuplicateAllCate';
 const { Title } = Typography;
 
 const ConfigCategories = () => {
@@ -31,6 +33,7 @@ const ConfigCategories = () => {
         onChange={(e) => setWebSite(e.target.value)}
         style={{ textAlign: 'center' }}
       />
+      <DuplicateAllCate />
       <List
         loading={isLoading}
         header={
@@ -40,7 +43,7 @@ const ConfigCategories = () => {
         }
         bordered
         dataSource={categories.sort((a, b) =>
-          a.category.localeCompare(b.category)
+          _toString(a.shopID).localeCompare(_toString(b.shopID))
         )}
         renderItem={(item) => (
           <List.Item>

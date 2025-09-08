@@ -6,6 +6,7 @@ export const endpoint = {
   wooConfig: '/api/woo/woo-config',
   wooCreate: '/api/woo/create-woo-result',
   categoryConfig: '/api/woo/categories-config',
+  categoryConfigBulk: '/api/woo/categories-config/bulk',
   websiteConfigList: '/api/woo/website-config',
 
   openaiGenerate: '/api/openai-generate',

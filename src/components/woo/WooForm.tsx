@@ -27,7 +27,7 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 const { Link } = Typography;
 
 export const PUBLIC_TIME = 10;
@@ -67,12 +67,12 @@ const WooForm = () => {
     );
     if (!categoriesByShop) return [];
     return categoriesByShop.map((category) => ({
-      label: category.templateName,
+      label: category.category,
       value: category._id,
     }));
   }, [categories, watchShopId]);
 
-  const watermarkOptions = useMemo(() => {
+  const websiteOptions = useMemo(() => {
     if (!websiteConfigList) return [];
     return websiteConfigList.map((website) => ({
       label: website.shopName,
@@ -203,7 +203,7 @@ const WooForm = () => {
             >
               <Select
                 placeholder='Select Website Website'
-                options={watermarkOptions}
+                options={websiteOptions}
                 showSearch
                 filterOption={(input, option) =>
                   (option?.label ?? '')
@@ -252,7 +252,7 @@ const WooForm = () => {
             onChange={(info) => {
               const name = _get(info, 'file.originFileObj.name', '');
               const website = name.split('-')[0].toLowerCase();
-              const websiteOption = watermarkOptions.find((item) =>
+              const websiteOption = websiteOptions.find((item) =>
                 item.label.toLowerCase().includes(website)
               );
               if (websiteOption) {

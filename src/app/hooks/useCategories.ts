@@ -18,7 +18,7 @@ export function useCategories(searchKeyword?: string) {
 
   return {
     categories:
-      data?.sort((a, b) => a.templateName.localeCompare(b.templateName)) || [],
+      data?.sort((a, b) => a.category.localeCompare(b.category)) || [],
     isLoading,
     isError: error,
     mutate,

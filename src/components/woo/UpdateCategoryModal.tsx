@@ -20,9 +20,7 @@ import axios from 'axios';
 import { useMemo, useState } from 'react';
 import { mutate } from 'swr';
 
-export interface CategoryFormValue extends WooFixedOption {
-  templateName: string;
-}
+export interface CategoryFormValue extends WooFixedOption {}
 
 export enum TypeUpdateCategory {
   ADD_CATEGORY = 'Add New',
@@ -50,7 +48,7 @@ const UpdateCategoryModal = ({
   const [loading, setLoading] = useState<boolean>(false);
   const { websiteConfigList } = useConfigWebsite();
 
-  const watermarkOptions = useMemo(() => {
+  const websiteOptions = useMemo(() => {
     if (!websiteConfigList) return [];
     return websiteConfigList.map((website) => ({
       label: website.shopName,
@@ -119,30 +117,13 @@ const UpdateCategoryModal = ({
           initialValues={initialForm}
           disabled={loading}
         >
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item<CategoryFormValue>
-                label='Template name'
-                name='templateName'
-                rules={[
-                  { required: true, message: 'Please input template name!' },
-                ]}
-              >
-                <Input placeholder='Recommendation: WebsiteName - Category' />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item<CategoryFormValue>
-                label='SKU prefix'
-                name='SKUPrefix'
-                rules={[
-                  { required: true, message: 'Please input SKU prefix!' },
-                ]}
-              >
-                <Input placeholder='Ex: MY_WEBSITE.COM' />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item<CategoryFormValue>
+            label='SKU prefix'
+            name='SKUPrefix'
+            rules={[{ required: true, message: 'Please input SKU prefix!' }]}
+          >
+            <Input placeholder='Ex: MY_WEBSITE.COM' />
+          </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
@@ -182,7 +163,7 @@ const UpdateCategoryModal = ({
               >
                 <Select
                   placeholder='Select Shop'
-                  options={watermarkOptions}
+                  options={websiteOptions}
                   showSearch
                   filterOption={(input, option) =>
                     (option?.label ?? '')

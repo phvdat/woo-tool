@@ -62,7 +62,7 @@ function ConvertFile() {
     );
     if (!categoriesByShop) return [];
     return categoriesByShop.map((category) => ({
-      label: category.templateName,
+      label: category.category,
       value: category.category,
     }));
   }, [categories, watchShopId]);

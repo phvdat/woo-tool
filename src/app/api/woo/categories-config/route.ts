@@ -16,7 +16,6 @@ export async function GET(request: Request) {
     .collection(CATEGORIES_COLLECTION)
     .find({
       $or: [
-        { templateName: { $regex: searchKeyword, $options: 'i' } },
         { category: { $regex: searchKeyword, $options: 'i' } },
         { shopID: { $regex: searchKeyword, $options: 'i' } },
       ],
