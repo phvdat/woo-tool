@@ -27,6 +27,9 @@ app.prepare().then(() => {
     socket.on('image-get-failed', (payload) => {
       io.emit('image-get-failed', payload);
     });
+    socket.on('crawl-progress', (payload) => {
+      io.emit('crawl-progress', payload);
+    });
   });
 
   httpServer

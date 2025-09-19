@@ -1,7 +1,7 @@
 'use client';
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { SearchOutlined } from '@ant-design/icons';
-import { Button, Card, Col, Image, Input, Modal, Row, Typography } from 'antd';
+import { Button, Card, Carousel, Col, Image, Input, Modal, Row, Typography } from 'antd';
 import Meta from 'antd/es/card/Meta';
 import { useMemo, useState } from 'react';
 const { Text } = Typography;
@@ -78,6 +78,7 @@ const SearchProductDialog = ({
 };
 
 const SearchResult = ({ result }: { result: Product[] }) => {
+  console.log(result);
   return (
     <Row gutter={[16, 16]}>
       {result.map((product) => {
@@ -91,7 +92,11 @@ const SearchResult = ({ result }: { result: Product[] }) => {
             <Card
               style={{ maxWidth: 240 }}
               cover={
-                <Image alt='product' src={product.Images?.split(',')[0]} />
+                <Carousel>
+                  {product.Images.split(',').map((image, index) => (
+                    <Image src={image} alt={product.Name} key={index} />
+                  ))}
+                </Carousel>
               }
             >
               <Meta description={<Text>{product.Name}</Text>} />

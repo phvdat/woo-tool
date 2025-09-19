@@ -1,7 +1,7 @@
 'use client';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { Form, Input, Button, Alert, Flex, message } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { Form, Input, Button, Alert, Flex, message, Progress } from 'antd';
 import * as XLSX from 'xlsx';
 import { isEmpty } from 'lodash';
 import dayjs from 'dayjs';
@@ -10,6 +10,7 @@ import { useUser } from '@/app/hooks/useUser';
 import _get from 'lodash/get';
 import { useSession } from 'next-auth/react';
 import { SelectorFormValues } from './SelectorSetup';
+import { getSocket } from '@/config/socket';
 
 type Product = {
   Name: string;
@@ -29,6 +30,14 @@ function CrawlMixedProductDetail() {
   const { user } = useUser(data?.user?.email || '');
   const [errorMessage, setErrorMessage] = useState('');
   const [selectors, setSelectors] = useState<SelectorFormValues[]>([]);
+  const [progress, setProgress] = useState<number>(0);
+  const [error, setError] = useState<string>('');
+  const [socketId, setSocketId] = useState<number>();
+
+  const socket = useMemo(() => {
+    const socket = getSocket();
+    return socket.connect();
+  }, []);
 
   const getAllSelectors = async () => {
     setLoading(true);
@@ -46,6 +55,8 @@ function CrawlMixedProductDetail() {
   };
 
   const handleSubmit = async (value: FormValues) => {
+    const socketId = dayjs().unix();
+    setSocketId(socketId);
     setLoading(true);
     setErrorMessage('');
     const { urls } = value;
@@ -56,6 +67,7 @@ function CrawlMixedProductDetail() {
           urls,
           selectors,
           telegramId: user?.telegramId,
+          socketId,
         }
       );
 
@@ -90,7 +102,7 @@ function CrawlMixedProductDetail() {
     const urlList = urls.split('\n').map((url: string) => url.trim());
     const missingDomains = urlList.filter(
       (url: string) =>
-        !selectors.some((selector) => url.includes(selector.domain))
+        url && !selectors.some((selector) => url.includes(selector.domain))
     );
     if (missingDomains.length > 0) {
       setErrorMessage(
@@ -107,6 +119,26 @@ function CrawlMixedProductDetail() {
   useEffect(() => {
     getAllSelectors();
   }, []);
+
+  useEffect(() => {
+    socket.on('crawl-progress', (payload) => {
+      if (_get(payload, 'socketId') !== socketId) return;
+      setProgress(_get(payload, 'progress.percent'));
+    });
+    socket.on('crawl-error', (payload) => {
+      if (Number(_get(payload, 'socketId')) !== socketId) return;
+      console.log('crawl error', _get(payload, 'error'));
+      const errorMessage = `${_get(payload, 'error.status')} - ${_get(
+        payload,
+        'error.config.url'
+      )}`;
+      setError(errorMessage);
+    });
+
+    return () => {
+      socket.off('crawl-progress');
+    };
+  }, [socketId]);
 
   return (
     <div>
@@ -135,6 +167,16 @@ function CrawlMixedProductDetail() {
             </Button>
           )}
         </Flex>
+        {progress ? (
+          <Progress
+            percent={progress}
+            strokeColor={{ from: '#108ee9', to: '#87d068' }}
+          />
+        ) : null}
+
+        {error && (
+          <Alert message={error} type='error' style={{ marginTop: 24 }} />
+        )}
         {errorMessage && (
           <Alert
             message={
