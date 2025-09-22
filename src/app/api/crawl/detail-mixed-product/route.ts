@@ -13,6 +13,19 @@ const bot = telegramBot;
 const socket = getSocket();
 socket.connect();
 
+function formatName(rawName: string): string {
+  if (!rawName) return '';
+
+  let name = rawName;
+  // 1. Xóa \n, khoảng trắng, ., -, _ ở đầu/cuối
+  name = name.replace(/^[.\-_\s\n]+|[.\-_\s\n]+$/g, '');
+  // 2. Xóa SKU dạng in hoa + số >=4 ký tự ở cuối (VD: " - LADJFHDSKJ432")
+  name = name.replace(/\s*[-–—]?\s*[A-Z0-9]{4,}\s*$/g, '');
+  // 3. Xóa khoảng trắng hoặc \n thừa giữa chuỗi
+  name = name.replace(/\s+/g, ' ');
+  return name.trim();
+}
+
 const getDomain = (url: string) => {
   const domain = new URL(url).hostname;
   return domain.startsWith('www.') ? domain.slice(4) : domain;
@@ -64,11 +77,11 @@ export async function POST(request: Request) {
           )
         );
         console.log({
-          Name: name.replaceAll('\n', '').trim(),
+          Name: formatName(name),
           Images: imgLinks.join(','),
         });
         result.push({
-          Name: name.replaceAll('\n', '').trim(),
+          Name: formatName(name),
           Images: imgLinks.join(','),
           Link: url,
         });
