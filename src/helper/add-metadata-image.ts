@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exiftool } from 'exiftool-vendored';
 import moment from 'moment';
 
 type AddMetadataParams = {
@@ -52,27 +52,5 @@ export async function addMetadata({
     SubSecCreateDate: currentDate,
     SubSecDateTimeOriginal: currentDate,
   };
-  await runExiftoolCommand(imagePath, metadata);
-}
-
-async function runExiftoolCommand(imagePath: string, metadata: any) {
-  const metadataArgs = Object.entries(metadata)
-    .map(([key, value]) => `-${key}="${value}"`)
-    .join(' ');
-  const command = `exiftool -overwrite_original -m ${metadataArgs} "${imagePath}"`;
-  const promise = new Promise((resolve, reject) => {
-    exec(command, (error: any, stdout: any, stderr: any) => {
-      if (error) {
-        console.error(`Error: ${error.message}`);
-        reject(error);
-      }
-      if (stderr) {
-        console.error(`stderr: ${stderr}`);
-        reject(stderr);
-      }
-      console.log(`stdout: ${stdout}`);
-      resolve(stdout);
-    });
-  });
-  await promise;
+  await await exiftool.write(imagePath, metadata, ['-overwrite_original']);
 }
