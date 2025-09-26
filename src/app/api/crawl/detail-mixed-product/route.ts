@@ -18,12 +18,18 @@ function formatName(rawName: string): string {
 
   let name = rawName;
   // 1. Xóa \n, khoảng trắng, ., -, _ ở đầu/cuối
-  name = name.replace(/^[.\-_\s\n]+|[.\-_\s\n]+$/g, '');
+  name = name.replace(/^[.\-_,* \s\n]+|[.\-_* \s\n]+$/g, '');
   // 2. Xóa SKU dạng in hoa + số >=4 ký tự ở cuối (VD: " - LADJFHDSKJ432")
   name = name.replace(/\s*[-–—]?\s*[A-Z0-9]{4,}\s*$/g, '');
-  // 3. Xóa khoảng trắng hoặc \n thừa giữa chuỗi
   name = name.replace(/\s+/g, ' ');
   return name.trim();
+}
+
+function formatImages(imgLinks: string[]): string[] {
+  const unique = Array.from(
+    new Set(imgLinks.map((link) => link.trim()).filter((link) => link !== ''))
+  );
+  return unique;
 }
 
 const getDomain = (url: string) => {
@@ -78,11 +84,11 @@ export async function POST(request: Request) {
         );
         console.log({
           Name: formatName(name),
-          Images: imgLinks.join(','),
+          Images: formatImages(imgLinks).join(','),
         });
         result.push({
           Name: formatName(name),
-          Images: imgLinks.join(','),
+          Images: formatImages(imgLinks).join(','),
           Link: url,
         });
         const progress = {
