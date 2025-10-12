@@ -8,6 +8,7 @@ import CateKeywordConfig, {
   CATE_KEYWORD_LOCAL_KEY,
 } from '@/components/convert-file/CateKeywordConfig';
 import DuplicatedChecker from '@/components/convert-file/DuplicatedChecker';
+import ExcludeSizeChartLink from '@/components/convert-file/ExcludeSizeChartLink';
 import ProductItem from '@/components/convert-file/ProductItem';
 import { endpoint } from '@/constant/endpoint';
 import { normFile } from '@/helper/common';
@@ -35,7 +36,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
 
 const { Title, Text } = Typography;
-const CONVERT_DATA = 'CONVERT_DATA';
+export const CONVERT_DATA = 'CONVERT_DATA';
 export interface Product {
   key: string;
   Name: string;
@@ -297,6 +298,7 @@ function ConvertFile() {
               handleDelete={handleDelete}
             />
             {products.length} items
+            <ExcludeSizeChartLink products={products} setProducts={setProducts}/>
             <Button
               danger
               onClick={() => setProducts([])}

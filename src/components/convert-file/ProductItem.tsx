@@ -96,7 +96,7 @@ const ProductItem = function ProductItem({
         }}
       >
         <Col span={24} lg={{ span: 8 }} style={{ padding: 12 }}>
-          <Flex style={{ width: '100%' }} gap={12} wrap>
+          <Flex style={{ width: '100%' }} gap={12} wrap justify='space-between'>
             <Select
               value={currentProduct.Categories}
               placeholder='Select Category'
@@ -117,7 +117,7 @@ const ProductItem = function ProductItem({
                   }}
                 />
               }
-              style={{ flex: 3 }}
+              style={{ minWidth: '215px' }}
               filterOption={(input, option: any) => {
                 const searchFull = (option?.label ?? '')
                   ?.toLowerCase()
