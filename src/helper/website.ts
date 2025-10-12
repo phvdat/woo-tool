@@ -1,6 +1,7 @@
 import { addMetadata } from '@/helper/add-metadata-image';
 import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
 import { storage } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import axios from 'axios';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
@@ -73,15 +74,33 @@ export async function addWatermark({
         writeFileSync(imagePath, buffer as any as string);
         await addMetadata({ name, shopName, imagePath });
         // upload imagePath to firebase storage
-        const storageRef = ref(
-          storage,
-          `${shopName.replace('.com', '')}/${imageName}`
-        );
-        const fileImage = readFileSync(imagePath);
-        const blob = new Blob([fileImage], { type: 'image/jpeg' });
-        await uploadBytes(storageRef, blob);
-        const urlImage = await getDownloadURL(storageRef);
-        imageUrlList.push(urlImage);
+        // const storageRef = ref(
+        //   storage,
+        //   `${shopName.replace('.com', '')}/${imageName}`
+        // );
+        // const fileImage = readFileSync(imagePath);
+        // const blob = new Blob([fileImage], { type: 'image/jpeg' });
+        // await uploadBytes(storageRef, blob);
+        // const urlImage = await getDownloadURL(storageRef);
+
+        const fileBytes = readFileSync(imagePath);
+        const filePath = `${shopName.replace('.com', '')}/${imageName}`;
+
+        const bucketName = process.env.SUSPABASE_BUCKET_NAME || '';
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, fileBytes, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+
+        if (error) throw error;
+
+        const { data: publicData } = supabase.storage
+          .from('product-image')
+          .getPublicUrl(filePath);
+
+        imageUrlList.push(publicData.publicUrl);
       } catch (error) {
         throw error;
       }
