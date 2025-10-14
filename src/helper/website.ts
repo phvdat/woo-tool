@@ -97,7 +97,7 @@ export async function addWatermark({
         if (error) throw error;
 
         const { data: publicData } = supabase.storage
-          .from('product-image')
+          .from(bucketName)
           .getPublicUrl(filePath);
 
         imageUrlList.push(publicData.publicUrl);
