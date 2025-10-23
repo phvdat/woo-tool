@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   const result: any[] = [];
 
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     executablePath: executablePath(),
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
   });
