@@ -26,8 +26,19 @@ function formatName(rawName: string): string {
 }
 
 function formatImages(imgLinks: string[]): string[] {
+  const processedLinks = imgLinks.map((link) => {
+    const trimmedLink = link.trim();
+    if (trimmedLink === '') return '';
+    try {
+      const url = new URL(trimmedLink);
+      return url.origin + url.pathname;
+    } catch (e) {
+      return trimmedLink;
+    }
+  });
+
   const unique = Array.from(
-    new Set(imgLinks.map((link) => link.trim()).filter((link) => link !== ''))
+    new Set(processedLinks.filter((link) => link !== ''))
   );
   return unique;
 }
@@ -44,7 +55,7 @@ export async function POST(request: Request) {
   const result: any[] = [];
 
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     executablePath: executablePath(),
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
   });
