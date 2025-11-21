@@ -1,10 +1,9 @@
 import { addMetadata } from '@/helper/add-metadata-image';
 import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
-import { storage } from '@/lib/firebase';
 import axios from 'axios';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import sharp from 'sharp';
+import path from 'path';
 
 interface CreateWebsiteParam {
   logoWidth: number;
@@ -33,23 +32,28 @@ export async function addWatermark({
   fit,
   logoResponse,
 }: CreateWebsiteParam) {
-  const imagesFolderPath = `public/media`;
-  mkdirSync(imagesFolderPath, { recursive: true });
+  const tempFolder = `public/media-temp`;
+  const uploadFolder = `public/uploads/${shopName.replace('.com', '')}`;
+
+  mkdirSync(tempFolder, { recursive: true });
+  mkdirSync(uploadFolder, { recursive: true });
 
   try {
     const resizedLogo = await sharp(logoResponse.data)
       .resize(logoWidth, logoHeight)
       .toBuffer();
+
     const name = originName.replace(formatNameRegex, '');
-    const imageUrlList = [];
+    const imageUrlList: string[] = [];
+
     for (let i = 0, len = images.length; i < len; i++) {
       const imageUrl = images[i];
       const imageName = `${name.replaceAll(' ', '-')}-${i + 1}.jpg`;
-      const imagePath = `${imagesFolderPath}/${imageName}`;
+
+      if (!imageUrl) continue;
+
       try {
-        if (!imageUrl) {
-          continue;
-        }
+        // Download ảnh gốc
         const { data: imageResponse } = await axios.get(imageUrl, {
           headers: {
             'User-Agent':
@@ -60,6 +64,7 @@ export async function addWatermark({
           maxBodyLength: Infinity,
         });
 
+        // Resize + watermark
         const buffer = await sharp(imageResponse)
           .resize({
             width: imageWidth,
@@ -70,23 +75,29 @@ export async function addWatermark({
           .composite([{ input: resizedLogo, gravity: 'center' }])
           .jpeg({ quality })
           .toBuffer();
-        writeFileSync(imagePath, buffer as any as string);
-        await addMetadata({ name, shopName, imagePath });
-        // upload imagePath to firebase storage
-        const storageRef = ref(
-          storage,
-          `${shopName.replace('.com', '')}/${imageName}`
-        );
-        const fileImage = readFileSync(imagePath);
-        const blob = new Blob([fileImage], { type: 'image/jpeg' });
-        await uploadBytes(storageRef, blob);
-        const urlImage = await getDownloadURL(storageRef);
-        imageUrlList.push(urlImage);
+
+        const tempPath = `${tempFolder}/${imageName}`;
+        writeFileSync(tempPath, buffer);
+
+        await addMetadata({ name, shopName, imagePath: tempPath });
+
+        const finalPath = path.join(uploadFolder, imageName);
+        writeFileSync(finalPath, readFileSync(tempPath));
+
+        const url = `${process.env.NEXTAUTH_URL}/uploads/${shopName.replace(
+          '.com',
+          ''
+        )}/${imageName}`;
+        imageUrlList.push(url);
       } catch (error) {
+        console.error('Error processing image:', error);
         throw error;
       }
     }
-    deleteFolderRecursive(imagesFolderPath);
+
+    // Xóa folder temp
+    deleteFolderRecursive(tempFolder);
+
     return imageUrlList;
   } catch (error) {
     console.log('create website', error);
