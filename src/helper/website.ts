@@ -32,8 +32,11 @@ export async function addWatermark({
   fit,
   logoResponse,
 }: CreateWebsiteParam) {
-  const tempFolder = `public/media-temp`;
-  const uploadFolder = `public/uploads/${shopName.replace('.com', '')}`;
+  // LƯU FILE NGOÀI NEXTJS
+  const baseUploadFolder = `/var/www/html/uploads`;
+  const uploadFolder = `${baseUploadFolder}/${shopName.replace('.com', '')}`;
+
+  const tempFolder = `/tmp/media-temp`;
 
   mkdirSync(tempFolder, { recursive: true });
   mkdirSync(uploadFolder, { recursive: true });
@@ -44,16 +47,16 @@ export async function addWatermark({
       .toBuffer();
 
     const name = originName.replace(formatNameRegex, '');
-    const imageUrlList: string[] = [];
+    const list: string[] = [];
 
-    for (let i = 0, len = images.length; i < len; i++) {
+    for (let i = 0; i < images.length; i++) {
       const imageUrl = images[i];
       const imageName = `${name.replaceAll(' ', '-')}-${i + 1}.jpg`;
 
       if (!imageUrl) continue;
 
       try {
-        // Download ảnh gốc
+        // Download
         const { data: imageResponse } = await axios.get(imageUrl, {
           headers: {
             'User-Agent':
@@ -79,26 +82,28 @@ export async function addWatermark({
         const tempPath = `${tempFolder}/${imageName}`;
         writeFileSync(tempPath, buffer);
 
+        // Add metadata
         await addMetadata({ name, shopName, imagePath: tempPath });
 
+        // FINAL PATH (ngoài Next.js)
         const finalPath = path.join(uploadFolder, imageName);
         writeFileSync(finalPath, readFileSync(tempPath));
 
-        const url = `${process.env.NEXTAUTH_URL}/uploads/${shopName.replace(
-          '.com',
-          ''
-        )}/${imageName}`;
-        imageUrlList.push(url);
+        // URL TRẢ VỀ CHO CLIENT
+        const finalUrl = `${
+          process.env.NEXTAUTH_URL
+        }/uploads/${shopName.replace('.com', '')}/${imageName}`;
+
+        list.push(finalUrl);
       } catch (error) {
-        console.error('Error processing image:', error);
+        console.error('Image error:', error);
         throw error;
       }
     }
 
-    // Xóa folder temp
     deleteFolderRecursive(tempFolder);
 
-    return imageUrlList;
+    return list;
   } catch (error) {
     console.log('create website', error);
     return images;
