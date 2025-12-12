@@ -44,8 +44,8 @@ function formatImages(imgLinks: string[]): string[] {
 }
 
 const getDomain = (url: string) => {
-  const domain = new URL(url).hostname;
-  return domain.startsWith('www.') ? domain.slice(4) : domain;
+  const parts = new URL(url).hostname.split('.');
+  return parts.slice(-2).join('.');
 };
 
 export async function POST(request: Request) {
