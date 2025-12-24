@@ -213,7 +213,9 @@ function ConvertFile() {
       <Title level={4} style={{ textAlign: 'center' }}>
         Convert File &nbsp;
       </Title>
-      <Form name='initial-file' layout='vertical' form={form}>
+      <Form name='initial-file' layout='vertical' form={form}
+      initialValues={{website: websiteOptions[0]}}
+      >
         {(categoriesLoading || websiteLoading) && (
           <Spin
             size='large'

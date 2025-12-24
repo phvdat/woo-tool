@@ -22,6 +22,7 @@ function formatName(rawName: string): string {
   // 2. Xóa SKU dạng in hoa + số >=4 ký tự ở cuối (VD: " - LADJFHDSKJ432")
   name = name.replace(/\s*[-–—]?\s*[A-Z0-9]{4,}\s*$/g, '');
   name = name.replace(/\s+/g, ' ');
+  name = name.replace('amp;', '');
   return name.trim();
 }
 
