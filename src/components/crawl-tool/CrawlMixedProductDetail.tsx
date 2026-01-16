@@ -20,7 +20,9 @@ type Product = {
 interface FormValues {
   urls: string;
 }
-
+type Selector = {
+  domain: string;
+};
 function CrawlMixedProductDetail() {
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<FormValues>();
@@ -99,11 +101,35 @@ function CrawlMixedProductDetail() {
       setErrorMessage('Please enter product URLs first.');
       return;
     }
+    
     const urlList = urls.split('\n').map((url: string) => url.trim());
-    const missingDomains = urlList.filter(
-      (url: string) =>
-        url && !selectors.some((selector) => url.includes(selector.domain))
+
+    const selectorDomainSet: Set<string> = new Set(
+      selectors.map((s: Selector) => s.domain.toLowerCase())
     );
+    const uniqueDomains: Set<string> = new Set();
+    for (let i = 0; i < urlList.length; i++) {
+      const rawUrl = urlList[i].trim();
+      if (!rawUrl) continue;
+
+      try {
+        const domain: string = new URL(rawUrl)
+          .hostname
+          .replace(/^www\./, '')
+          .toLowerCase();
+        uniqueDomains.add(domain);
+      } catch {
+        // ignore invalid URL
+      }
+    }
+
+    const missingDomains: string[] = [];
+
+    uniqueDomains.forEach((domain: string) => {
+      if (!selectorDomainSet.has(domain)) {
+        missingDomains.push(domain);
+      }
+    });
     if (missingDomains.length > 0) {
       setErrorMessage(
         `The following domains are missing in the selectors:\n${missingDomains.join(
