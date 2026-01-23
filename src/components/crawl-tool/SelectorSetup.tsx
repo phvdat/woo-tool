@@ -30,7 +30,6 @@ const SelectorSetup = () => {
       const { status, data } = await axios.get(endpoint.addSelector);
       if (status === 200) {
         setExistSelector(data);
-        console.log(data);
       }
     } catch (error) {
       console.log('getAllSelectors:', error);
@@ -79,7 +78,6 @@ const SelectorSetup = () => {
       );
       if (status === 200) {
         messageApi.info('Test successful');
-        console.log(data);
         setTestData(data[0]);
       }
     } catch (error) {
@@ -165,6 +163,7 @@ const SelectorSetup = () => {
       <List
         loading={loading}
         bordered
+        style={{height: 500, overflow: 'auto'}}
         dataSource={existSelectors}
         renderItem={(item) => (
           <List.Item

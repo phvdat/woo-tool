@@ -70,7 +70,7 @@ function CrawlMixedProductDetail() {
           selectors,
           telegramId: user?.telegramId,
           socketId,
-        }
+        },
       );
 
       setFile(data);
@@ -90,7 +90,7 @@ function CrawlMixedProductDetail() {
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     XLSX.writeFile(
       wb,
-      `crawl-products-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.xlsx`
+      `crawl-products-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}.xlsx`,
     );
   };
 
@@ -101,11 +101,11 @@ function CrawlMixedProductDetail() {
       setErrorMessage('Please enter product URLs first.');
       return;
     }
-    
+
     const urlList = urls.split('\n').map((url: string) => url.trim());
 
     const selectorDomainSet: Set<string> = new Set(
-      selectors.map((s: Selector) => s.domain.toLowerCase())
+      selectors.map((s: Selector) => s.domain.toLowerCase()),
     );
     const uniqueDomains: Set<string> = new Set();
     for (let i = 0; i < urlList.length; i++) {
@@ -113,8 +113,7 @@ function CrawlMixedProductDetail() {
       if (!rawUrl) continue;
 
       try {
-        const domain: string = new URL(rawUrl)
-          .hostname
+        const domain: string = new URL(rawUrl).hostname
           .replace(/^www\./, '')
           .toLowerCase();
         uniqueDomains.add(domain);
@@ -133,13 +132,21 @@ function CrawlMixedProductDetail() {
     if (missingDomains.length > 0) {
       setErrorMessage(
         `The following domains are missing in the selectors:\n${missingDomains.join(
-          '\n'
-        )}`
+          '\n',
+        )}`,
       );
     } else {
       messageApi.info('All domains are present in the selectors.');
       setErrorMessage('');
     }
+  };
+
+  const uniqueLink = () => {
+    const urls = form.getFieldValue('urls');    
+    if (!urls) return;
+    const urlList = urls.split('\n').map((url: string) => url.trim()).filter(Boolean);
+    const uniqueUrls = Array.from(new Set(urlList));
+    form.setFieldValue('urls', uniqueUrls.join('\n'));
   };
 
   useEffect(() => {
@@ -156,7 +163,7 @@ function CrawlMixedProductDetail() {
       console.log('crawl error', _get(payload, 'error'));
       const errorMessage = `${_get(payload, 'error.status')} - ${_get(
         payload,
-        'error.config.url'
+        'error.config.url',
       )}`;
       setError(errorMessage);
     });
@@ -176,7 +183,7 @@ function CrawlMixedProductDetail() {
         form={form}
       >
         <Form.Item<FormValues> name='urls'>
-          <Input.TextArea placeholder='Enter products URL' rows={4} />
+          <Input.TextArea placeholder='Enter products URL' rows={20} />
         </Form.Item>
         <Flex gap={8}>
           <Form.Item>
@@ -186,6 +193,16 @@ function CrawlMixedProductDetail() {
           </Form.Item>
           <Form.Item>
             <Button onClick={checkMissingDomain}>Check missing domains</Button>
+          </Form.Item>
+          <Form.Item shouldUpdate>
+            {() => {
+              const urls = form.getFieldValue('urls') || '';
+              return (
+                <Button onClick={uniqueLink}>
+                  Unique {urls.split('\n').length}
+                </Button>
+              );
+            }}
           </Form.Item>
           {isEmpty(file) || loading ? null : (
             <Button loading={loading} onClick={handleDownload}>
