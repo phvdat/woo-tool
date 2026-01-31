@@ -100,7 +100,8 @@ export async function POST(request: Request) {
         });
         result.push({
           Name: formatName(name),
-          Images: formatImages(imgLinks).join(','),
+          ImagesOrigin: formatImages(imgLinks).join(','),
+          Images: formatImages(imgLinks).join(',').replaceAll('/600/744/', '/2000/2000/'),
           Link: url,
         });
         const progress = {
