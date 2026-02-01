@@ -68,7 +68,7 @@ const DuplicatedChecker = ({
         footer={null}
         onCancel={() => setIsModalOpen(false)}
       >
-        <Tabs defaultActiveKey='1' items={tabItems} />
+        <Tabs defaultActiveKey='1' items={tabItems} destroyInactiveTabPane/>
       </Modal>
     </div>
   );
@@ -77,19 +77,19 @@ const DuplicatedChecker = ({
 export default DuplicatedChecker;
 
 const ProductGallery = ({
-  products,
-  handleDelete,
-}: {
-  products: Product[];
-  handleDelete: (index: string) => void;
-}) => {
+    products,
+    handleDelete,
+  }: {
+    products: Product[];
+    handleDelete: (index: string) => void;
+  }) => {
   const [loading, setLoading] = useState(false);
-  const [existingProducts, setExistingProducts] = useState<Product[]>([]);
+    const [existingProducts, setExistingProducts] = useState<Product[]>([]);
   const productsSortByName = products.sort((a, b) =>
     a.Name.localeCompare(b.Name)
-  );
+    );
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
@@ -115,14 +115,14 @@ const ProductGallery = ({
     );
   }
 
-  return (
+            return (
     <Row gutter={[16, 16]}>
       {productsSortByName.map((product) => {
-        const matchedProduct = getMatchedWordsForBestMatch(
-          product.Name,
-          existingProducts
-        );
-        return (
+                  const matchedProduct = getMatchedWordsForBestMatch(
+                    product.Name,
+                    existingProducts
+                  );
+                  return (
           <Col
             xl={{ span: 4 }}
             lg={{ span: 6 }}
@@ -130,29 +130,29 @@ const ProductGallery = ({
             xs={{ span: 12 }}
             key={product.key}
           >
-            <Card
-              hoverable
+                      <Card
+                        hoverable
               style={{ maxWidth: 240 }}
-              cover={
-                <Carousel>
+                        cover={
+                          <Carousel>
                   {product.Images.split(',').map((image, index) => (
                     <Image src={image} alt={product.Name} key={index} />
-                  ))}
-                </Carousel>
-              }
-            >
-              <Meta
-                description={
-                  <Text
-                    onClick={() => {
-                      navigator.clipboard.writeText(product.Name);
+                            ))}
+                          </Carousel>
+                        }
+                      >
+                        <Meta
+                          description={
+                            <Text
+                              onClick={() => {
+                                navigator.clipboard.writeText(product.Name);
                       message.success('Copy successfully');
-                    }}
-                  >
-                    {renderHighlightedName(product.Name, matchedProduct)}
-                  </Text>
-                }
-              />
+                              }}
+                            >
+                              {renderHighlightedName(product.Name, matchedProduct)}
+                            </Text>
+                          }
+                        />
               <Flex
                 justify='space-between'
                 align='center'
@@ -164,22 +164,22 @@ const ProductGallery = ({
                   existingProducts={existingProducts}
                 />
 
-                <Popconfirm
+                          <Popconfirm
                   title='Delete the Product'
                   description='Are you sure to delete this product?'
-                  onConfirm={() => handleDelete(product.key)}
+                            onConfirm={() => handleDelete(product.key)}
                   okText='Yes'
                   cancelText='No'
-                >
+                          >
                   <Button danger>Delete</Button>
-                </Popconfirm>
-              </Flex>
-            </Card>
+                          </Popconfirm>
+                        </Flex>
+                      </Card>
           </Col>
-        );
+                  );
       })}
     </Row>
-  );
+    );
 };
 
 function renderHighlightedName(
