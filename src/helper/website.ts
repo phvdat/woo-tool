@@ -16,6 +16,7 @@ interface CreateWebsiteParam {
   name: string;
   fit: 'contain' | 'cover' | 'fill';
   logoResponse: any;
+  category: string;
 }
 
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
@@ -31,6 +32,7 @@ export async function addWatermark({
   name: originName,
   fit,
   logoResponse,
+  category
 }: CreateWebsiteParam) {
   // LƯU FILE NGOÀI NEXTJS
   const baseUploadFolder = `/var/www/html/uploads`;
@@ -83,7 +85,7 @@ export async function addWatermark({
         writeFileSync(tempPath, buffer);
 
         // Add metadata
-        await addMetadata({ name, shopName, imagePath: tempPath });
+        await addMetadata({ name, shopName, imagePath: tempPath, category });
 
         // FINAL PATH (ngoài Next.js)
         const finalPath = path.join(uploadFolder, imageName);

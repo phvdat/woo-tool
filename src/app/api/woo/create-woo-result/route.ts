@@ -104,6 +104,7 @@ export async function POST(request: Request) {
         name: name,
         fit: fit,
         logoResponse,
+        category: rowData['Categories'],
       });
 
       if (!urlImageList) {
