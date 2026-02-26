@@ -11,5 +11,6 @@ const navigation = {
   trackingChecker: '/tracking-checker',
   convertFile: '/convert-file',
   excelSplitter: '/excel-splitter',
+  originalProduct: '/original-product',
 };
 export { navigation };

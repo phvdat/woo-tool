@@ -8,10 +8,11 @@ export interface ProductDataPayload extends Product {}
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
   const categories = searchParams.get('categories') || '';
+  const name = searchParams.get('name') || '';
   let { db } = await connectToDatabase();
   const response = await db
     .collection(PRODUCT_DATA_COLLECTION)
-    .find({ Categories: { $regex: categories, $options: 'i' } })
+    .find({ Categories: { $regex: categories, $options: 'i' }, Name: { $regex: name, $options: 'i' } })
     .sort({ createdAt: -1 })
     .toArray();
   return Response.json(response, { status: 200 });

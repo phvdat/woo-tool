@@ -16,8 +16,6 @@ const { Text } = Typography;
 
 const Header = () => {
   const { data } = useSession();
-  const email = data?.user?.email;
-  const isAdmin = email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const headerItems = [
     {
       label: <Link href={navigation.woo}>Woo tool</Link>,
@@ -50,12 +48,6 @@ const Header = () => {
       ),
       key: navigation.createInitialFile,
     },
-    // {
-    //   label: <Link href={navigation.trackingChecker}>Tracking Checker</Link>,
-    //   key: navigation.trackingChecker,
-    // },
-  ];
-  const headerItemsAdmin = [
     {
       label: <Link href={navigation.excelSplitter}>Excel Splitter</Link>,
       key: navigation.excelSplitter,
@@ -67,6 +59,10 @@ const Header = () => {
     {
       label: <Link href={navigation.crawlTool}>Craw</Link>,
       key: navigation.crawlTool,
+    },
+    {
+      label: <Link href={navigation.originalProduct}>Original Product</Link>,
+      key: navigation.originalProduct,
     },
   ];
 
@@ -100,7 +96,7 @@ const Header = () => {
           style={{ minWidth: 1, flex: 1 }}
           mode='horizontal'
           selectedKeys={[pathName]}
-          items={isAdmin ? [...headerItems, ...headerItemsAdmin] : headerItems}
+          items={headerItems}
           triggerSubMenuAction='hover'
         />
         <Dropdown
