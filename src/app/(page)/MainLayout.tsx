@@ -7,7 +7,7 @@ import { PropsWithChildren } from 'react';
 const { Text } = Typography;
 const { Content, Footer } = Layout;
 
-export default function MainLayout({ children }: PropsWithChildren) {
+export default function MainLayout({ children }: PropsWithChildren<{}>) {
   return (
     <SessionProvider>
       <Layout style={layoutStyle}>
