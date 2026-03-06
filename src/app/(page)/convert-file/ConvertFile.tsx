@@ -30,6 +30,7 @@ import {
   Upload,
 } from 'antd';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { useMediaQuery } from 'usehooks-ts';
@@ -44,6 +45,7 @@ export interface Product {
   Categories: string;
 }
 function ConvertFile() {
+  const { data: session } = useSession();
   const matches = useMediaQuery('(min-width: 992px)');
   const [form] = Form.useForm();
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
@@ -52,7 +54,7 @@ function ConvertFile() {
   const [cateKeyword] = useLocalStorage<{
     [key: string]: string[];
   }>(CATE_KEYWORD_LOCAL_KEY, {});
-  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(session?.user?.email || '');
   const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch('website', form);
   const [searchProduct, setSearchProduct] = useState<Product[] | null>(null);
@@ -226,6 +228,10 @@ function ConvertFile() {
     setProducts([...products, ...debounceProducts]);
   }, [debounceProducts]);
 
+  useEffect(() => {
+    form.setFieldValue('website', websiteOptions[0]);
+  }, [websiteOptions])
+
   return (
     <div
       style={{
@@ -236,7 +242,6 @@ function ConvertFile() {
         Convert File &nbsp;
       </Title>
       <Form name='initial-file' layout='vertical' form={form}
-      initialValues={{website: websiteOptions[0]}}
       >
         {(categoriesLoading || websiteLoading) && (
           <Spin

@@ -58,7 +58,7 @@ const WooForm = () => {
   const [error, setError] = useState<string>('');
 
   const { categories } = useCategories();
-  const { websiteConfigList } = useConfigWebsite();
+  const { websiteConfigList } = useConfigWebsite(data?.user?.email || '');
   const watchShopId = Form.useWatch('watermarkWebsite', form);
 
   const categoriesOptions = useMemo(() => {
