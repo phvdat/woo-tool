@@ -187,10 +187,32 @@ function ConvertFile() {
       message.error('Error uploading products');
     }
   };
+
+  const getDuplicateNames = (products: Product[]) => {
+    const nameMap: Record<string, number> = {};
+
+    products.forEach((product) => {
+      const normalizedName = product.Name.trim().toLowerCase();
+      nameMap[normalizedName] = (nameMap[normalizedName] || 0) + 1;
+    });
+
+    return Object.keys(nameMap).filter((name) => nameMap[name] > 1);
+  };
+
   const handleSubmit = async () => {
     const isCategoryValid = products.every((product) => product.Categories);
     if (!isCategoryValid) {
       message.error('Please fill all category');
+      return;
+    }
+
+    // 🔥 Check duplicate product names
+    const duplicateNames = getDuplicateNames(products);
+
+    if (duplicateNames.length > 0) {
+      message.error(
+        `Duplicate product names detected (${duplicateNames.length}). Please fix before download.`
+      );
       return;
     }
     handleDownloadFile(products, 'Converted');
