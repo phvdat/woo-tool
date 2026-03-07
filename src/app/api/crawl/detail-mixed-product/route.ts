@@ -63,7 +63,10 @@ export async function POST(request: Request) {
 
   try {
     const page = await browser.newPage();
-
+    await page.setViewport({
+      width: 1920,
+      height: 1200,
+    });
     for (const url of urlList) {
       try {
         const domain = getDomain(url);
@@ -87,13 +90,36 @@ export async function POST(request: Request) {
 
         await page.waitForSelector(selector.imagesSelector, { timeout: 20000 });
         const imgLinks = await page.$$eval(selector.imagesSelector, (imgs) =>
-          imgs.map(
-            (img: Element) =>
-              (img as HTMLImageElement)?.src ||
-              (img as HTMLLinkElement)?.href ||
-              ''
-          )
-        );
+            imgs
+              .map((img) => {
+                const el = img as HTMLImageElement;
+
+                // property trước (auto resolve URL)
+                if ((el as HTMLImageElement).src && !el.src.startsWith("data:image"))
+                  return el.src;
+
+                if ((el as unknown as HTMLAnchorElement).href) return (el as unknown as HTMLAnchorElement).href;
+
+                // fallback attribute
+                const attrs = [
+                  "data-large_image",
+                  "data-src",
+                  "data-lazy-src",
+                  "data-original",
+                ];
+
+                for (const a of attrs) {
+                  const val = el.getAttribute(a);
+                  if (val && !val.startsWith("data:image")) return val;
+                }
+
+                const srcset = el.getAttribute("srcset");
+                if (srcset) return srcset.split(",")[0].split(" ")[0];
+
+                return "";
+              })
+              .filter(Boolean)
+          );
         console.log({
           Name: formatName(name),
           Images: formatImages(imgLinks).join(','),
