@@ -1,8 +1,18 @@
-'use client';
-import { endpoint } from '@/constant/endpoint';
-import { Button, Col, Form, Input, List, message, Row, Typography } from 'antd';
-import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+"use client";
+import { endpoint } from "@/constant/endpoint";
+import {
+  Button,
+  Col,
+  Form,
+  Input,
+  List,
+  message,
+  Row,
+  Spin,
+  Typography,
+} from "antd";
+import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
 
 const { Text } = Typography;
 
@@ -21,7 +31,7 @@ const SelectorSetup = () => {
   const [testData, setTestData] = useState<any>();
   const listExistDomain = useMemo(
     () => existSelectors.map((item) => item.domain),
-    [existSelectors]
+    [existSelectors],
   );
 
   const getAllSelectors = async () => {
@@ -32,7 +42,7 @@ const SelectorSetup = () => {
         setExistSelector(data);
       }
     } catch (error) {
-      console.log('getAllSelectors:', error);
+      console.log("getAllSelectors:", error);
     } finally {
       setLoading(false);
     }
@@ -42,11 +52,11 @@ const SelectorSetup = () => {
     try {
       const { status } = await axios.post(endpoint.addSelector, formValues);
       if (status === 200) {
-        messageApi.info('Success');
+        messageApi.info("Success");
         await getAllSelectors();
       }
     } catch (error) {
-      console.log('addNewSelector:', error);
+      console.log("addNewSelector:", error);
     }
   };
 
@@ -56,33 +66,36 @@ const SelectorSetup = () => {
         params: { _id },
       });
       if (status === 200) {
-        messageApi.info('Success');
+        messageApi.info("Success");
         await getAllSelectors();
       }
     } catch (error) {
-      console.log('handleDelete:', error);
+      console.log("handleDelete:", error);
     }
   };
 
   const handleTestUrl = async () => {
+    setLoading(true);
     setTestData(null);
-    const testUrl = form.getFieldValue('testUrl');
-    messageApi.info('Testing...');
+    const testUrl = form.getFieldValue("testUrl");
+    messageApi.info("Testing...");
     try {
       const { status, data } = await axios.post(
         endpoint.crawlMixedProductDetail,
         {
           urls: testUrl,
           selectors: [form.getFieldsValue()],
-        }
+        },
       );
       if (status === 200) {
-        messageApi.info('Test successful');
+        messageApi.info("Test successful");
         setTestData(data[0]);
       }
     } catch (error) {
-      console.log('handleTestUrl:', error);
-      messageApi.error('Test failed');
+      console.log("handleTestUrl:", error);
+      messageApi.error("Test failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,56 +107,67 @@ const SelectorSetup = () => {
     <div>
       {contextHolder}
 
-      <Form form={form} onFinish={addNewSelector} name='selector-form'>
+      {loading && (
+        <Spin
+          size="large"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "20%",
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      )}
+      <Form form={form} onFinish={addNewSelector} name="selector-form">
         <Form.Item<SelectorFormValues>
-          name='domain'
+          name="domain"
           rules={[
             {
               required: true,
-              message: 'Required',
+              message: "Required",
             },
             {
               validator: (_, value) =>
                 listExistDomain.includes(value)
-                  ? Promise.reject(new Error('Exist Domain'))
+                  ? Promise.reject(new Error("Exist Domain"))
                   : Promise.resolve(),
             },
           ]}
         >
-          <Input placeholder='Domain' />
+          <Input placeholder="Domain" />
         </Form.Item>
 
         <Form.Item<SelectorFormValues>
-          name='nameSelector'
+          name="nameSelector"
           rules={[
             {
               required: true,
-              message: 'Required',
+              message: "Required",
             },
           ]}
         >
-          <Input placeholder='Title Selector' />
+          <Input placeholder="Title Selector" />
         </Form.Item>
 
         <Form.Item<SelectorFormValues>
-          name='imagesSelector'
+          name="imagesSelector"
           rules={[
             {
               required: true,
-              message: 'Required',
+              message: "Required",
             },
           ]}
         >
-          <Input placeholder='Images Selector' />
+          <Input placeholder="Images Selector" />
         </Form.Item>
         <Form.Item>
-          <Button htmlType='submit' type='primary'>
+          <Button htmlType="submit" type="primary">
             Add new Selector
           </Button>
         </Form.Item>
-        <Form.Item name='testUrl'>
+        <Form.Item name="testUrl">
           <Input
-            placeholder='test url'
+            placeholder="test url"
             suffix={<Button onClick={handleTestUrl}>Test</Button>}
           />
         </Form.Item>
@@ -163,12 +187,12 @@ const SelectorSetup = () => {
       <List
         loading={loading}
         bordered
-        style={{height: 500, overflow: 'auto'}}
+        style={{ height: 500, overflow: "auto" }}
         dataSource={existSelectors}
         renderItem={(item) => (
           <List.Item
             actions={[
-              <a key='more' onClick={() => handleDelete(item?._id || '')}>
+              <a key="more" onClick={() => handleDelete(item?._id || "")}>
                 Delete
               </a>,
             ]}

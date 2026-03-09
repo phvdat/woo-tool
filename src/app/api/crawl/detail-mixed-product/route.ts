@@ -15,15 +15,21 @@ socket.connect();
 
 function formatName(rawName: string): string {
   if (!rawName) return '';
-
   let name = rawName;
-  // 1. Xóa \n, khoảng trắng, ., -, _ ở đầu/cuối
   name = name.replace(/^[.\-_,* \s\n]+|[.\-_* \s\n]+$/g, '');
-  // 2. Xóa SKU dạng in hoa + số >=4 ký tự ở cuối (VD: " - LADJFHDSKJ432")
   name = name.replace(/\s*[-–—]?\s*[A-Z0-9]{4,}\s*$/g, '');
   name = name.replace(/\s+/g, ' ');
   name = name.replace('amp;', '');
   return name.trim();
+}
+
+function upscaleImage(url: string) {
+  return url.replace(/\/(\d+)\/(\d+)\//, (match, w, h) => {
+    if (Number(w) < 1000 && Number(h) < 1000) {
+      return "/2000/2000/";
+    }
+    return match;
+  });
 }
 
 function formatImages(imgLinks: string[]): string[] {
@@ -90,36 +96,36 @@ export async function POST(request: Request) {
 
         await page.waitForSelector(selector.imagesSelector, { timeout: 20000 });
         const imgLinks = await page.$$eval(selector.imagesSelector, (imgs) =>
-            imgs
-              .map((img) => {
-                const el = img as HTMLImageElement;
+          imgs
+            .map((img) => {
+              const el = img as HTMLImageElement;
 
-                // property trước (auto resolve URL)
-                if ((el as HTMLImageElement).src && !el.src.startsWith("data:image"))
-                  return el.src;
+              // property trước (auto resolve URL)
+              if ((el as HTMLImageElement).src && !el.src.startsWith("data:image"))
+                return el.src;
 
-                if ((el as unknown as HTMLAnchorElement).href) return (el as unknown as HTMLAnchorElement).href;
+              if ((el as unknown as HTMLAnchorElement).href) return (el as unknown as HTMLAnchorElement).href;
 
-                // fallback attribute
-                const attrs = [
-                  "data-large_image",
-                  "data-src",
-                  "data-lazy-src",
-                  "data-original",
-                ];
+              // fallback attribute
+              const attrs = [
+                "data-large_image",
+                "data-src",
+                "data-lazy-src",
+                "data-original",
+              ];
 
-                for (const a of attrs) {
-                  const val = el.getAttribute(a);
-                  if (val && !val.startsWith("data:image")) return val;
-                }
+              for (const a of attrs) {
+                const val = el.getAttribute(a);
+                if (val && !val.startsWith("data:image")) return val;
+              }
 
-                const srcset = el.getAttribute("srcset");
-                if (srcset) return srcset.split(",")[0].split(" ")[0];
+              const srcset = el.getAttribute("srcset");
+              if (srcset) return srcset.split(",")[0].split(" ")[0];
 
-                return "";
-              })
-              .filter(Boolean)
-          );
+              return "";
+            })
+            .filter(Boolean)
+        );
         console.log({
           Name: formatName(name),
           Images: formatImages(imgLinks).join(','),
@@ -127,7 +133,11 @@ export async function POST(request: Request) {
         result.push({
           Name: formatName(name),
           ImagesOrigin: formatImages(imgLinks).join(','),
-          Images: formatImages(imgLinks).join(',').replaceAll('/600/744/', '/2000/2000/'),
+          Images: Array.from(
+            new Set(
+              formatImages(imgLinks).map(upscaleImage)
+            )
+          ).join(','),
           Link: url,
         });
         const progress = {
