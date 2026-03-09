@@ -213,7 +213,7 @@ function ConvertFile() {
 
     if (duplicateNames.length > 0) {
       message.error(
-        `Duplicate product names detected (${duplicateNames.length}). Please fix before download.`
+        `Duplicate product names: ${duplicateNames.join('\n')}. Please fix before download.`
       );
       return;
     }
