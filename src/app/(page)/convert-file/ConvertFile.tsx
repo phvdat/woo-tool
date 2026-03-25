@@ -190,31 +190,28 @@ function ConvertFile() {
     }
   };
 
-  const getDuplicateNames = (products: Product[]) => {
-    const nameMap: Record<string, number> = {};
 
-    products.forEach((product) => {
-      const normalizedName = product.Name.trim().toLowerCase();
-      nameMap[normalizedName] = (nameMap[normalizedName] || 0) + 1;
-    });
-
-    return Object.keys(nameMap).filter((name) => nameMap[name] > 1);
-  };
-
+  const handleCheckDuplicate = () => {
+    const getDuplicateNames = (products: Product[]) => {
+      const nameMap: Record<string, number> = {};
+      products.forEach((product) => {
+        const normalizedName = product.Name.trim().toLowerCase();
+        nameMap[normalizedName] = (nameMap[normalizedName] || 0) + 1;
+      });
+      return Object.keys(nameMap).filter((name) => nameMap[name] > 1);
+    };
+    const duplicateNames = getDuplicateNames(products);
+    if (duplicateNames.length > 0) {
+      message.error(duplicateNames[0]);
+      return;
+    } else {
+      message.success('No duplicate names found');
+    }
+  }
   const handleSubmit = async () => {
     const isCategoryValid = products.every((product) => product.Categories);
     if (!isCategoryValid) {
       message.error('Please fill all category');
-      return;
-    }
-
-    // 🔥 Check duplicate product names
-    const duplicateNames = getDuplicateNames(products);
-
-    if (duplicateNames.length > 0) {
-      message.error(
-        `Duplicate product names: ${duplicateNames.join('\n')}. Please fix before download.`
-      );
       return;
     }
     handleDownloadFile(products, 'Converted');
@@ -365,7 +362,9 @@ function ConvertFile() {
               <Text>Upload to server: </Text>
               <Switch value={uploadAble} onChange={(e) => setUploadable(e)} />
             </div>
-
+            <Button type='primary' onClick={handleCheckDuplicate}>
+              Check duplicate
+            </Button>
             <Button
               type='primary'
               icon={<DownloadOutlined />}

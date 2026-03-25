@@ -1,10 +1,25 @@
 import { addMetadata } from '@/helper/add-metadata-image';
 import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
 import axios from 'axios';
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import sharp from 'sharp';
 import path from 'path';
 
+function getUniqueFileName(folder: string, baseName: string) {
+  let counter = 1;
+
+  const ext = path.extname(baseName);
+  const nameWithoutExt = path.basename(baseName, ext);
+
+  let finalName = baseName;
+
+  while (existsSync(path.join(folder, finalName))) {
+    finalName = `${nameWithoutExt}-${counter}${ext}`;
+    counter++;
+  }
+
+  return finalName;
+}
 interface CreateWebsiteParam {
   logoWidth: number;
   logoHeight: number;
@@ -53,7 +68,8 @@ export async function addWatermark({
 
     for (let i = 0; i < images.length; i++) {
       const imageUrl = images[i];
-      const imageName = `${name.replaceAll(' ', '-')}-${i + 1}.jpg`;
+      const baseImageName = `${name.replaceAll(' ', '-')}-${i + 1}.jpg`;
+      const imageName = getUniqueFileName(uploadFolder, baseImageName);
 
       if (!imageUrl) continue;
 
@@ -92,9 +108,8 @@ export async function addWatermark({
         writeFileSync(finalPath, readFileSync(tempPath));
 
         // URL TRẢ VỀ CHO CLIENT
-        const finalUrl = `${
-          process.env.NEXTAUTH_URL
-        }/uploads/${shopName.replace('.com', '')}/${imageName}`;
+        const finalUrl = `${process.env.NEXTAUTH_URL
+          }/uploads/${shopName.replace('.com', '')}/${imageName}`;
 
         list.push(finalUrl);
       } catch (error) {
