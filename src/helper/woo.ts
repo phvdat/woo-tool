@@ -51,7 +51,7 @@ export function createWooRecord(
     SKU: generateSKU(SKUPrefix),
     ...wooDynamic,
     Published: published,
-    Description: description,
+    Description: description.replace("[title-post]", wooDynamic.Name),
     Categories: category,
     'Sale price': salePrice,
     'Regular price': regularPrice,

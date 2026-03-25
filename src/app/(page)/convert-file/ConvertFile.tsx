@@ -226,7 +226,7 @@ function ConvertFile() {
   }, [debounceProducts]);
 
   useEffect(() => {
-    form.setFieldValue('website', websiteOptions[0]);
+    form.setFieldValue('website', websiteOptions[0]?.value);
   }, [websiteOptions])
 
   return (

@@ -6,6 +6,9 @@ const theme: ThemeConfig = {
       paddingLG: 8,
     },
   },
+  token: {
+    colorPrimary: '#a5aa60',
+  },
 };
 
 export default theme;
