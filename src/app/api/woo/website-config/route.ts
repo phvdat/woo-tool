@@ -10,14 +10,25 @@ export interface WooWebsitePayload extends WebsiteFormValue {
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
-  const userEmail = searchParams.get('userEmail') || '';
+  const userEmail = searchParams.get('userEmail');
   let { db } = await connectToDatabase();
-  const response = await db.collection(WEBSITES_COLLECTION).find({
-    owner: { $regex: userEmail, $options: 'i' }
-  }).toArray();
+  let query: any = {};
+  // chỉ filter khi có email
+  if (userEmail) {
+    query = {
+      $or: [
+        { owner: userEmail.toLowerCase() },
+        { members: userEmail.toLowerCase() }
+      ]
+    };
+  }
+  const response = await db
+    .collection(WEBSITES_COLLECTION)
+    .find(query)
+    .toArray();
+
   return Response.json(response, { status: 200 });
 }
-
 export async function POST(request: Request) {
   try {
     const payload: WooWebsitePayload = await request.json();

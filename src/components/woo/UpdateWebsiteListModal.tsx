@@ -1,7 +1,7 @@
-'use client';
-import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
-import { endpoint } from '@/constant/endpoint';
-import { handleErrorMongoDB } from '@/helper/common';
+"use client";
+import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
+import { endpoint } from "@/constant/endpoint";
+import { handleErrorMongoDB } from "@/helper/common";
 import {
   Alert,
   Button,
@@ -12,11 +12,12 @@ import {
   Input,
   Modal,
   Row,
+  Select,
   message,
-} from 'antd';
-import axios from 'axios';
-import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+} from "antd";
+import axios from "axios";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 interface AddNewCategoryProps {
   initialForm?: WebsiteFormValue;
@@ -32,17 +33,20 @@ export interface WebsiteFormValue {
   imageHeight: number;
   shopName: string;
   quality: number;
+  members?: string[]; // thêm
 }
 
 const defaultFormValue: WebsiteFormValue = {
-  logoUrl: '',
+  logoUrl: "",
   logoWidth: 1000,
   logoHeight: 1000,
   imageWidth: 1000,
   imageHeight: 1000,
-  shopName: '',
+  shopName: "",
   quality: 80,
+  members: [],
 };
+
 const UpdateWebsiteListModal = ({
   initialForm = defaultFormValue,
   _id,
@@ -53,17 +57,21 @@ const UpdateWebsiteListModal = ({
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<WebsiteFormValue>();
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const createWebsite = async (values: WebsiteFormValue) => {
-    const payload = { ...values, owner: data?.user?.email };
-    console.log(payload);
+    const payload = {
+      ...values,
+      owner: data?.user?.email,
+      members: values.members?.map((e) => e.toLowerCase()) || [],
+    };
+
     try {
       await axios.post(endpoint.websiteConfigList, payload);
       messageApi.open({
-        type: 'success',
-        content: 'Create category successfully!',
+        type: "success",
+        content: "Create category successfully!",
       });
       refresh && (await refresh());
       setIsModalOpen(false);
@@ -75,16 +83,20 @@ const UpdateWebsiteListModal = ({
 
   const updateWebsite = async (_id: string, values: WebsiteFormValue) => {
     try {
-      await axios.put(endpoint.websiteConfigList, { _id, ...values });
+      await axios.put(endpoint.websiteConfigList, {
+        _id,
+        ...values,
+        members: values.members?.map((e) => e.toLowerCase()) || [],
+      });
       messageApi.open({
-        type: 'success',
-        content: 'Update category successfully!',
+        type: "success",
+        content: "Update category successfully!",
       });
       refresh();
-      console.log('thanh cong');
+      console.log("thanh cong");
       setIsModalOpen(false);
     } catch (error) {
-      console.log('errrr ???', error);
+      console.log("errrr ???", error);
 
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
@@ -93,7 +105,7 @@ const UpdateWebsiteListModal = ({
 
   const onSubmit = async (values: WebsiteFormValue) => {
     setLoading(true);
-    setError('');
+    setError("");
     if (_id) {
       await updateWebsite(_id, values);
     } else {
@@ -105,10 +117,10 @@ const UpdateWebsiteListModal = ({
     <>
       {contextHolder}
       <Button onClick={() => setIsModalOpen(true)}>
-        {_id ? 'Edit' : 'Add new Website List'}
+        {_id ? "Edit" : "Add new Website List"}
       </Button>
       <Modal
-        title='Category'
+        title="Category"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
@@ -117,96 +129,107 @@ const UpdateWebsiteListModal = ({
       >
         <Form
           form={form}
-          layout='vertical'
+          layout="vertical"
           onFinish={onSubmit}
-          name='add-category-form'
+          name="add-category-form"
           disabled={loading}
           initialValues={initialForm}
         >
           <Card>
             <Form.Item<WebsiteFormValue>
-              name='logoUrl'
-              label='Logo URL'
-              rules={[{ required: true, message: 'Please input Logo URL!' }]}
+              name="logoUrl"
+              label="Logo URL"
+              rules={[{ required: true, message: "Please input Logo URL!" }]}
             >
-              <Input type='text' placeholder='Logo URL' />
+              <Input type="text" placeholder="Logo URL" />
             </Form.Item>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item<WebsiteFormValue>
-                  name='shopName'
-                  label='Shop Name'
+                  name="shopName"
+                  label="Shop Name"
                   rules={[
-                    { required: true, message: 'Please input Shop Name!' },
+                    { required: true, message: "Please input Shop Name!" },
                   ]}
                 >
-                  <Input type='text' placeholder='Shop Name' />
+                  <Input type="text" placeholder="Shop Name" />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item<WebsiteFormValue>
-                  name='quality'
-                  label='Quality'
-                  rules={[{ required: true, message: 'Please input Quality!' }]}
+                  name="quality"
+                  label="Quality"
+                  rules={[{ required: true, message: "Please input Quality!" }]}
                 >
-                  <Input type='number' placeholder='Quality' />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item<WebsiteFormValue>
-                  name='logoWidth'
-                  label='Logo Width'
-                  rules={[
-                    { required: true, message: 'Please input Logo Width!' },
-                  ]}
-                >
-                  <Input type='number' placeholder='Logo Width' />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item<WebsiteFormValue>
-                  name='logoHeight'
-                  label='Logo Height'
-                  rules={[
-                    { required: true, message: 'Please input Logo Height!' },
-                  ]}
-                >
-                  <Input type='number' placeholder='Logo Height' />
+                  <Input type="number" placeholder="Quality" />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
                 <Form.Item<WebsiteFormValue>
-                  name='imageWidth'
-                  label='Image Width'
+                  name="logoWidth"
+                  label="Logo Width"
                   rules={[
-                    { required: true, message: 'Please input Image Width!' },
+                    { required: true, message: "Please input Logo Width!" },
                   ]}
                 >
-                  <Input type='number' placeholder='Image Width' />
+                  <Input type="number" placeholder="Logo Width" />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item<WebsiteFormValue>
-                  name='imageHeight'
-                  label='Image Height'
+                  name="logoHeight"
+                  label="Logo Height"
                   rules={[
-                    { required: true, message: 'Please input Image Height!' },
+                    { required: true, message: "Please input Logo Height!" },
                   ]}
                 >
-                  <Input type='number' placeholder='Image Height' />
+                  <Input type="number" placeholder="Logo Height" />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item<WebsiteFormValue>
+                  name="imageWidth"
+                  label="Image Width"
+                  rules={[
+                    { required: true, message: "Please input Image Width!" },
+                  ]}
+                >
+                  <Input type="number" placeholder="Image Width" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item<WebsiteFormValue>
+                  name="imageHeight"
+                  label="Image Height"
+                  rules={[
+                    { required: true, message: "Please input Image Height!" },
+                  ]}
+                >
+                  <Input type="number" placeholder="Image Height" />
                 </Form.Item>
               </Col>
             </Row>
           </Card>
-          <Flex justify='center' gap={16} style={{ marginTop: 24 }}>
-            <Button htmlType='submit' loading={loading}>
+          <Form.Item<WebsiteFormValue>
+            name="members"
+            label="Members (emails)"
+            tooltip="Press enter after each email"
+          >
+            <Select
+              mode="tags"
+              placeholder="Enter member email"
+              tokenSeparators={[",", " "]}
+            />
+          </Form.Item>
+          <Flex justify="center" gap={16} style={{ marginTop: 24 }}>
+            <Button htmlType="submit" loading={loading}>
               Submit
             </Button>
           </Flex>
           {error ? (
-            <Alert message={error} type='error' style={{ marginTop: 24 }} />
+            <Alert message={error} type="error" style={{ marginTop: 24 }} />
           ) : null}
         </Form>
       </Modal>
