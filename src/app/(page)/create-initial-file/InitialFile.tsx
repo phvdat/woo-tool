@@ -2,7 +2,7 @@
 
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
-import { CATE_KEYWORD_LOCAL_KEY } from '@/components/convert-file/CateKeywordConfig';
+import { useGlobalCateKeywordConfig } from '@/app/hooks/useGlobalCateKeywordConfig';
 import InitialFileTable from '@/components/create-initial-file/InitialFileTable';
 import { convertToAcronym } from '@/helper/common';
 import detectCategory from '@/helper/detect-category';
@@ -43,9 +43,8 @@ const InitialFile = () => {
   const [dataFile, setDataFile] = useState<
     Omit<InitialFileValues, 'website'>[]
   >([]);
-  const [cateKeyword] = useLocalStorage<{
-    [key: string]: string[];
-  }>(CATE_KEYWORD_LOCAL_KEY, {});
+    const { cateKeyword, isLoading: cateKeywordLoading } = useGlobalCateKeywordConfig();
+
   const [dataLocal, setDataLocal] = useLocalStorage(INITIAL_DATA, '[]');
   const watchShopId = Form.useWatch('website', form);
 
@@ -125,7 +124,7 @@ const InitialFile = () => {
           layout='vertical'
           form={form}
         >
-          {(categoriesLoading || websiteLoading) && (
+          {(categoriesLoading || websiteLoading || cateKeywordLoading) && (
             <Spin
               size='large'
               style={{
@@ -269,7 +268,6 @@ const InitialFile = () => {
               htmlType='submit'
               block
               type='primary'
-              style={{ width: '100%', backgroundColor: 'green' }}
             >
               Add Row
             </Button>
@@ -283,14 +281,12 @@ const InitialFile = () => {
             removeRecordByName={removeRecordByName}
           />
           <Button
-            type='primary'
             style={{ marginTop: '10px' }}
             htmlType='button'
             onClick={() => {
               handleDownloadFile(dataFile, 'initial-file');
               setDataLocal('[]');
             }}
-            block
           >
             <DownloadOutlined /> Download
           </Button>

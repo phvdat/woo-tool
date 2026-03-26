@@ -1,39 +1,70 @@
 import { Product } from "@/app/(page)/convert-file/ConvertFile"
-import { useLocalStorage } from "@/app/hooks/useLocalStorage"
 import { ApiOutlined } from "@ant-design/icons"
 import { Button, Flex, Popover } from "antd"
 import TextArea from "antd/es/input/TextArea"
+import { useGlobalSizeChartLinks } from "@/app/hooks/useGlobalSizeChartLinks"
 
-const SIZE_CHART_LINK ='SIZE_CHART_LINK'
+const ExcludeSizeChartLink = ({
+  products,
+  setProducts
+}: {
+  products: Product[],
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>
+}) => {
 
-const ExcludeSizeChartLink = ({products, setProducts}: {products: Product[], setProducts: React.Dispatch<React.SetStateAction<Product[]>>})=>{
-  const [sizeChartLinks, setSizeChartLinks] = useLocalStorage(SIZE_CHART_LINK, '')
+  const { sizeChartLinks, save } = useGlobalSizeChartLinks()
+
+  const textValue = sizeChartLinks.join('\n')
+
+  const handleSave = async (value: string) => {
+    const links = value
+      .split('\n')
+      .map(i => i.trim())
+      .filter(Boolean)
+
+    await save(links)
+  }
 
   const handleRemoveSizeChartLink = () => {
-  const linksToRemove = sizeChartLinks
-    .split('\n')
-    .map(link => link.trim())
-    .filter(Boolean);
 
-  const newProducts = products.map(product => {
-    const newImages = product.Images
-      .split(',')
-      .map(img => img.trim())
-      .filter(img => img && !linksToRemove.includes(img))
-      .join(',');
+    const newProducts = products.map(product => {
 
-    return { ...product, Images: newImages };
-  });
+      const newImages = product.Images
+        .split(',')
+        .map(img => img.trim())
+        .filter(img => img && !sizeChartLinks.includes(img))
+        .join(',')
 
-  setProducts(newProducts);
-};
+      return { ...product, Images: newImages }
 
-  return <Flex gap={12}>
-    <Popover content={<TextArea style={{width: '100%'}} rows={5} placeholder="Size chart links image" value={sizeChartLinks} onChange={(e)=>setSizeChartLinks(e.target.value)}/>} title="Title" trigger="click">
-      <ApiOutlined />
-    </Popover>
-    <Button onClick={handleRemoveSizeChartLink}>Remove Size Link</Button>
-  </Flex>
+    })
+
+    setProducts(newProducts)
+  }
+
+  return (
+    <Flex gap={12}>
+
+      <Popover
+        content={
+          <TextArea
+            rows={6}
+            style={{ width: 400 }}
+            defaultValue={textValue}
+            onBlur={(e)=>handleSave(e.target.value)}
+          />
+        }
+        trigger="click"
+      >
+        <ApiOutlined />
+      </Popover>
+
+      <Button onClick={handleRemoveSizeChartLink}>
+        Remove Size Link
+      </Button>
+
+    </Flex>
+  )
 }
 
 export default ExcludeSizeChartLink

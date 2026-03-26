@@ -1,7 +1,6 @@
 'use client';
 import CrawlListProductUrl from '@/components/crawl-tool/CrawlListProductUrl';
 import CrawlMixedProductDetail from '@/components/crawl-tool/CrawlMixedProductDetail';
-import CrawlProductDetail from '@/components/crawl-tool/CrawProductDetail';
 import SelectorSetup from '@/components/crawl-tool/SelectorSetup';
 import { Carousel, Divider, Segmented, Slider } from 'antd';
 import { useRef, useState } from 'react';
@@ -9,7 +8,6 @@ import { useRef, useState } from 'react';
 const TOOL_OPTIONS = {
   CRAWL_MIXED_PRODUCTS_DETAIL: 'Crawl Mixed Products Detail',
   CRAWL_LIST_PRODUCT_URL: 'Crawl List Product URL',
-  CRAWL_PRODUCTS_DETAIL: 'Crawl Products Detail',
   SELECTOR_SETUP: 'Selector Setup',
 };
 
@@ -28,11 +26,8 @@ function CrawlTool() {
       case TOOL_OPTIONS.CRAWL_LIST_PRODUCT_URL:
         carouselRef.current?.goTo(1);
         break;
-      case TOOL_OPTIONS.CRAWL_PRODUCTS_DETAIL:
-        carouselRef.current?.goTo(2);
-        break;
       case TOOL_OPTIONS.SELECTOR_SETUP:
-        carouselRef.current?.goTo(3);
+        carouselRef.current?.goTo(2);
         break;
       default:
         break;
@@ -60,9 +55,6 @@ function CrawlTool() {
         </div>
         <div>
           <CrawlListProductUrl />
-        </div>
-        <div>
-          <CrawlProductDetail />
         </div>
         <div>
           <SelectorSetup />

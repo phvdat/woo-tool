@@ -1,4 +1,3 @@
-import CrawlMixedProductDetail from '@/components/crawl-tool/CrawlMixedProductDetail';
 
 export const endpoint = {
   users: '/api/users',
@@ -15,4 +14,7 @@ export const endpoint = {
   productData: '/api/woo/product-data',
   addSelector: '/api/crawl/add-selector',
   crawlMixedProductDetail: '/api/crawl/detail-mixed-product',
+
+  globalConfigCateKeyword: '/api/global-config/cate-keyword',
+  globalConfigSizeChartLinks: '/api/global-config/size-chart-links',
 };

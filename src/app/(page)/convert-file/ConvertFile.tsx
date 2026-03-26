@@ -3,10 +3,9 @@
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import useDebounce from '@/app/hooks/useDebounce';
+import { useGlobalCateKeywordConfig } from '@/app/hooks/useGlobalCateKeywordConfig';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
-import CateKeywordConfig, {
-  CATE_KEYWORD_LOCAL_KEY,
-} from '@/components/convert-file/CateKeywordConfig';
+import CateKeywordConfig from '@/components/convert-file/CateKeywordConfig';
 import DuplicatedChecker from '@/components/convert-file/DuplicatedChecker';
 import ExcludeSizeChartLink from '@/components/convert-file/ExcludeSizeChartLink';
 import ProductItem from '@/components/convert-file/ProductItem';
@@ -51,9 +50,7 @@ function ConvertFile() {
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [uploadAble, setUploadable] = useState(true);
-  const [cateKeyword] = useLocalStorage<{
-    [key: string]: string[];
-  }>(CATE_KEYWORD_LOCAL_KEY, {});
+  const { cateKeyword, isLoading: cateKeywordLoading } = useGlobalCateKeywordConfig();
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(session?.user?.email || '');
   const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch('website', form);
@@ -240,7 +237,7 @@ function ConvertFile() {
       </Title>
       <Form name='initial-file' layout='vertical' form={form}
       >
-        {(categoriesLoading || websiteLoading) && (
+        {(categoriesLoading || websiteLoading || cateKeywordLoading) && (
           <Spin
             size='large'
             style={{

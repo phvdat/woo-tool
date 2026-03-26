@@ -1,4 +1,4 @@
-import { navigation } from '@/constant/navigation';
+import { navigation } from "@/constant/navigation";
 import {
   Avatar,
   Dropdown,
@@ -7,10 +7,10 @@ import {
   Menu,
   MenuProps,
   Typography,
-} from 'antd';
-import { signOut, useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+} from "antd";
+import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 const { Header: HeaderAntd } = Layout;
 const { Text } = Typography;
 
@@ -18,15 +18,29 @@ const Header = () => {
   const { data } = useSession();
   const headerItems = [
     {
+      label: (
+        <Link href={navigation.createInitialFile}>Create Initial File</Link>
+      ),
+      key: navigation.createInitialFile,
+    },
+    {
+      label: <Link href={navigation.crawlTool}>Crawl</Link>,
+      key: navigation.crawlTool,
+    },
+    {
+      label: <Link href={navigation.convertFile}>Convert File</Link>,
+      key: navigation.convertFile,
+    },
+    {
       label: <Link href={navigation.woo}>Woo tool</Link>,
       key: navigation.woo,
       children: [
         {
-          label: <Link href='/woo/config-categories'>Config Categories</Link>,
+          label: <Link href="/woo/config-categories">Config Categories</Link>,
           key: navigation.configCategories,
         },
         {
-          label: <Link href='/woo/config-website'>Config Website</Link>,
+          label: <Link href="/woo/config-website">Config Website</Link>,
           key: navigation.configWebsite,
         },
       ],
@@ -43,22 +57,8 @@ const Header = () => {
       key: navigation.updatePublishedTime,
     },
     {
-      label: (
-        <Link href={navigation.createInitialFile}>Create Initial File</Link>
-      ),
-      key: navigation.createInitialFile,
-    },
-    {
       label: <Link href={navigation.excelSplitter}>Excel Splitter</Link>,
       key: navigation.excelSplitter,
-    },
-    {
-      label: <Link href={navigation.convertFile}>Convert File</Link>,
-      key: navigation.convertFile,
-    },
-    {
-      label: <Link href={navigation.crawlTool}>Craw</Link>,
-      key: navigation.crawlTool,
     },
     {
       label: <Link href={navigation.originalProduct}>Original Product</Link>,
@@ -66,12 +66,12 @@ const Header = () => {
     },
   ];
 
-  const dropdownItems: MenuProps['items'] = [
+  const dropdownItems: MenuProps["items"] = [
     {
-      key: '1',
+      key: "1",
       label: (
         <Link href={navigation.setting}>
-          <Flex vertical align='center'>
+          <Flex vertical align="center">
             <Avatar src={data?.user?.image} />
             <Text strong>{data?.user?.name}</Text>
           </Flex>
@@ -79,7 +79,7 @@ const Header = () => {
       ),
     },
     {
-      key: '2',
+      key: "2",
       label: <Text onClick={() => signOut()}>Logout</Text>,
     },
   ];
@@ -88,23 +88,23 @@ const Header = () => {
   return (
     <HeaderAntd style={headerStyle}>
       <Flex
-        align='center'
-        justify='space-between'
-        style={{ width: '100%', height: '100%' }}
+        align="center"
+        justify="space-between"
+        style={{ width: "100%", height: "100%" }}
       >
         <Menu
           style={{ minWidth: 1, flex: 1 }}
-          mode='horizontal'
+          mode="horizontal"
           selectedKeys={[pathName]}
           items={headerItems}
-          triggerSubMenuAction='hover'
+          triggerSubMenuAction="hover"
         />
         <Dropdown
           menu={{ items: dropdownItems }}
-          trigger={['click']}
-          placement='bottomRight'
+          trigger={["click"]}
+          placement="bottomRight"
         >
-          <Avatar src={data?.user?.image} style={{ cursor: 'pointer' }} />
+          <Avatar src={data?.user?.image} style={{ cursor: "pointer" }} />
         </Dropdown>
       </Flex>
     </HeaderAntd>
@@ -112,8 +112,8 @@ const Header = () => {
 };
 
 const headerStyle: React.CSSProperties = {
-  background: '#fff',
-  minHeight: '64px',
+  background: "#fff",
+  minHeight: "64px",
 };
 
 export default Header;
