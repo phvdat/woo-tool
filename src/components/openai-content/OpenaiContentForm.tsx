@@ -11,7 +11,8 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 
 interface OpenaiFormValues {
-  promptQuestion: string;
+  promptDescriptionProduct: string;
+  promptTagsProduct: string;
   website: string;
   apiKey: string;
   file: FileList;
@@ -48,7 +49,8 @@ const OpenaiContentForm = () => {
         formData.append('file', fileOrigin);
         formData.append('mixed', String(mixed));
         formData.append('telegramId', user.telegramId);
-        formData.append('promptQuestion', user.promptQuestion);
+        formData.append('promptDescriptionProduct', user.promptDescriptionProduct);
+        formData.append('promptTagsProduct', user.promptTagsProduct);
         formData.append('apiKey', user.apiKey);
         formData.append('website', website);
         formData.append('publicTime', (user?.publicTime || 0).toString());

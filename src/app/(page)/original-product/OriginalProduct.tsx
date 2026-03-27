@@ -7,6 +7,7 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { Product } from "../convert-file/ConvertFile";
 import { debounce } from "lodash";
+import Container from "@/components/commons/Container";
 
 const { Text } = Typography;
 
@@ -28,7 +29,7 @@ function OriginalProduct() {
         params: { name: keyword },
       });
 
-      setResult(data);
+      setResult(data.slice(0, 100));
     } catch (error) {
       console.error("Error fetching product data: ", error);
     } finally {
@@ -51,23 +52,24 @@ function OriginalProduct() {
   }, [keyword, searchProductsDebounced]);
 
   return (
-    <Flex vertical gap={20} style={{ marginTop: 24 }}>
-      <Input
-        placeholder="Search product by name"
-        size="large"
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-      />
-
+    <>
+      <Container title="Original Product">
+        <Input
+          placeholder="Search product by name"
+          size="large"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+      </Container>
       <Row gutter={[16, 16]}>
         {loading ? (
           <p style={{ textAlign: "center" }}>Loading...</p>
         ) : (
           result.map((product, index) => (
             <Col
-              xl={{ span: 8 }}
-              md={{ span: 12 }}
-              xs={{ span: 24 }}
+              xl={{ span: 4 }}
+              md={{ span: 8 }}
+              xs={{ span: 12 }}
               key={product.key + index}
             >
               <Card
@@ -86,7 +88,7 @@ function OriginalProduct() {
           ))
         )}
       </Row>
-    </Flex>
+    </>
   );
 }
 

@@ -1,4 +1,5 @@
 import { getSocket } from '@/config/socket';
+import { DEFAULT_PROMPT_DESCRIPTION, DEFAULT_PROMPT_TAGS } from '@/constant/commons';
 import { publishedTimeHelper } from '@/helper/common';
 import chatgpt from '@/services/chatgpt';
 import { telegramBot } from '@/services/telegram';
@@ -23,7 +24,8 @@ export async function POST(request: Request) {
 
   const file = payload.get('file') as File;
   const telegramId = payload.get('telegramId') as string;
-  const promptQuestion = payload.get('promptQuestion') as string;
+  const promptDescriptionProduct = payload.get('promptDescriptionProduct') as string || DEFAULT_PROMPT_DESCRIPTION;
+  const promptTagsProduct = payload.get('promptTagsProduct') as string || DEFAULT_PROMPT_TAGS;
   const website = payload.get('website') as string;
   const apiKey = payload.get('apiKey') as string;
   const mixed = payload.get('mixed') as string;
@@ -33,9 +35,7 @@ export async function POST(request: Request) {
   const socketId = Number(payload.get('socketId'));
 
   try {
-    const workbook = XLSX.read(await file.arrayBuffer(), {
-      type: 'array',
-    });
+    const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' });
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(wordSheet) as SheetData[];
     if (!data[0].hasOwnProperty('Name')) {
@@ -47,13 +47,11 @@ export async function POST(request: Request) {
       const productName: string = rowData['Name'];
       const categoryRaw = rowData['Categories'];
       const category = categoryRaw.split('>').pop().trim();
-      const question = promptQuestion
+      const question = promptDescriptionProduct
         .replaceAll('{product-name}', productName)
         .replaceAll('{category}', category)
         .replaceAll('{website}', website);
-      console.log(question);
 
-      // const responseChatGPT = await deepSeek(question, apiKey);
       const responseChatGPT = await chatgpt(question, apiKey);
       const Description = rowData['Description'];
       const finalDescription = Description.replace(
@@ -65,10 +63,34 @@ export async function POST(request: Request) {
         ...rowData,
         Description: finalDescription,
       });
-      const progress = Math.floor((result.length / data.length) * 100);
+      const progress = Math.floor((result.length / data.length) * 80);
       socket.emit('openai-progress', { progress, socketId });
     }
-    let resultMixed = result;
+    const productNames = data.map(p => p.Name).join('\n');
+    const tagPrompt =
+      promptTagsProduct +
+      `
+Product list:
+${productNames}
+
+Remember:
+- Output ONLY tags
+- Separate each product with "|"
+`;
+
+    const tagsRaw = await chatgpt(tagPrompt, apiKey);
+    const cleanText = tagsRaw?.replace(/```/g, '')
+      .replace(/output\s*:/gi, '')
+      .trim() || '';
+
+    const tagsList = cleanText
+      .split('|')
+      .map(t => t.trim());
+    const resultWithTags = result.map((item, index) => ({
+      ...item,
+      Tags: tagsList[index] || ''
+    }));
+    let resultMixed = resultWithTags;
 
     if (mixed === 'true') {
       resultMixed = shuffle(resultMixed);
@@ -80,7 +102,6 @@ export async function POST(request: Request) {
       gapFrom,
       gapTo
     );
-    // create excel from result and send file to telegram id by bot
     const ws = XLSX.utils.json_to_sheet(resultPublished);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'result');
@@ -92,11 +113,15 @@ export async function POST(request: Request) {
     bot
       .sendDocument(telegramId, stream, {
         caption: `Here is your file: ${fileName}`,
-      })
+    })
       .then(() => {
         unlinkSync(fileName);
       });
-    return Response.json(result, { status: 200 });
+    socket.emit('openai-progress', {
+      progress: 100,
+      socketId
+    });
+    return Response.json(resultPublished, { status: 200 });
   } catch (error) {
     console.log('error api openai', error);
     return Response.json(error, {

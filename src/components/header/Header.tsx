@@ -1,22 +1,40 @@
 import { navigation } from "@/constant/navigation";
 import {
+  LoginOutlined,
+  SettingFilled,
+  TeamOutlined,
+  MenuOutlined,
+} from "@ant-design/icons";
+import {
   Avatar,
   Dropdown,
-  Flex,
+  Drawer,
   Layout,
   Menu,
   MenuProps,
   Typography,
+  Grid,
 } from "antd";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+
 const { Header: HeaderAntd } = Layout;
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 const Header = () => {
   const { data } = useSession();
-  const headerItems = [
+  const email = data?.user?.email;
+  const isAdmin = email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
+  const screens = useBreakpoint();
+  const isMobile = !screens.md; // mobile < 768px
+
+  const [drawerVisible, setDrawerVisible] = useState(false);
+
+  const headerItems: MenuProps["items"] = [
     {
       label: (
         <Link href={navigation.createInitialFile}>Create Initial File</Link>
@@ -45,7 +63,6 @@ const Header = () => {
         },
       ],
     },
-
     {
       label: <Link href={navigation.openaiContent}>Openai Content</Link>,
       key: navigation.openaiContent,
@@ -68,45 +85,90 @@ const Header = () => {
 
   const dropdownItems: MenuProps["items"] = [
     {
-      key: "1",
+      key: "setting",
       label: (
         <Link href={navigation.setting}>
-          <Flex vertical align="center">
-            <Avatar src={data?.user?.image} />
-            <Text strong>{data?.user?.name}</Text>
-          </Flex>
+          <SettingFilled /> Setting
         </Link>
       ),
     },
+    ...(isAdmin
+      ? [
+          {
+            key: "manage-users",
+            label: (
+              <Link href={navigation.managementUser}>
+                <TeamOutlined /> Management Users
+              </Link>
+            ),
+          },
+        ]
+      : []),
     {
-      key: "2",
-      label: <Text onClick={() => signOut()}>Logout</Text>,
+      key: "logout",
+      label: (
+        <Text onClick={() => signOut()}>
+          <LoginOutlined /> Logout
+        </Text>
+      ),
     },
   ];
 
   const pathName = usePathname();
+
   return (
     <HeaderAntd style={headerStyle}>
-      <Flex
-        align="center"
-        justify="space-between"
-        style={{ width: "100%", height: "100%" }}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          height: "100%",
+        }}
       >
-        <Menu
-          style={{ minWidth: 1, flex: 1 }}
-          mode="horizontal"
-          selectedKeys={[pathName]}
-          items={headerItems}
-          triggerSubMenuAction="hover"
-        />
+        {isMobile ? (
+          <>
+            <MenuOutlined
+              style={{ fontSize: 18 }}
+              onClick={() => setDrawerVisible(true)}
+            />
+            <Drawer
+              title="Menu"
+              placement="left"
+              onClose={() => setDrawerVisible(false)}
+              open={drawerVisible}
+              width={300}
+              styles={{ body: { padding: 0 } }}
+            >
+              <Menu
+                mode="inline"
+                selectedKeys={[pathName]}
+                items={headerItems}
+                onClick={() => setDrawerVisible(false)}
+              />
+            </Drawer>
+          </>
+        ) : (
+          <Menu
+            style={{ flex: 1 }}
+            mode="horizontal"
+            selectedKeys={[pathName]}
+            items={headerItems}
+            triggerSubMenuAction="hover"
+          />
+        )}
+
         <Dropdown
           menu={{ items: dropdownItems }}
           trigger={["click"]}
           placement="bottomRight"
         >
-          <Avatar src={data?.user?.image} style={{ cursor: "pointer" }} />
+          <Avatar
+            src={data?.user?.image}
+            style={{ cursor: "pointer", marginLeft: 16 }}
+          />
         </Dropdown>
-      </Flex>
+      </div>
     </HeaderAntd>
   );
 };
@@ -114,6 +176,7 @@ const Header = () => {
 const headerStyle: React.CSSProperties = {
   background: "#fff",
   minHeight: "64px",
+  padding: "0 16px",
 };
 
 export default Header;

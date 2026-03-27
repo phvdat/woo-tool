@@ -3,6 +3,7 @@
 import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import { useGlobalCateKeywordConfig } from '@/app/hooks/useGlobalCateKeywordConfig';
+import Container from '@/components/commons/Container';
 import InitialFileTable from '@/components/create-initial-file/InitialFileTable';
 import { convertToAcronym } from '@/helper/common';
 import detectCategory from '@/helper/detect-category';
@@ -117,7 +118,7 @@ const InitialFile = () => {
 
   return (
     <div>
-      <div style={{ padding: '20px', maxWidth: '1000px', margin: 'auto' }}>
+      <Container title='Create Initial File'>
         <Form
           name='initial-file'
           onFinish={handleSubmit}
@@ -273,7 +274,7 @@ const InitialFile = () => {
             </Button>
           </Form.Item>
         </Form>
-      </div>
+      </Container>
       {dataFile.length ? (
         <>
           <InitialFileTable

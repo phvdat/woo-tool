@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useMediaQuery } from 'usehooks-ts';
 import * as XLSX from 'xlsx';
 import ProductSorter from './ProductSorter';
+import Container from '@/components/commons/Container';
 
 const SPLIT_NAME_LOCAL_KEY = 'splitName';
 
@@ -47,9 +48,8 @@ const ExcelSplitter = () => {
   }, [websiteNames]);
 
   return (
-    <div>
-      <div style={{ padding: '20px', maxWidth: '900px', margin: 'auto' }}>
-        <h1 style={{ textAlign: 'center' }}>Published Time Tool</h1>
+    <>
+      <Container title='Excel Splitter'>
         <Form onFinish={handleSubmit} layout='vertical' form={form}>
           <Form.Item
             label='Website Names'
@@ -87,11 +87,11 @@ const ExcelSplitter = () => {
             </Button>
           </Form.Item>
         </Form>
-      </div>
+      </Container>
       {items.length > 0 && (
         <ProductSorter items={items} webArray={websiteNames.split(',')} />
       )}
-    </div>
+    </>
   );
 };
 

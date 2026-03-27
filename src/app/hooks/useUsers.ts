@@ -10,7 +10,8 @@ export interface UsersPayload {
   gapFrom: number;
   gapTo: number;
   apiKey: string;
-  promptQuestion: string;
+  promptDescriptionProduct: string;
+  promptTagsProduct: string;
 }
 
 const fetcher = async (url: string) => {

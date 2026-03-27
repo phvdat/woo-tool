@@ -1,4 +1,5 @@
 'use client';
+import Container from '@/components/commons/Container';
 import { normFile, publishedTimeHelper } from '@/helper/common';
 import { handleDownloadFile } from '@/helper/woo';
 import { WooCommerce } from '@/types/woo';
@@ -68,8 +69,7 @@ const UpdatePublishedTime = () => {
   }, []);
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
-      <h1 style={{ textAlign: 'center' }}>Published Time Tool</h1>
+    <Container title='Set Published Time'>
       <Form onFinish={handleSubmit} layout='vertical' form={form}>
         <Form.Item<FormValues>
           label='After'
@@ -147,7 +147,7 @@ const UpdatePublishedTime = () => {
           ) : null}
         </Form.Item>
       </Form>
-    </div>
+    </Container>
   );
 };
 

@@ -1,5 +1,4 @@
 'use client';
-import { useCategories } from '@/app/hooks/useCategories';
 import { useUser } from '@/app/hooks/useUser';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import { getSocket } from '@/config/socket';
@@ -35,7 +34,7 @@ export const GAP_MINUTES = 10;
 
 export interface WooFormValue {
   file: FileList;
-  category: string;
+  
   watermarkWebsite: string;
   telegramId: string;
 }
@@ -57,20 +56,8 @@ const WooForm = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  const { categories } = useCategories();
   const { websiteConfigList } = useConfigWebsite(data?.user?.email || '');
   const watchShopId = Form.useWatch('watermarkWebsite', form);
-
-  const categoriesOptions = useMemo(() => {
-    const categoriesByShop = categories?.filter(
-      (category) => category.shopID === watchShopId
-    );
-    if (!categoriesByShop) return [];
-    return categoriesByShop.map((category) => ({
-      label: category.category,
-      value: category._id,
-    }));
-  }, [categories, watchShopId]);
 
   const websiteOptions = useMemo(() => {
     if (!websiteConfigList) return [];
@@ -88,10 +75,9 @@ const WooForm = () => {
     setCurrentProcess('');
     setErrorImageIndex('');
     setLoading(true);
-    const { file, category } = value;
+    const { file } = value;
     const fileOrigin = _get(file[0], 'originFileObj');
 
-    const categoriesObject = categories?.find((item) => item._id === category);
     const watermarkObject = websiteConfigList?.find(
       (item) => item._id === value.watermarkWebsite
     );
@@ -101,8 +87,6 @@ const WooForm = () => {
       try {
         const formData = new FormData();
         formData.append('file', fileOrigin);
-        categoriesObject &&
-          formData.append('categoriesObject', JSON.stringify(categoriesObject));
         formData.append('watermarkObject', JSON.stringify(watermarkObject));
         formData.append('telegramId', value.telegramId);
         formData.append(
@@ -176,15 +160,18 @@ const WooForm = () => {
         />
       )}
       <Card>
+        <Row gutter={16}>
+          <Col span={24} sm={{ span: 12 }}>
+            
         <Form.Item<WooFormValue> name='telegramId' label='Telegram ID'>
           <Input
             type='text'
             placeholder='Enter telegram id for receive file, if not you can download in this page'
           />
         </Form.Item>
-        <Row gutter={16}>
+          </Col>
           <Col span={24} sm={{ span: 12 }}>
-            <Form.Item<WooFormValue>
+           <Form.Item<WooFormValue>
               name='watermarkWebsite'
               label={
                 <span>
@@ -204,30 +191,6 @@ const WooForm = () => {
               <Select
                 placeholder='Select Website Website'
                 options={websiteOptions}
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
-                }
-              />
-            </Form.Item>
-          </Col>
-          <Col span={24} sm={{ span: 12 }}>
-            <Form.Item<WooFormValue>
-              name='category'
-              label={
-                <span>
-                  Choose Category{' '}
-                  <Link href='/woo/config-categories' type='warning'>
-                    <SettingOutlined />
-                  </Link>{' '}
-                </span>
-              }
-            >
-              <Select
-                placeholder='Select Category'
-                options={categoriesOptions}
                 showSearch
                 filterOption={(input, option) =>
                   (option?.label ?? '')

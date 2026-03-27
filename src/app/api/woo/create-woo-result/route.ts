@@ -41,12 +41,6 @@ export async function POST(request: Request) {
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
-  const categoriesObject = payload.get('categoriesObject')
-    ? (JSON.parse(
-        _toString(payload.get('categoriesObject'))
-      ) as WooCategoryPayload)
-    : null;
-
   const watermarkObject = JSON.parse(
     _toString(payload.get('watermarkObject'))
   ) as WooWebsitePayload;
@@ -88,8 +82,8 @@ export async function POST(request: Request) {
           (item: any) => item.category === rowData['Categories']
         ) as unknown as WooFixedOption;
       }
-      if (!categoryObjectByRow && !categoriesObject) {
-        throw new Error('Missing category');
+      if (!categoryObjectByRow) {
+        throw new Error(`Missing category at row ${i}`);
       }
       const imageUrls: string[] = rowData['Images'].split(',');
 
@@ -112,7 +106,7 @@ export async function POST(request: Request) {
       } else {
         result.push(
           createWooRecord(
-            categoryObjectByRow || (categoriesObject as WooFixedOption),
+            categoryObjectByRow,
             {
               ...rowData,
               Images: urlImageList?.join(','),
@@ -142,9 +136,8 @@ export async function POST(request: Request) {
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
     const date = moment().format('YYYY-MM-DD-HH-mm-ss');
-    const fileName = `${
-      watermarkObject.shopName.split('.')[0]
-    }-WOO-${date}.csv`;
+    const fileName = `${watermarkObject.shopName.split('.')[0]
+      }-WOO-${date}.csv`;
     writeFileSync(fileName, buffer);
     const stream = createReadStream(fileName);
     bot
@@ -156,8 +149,17 @@ export async function POST(request: Request) {
       });
     return Response.json(result, { status: 200 });
   } catch (error) {
-    console.log('error api woo', error);
-    socket.emit('woo-error', { error, socketId });
-    throw error;
+    let message = 'Unknown error';
+    if (error instanceof Error) {
+      message = error.message;
+    }
+    socket.emit('woo-error', {
+      error: message,
+      socketId,
+    });
+    return Response.json(
+      { message },
+      { status: 400 }
+    );
   }
 }

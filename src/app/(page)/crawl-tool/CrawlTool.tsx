@@ -1,20 +1,21 @@
-'use client';
-import CrawlListProductUrl from '@/components/crawl-tool/CrawlListProductUrl';
-import CrawlMixedProductDetail from '@/components/crawl-tool/CrawlMixedProductDetail';
-import SelectorSetup from '@/components/crawl-tool/SelectorSetup';
-import { Carousel, Divider, Segmented, Slider } from 'antd';
-import { useRef, useState } from 'react';
+"use client";
+import Container from "@/components/commons/Container";
+import CrawlListProductUrl from "@/components/crawl-tool/CrawlListProductUrl";
+import CrawlMixedProductDetail from "@/components/crawl-tool/CrawlMixedProductDetail";
+import SelectorSetup from "@/components/crawl-tool/SelectorSetup";
+import { Carousel, Divider, Segmented, Slider } from "antd";
+import { useRef, useState } from "react";
 
 const TOOL_OPTIONS = {
-  CRAWL_MIXED_PRODUCTS_DETAIL: 'Crawl Mixed Products Detail',
-  CRAWL_LIST_PRODUCT_URL: 'Crawl List Product URL',
-  SELECTOR_SETUP: 'Selector Setup',
+  CRAWL_MIXED_PRODUCTS_DETAIL: "Crawl Mixed Products Detail",
+  CRAWL_LIST_PRODUCT_URL: "Crawl List Product URL",
+  SELECTOR_SETUP: "Selector Setup",
 };
 
 function CrawlTool() {
   const carouselRef = useRef<any>(null);
   const [option, setOption] = useState(
-    TOOL_OPTIONS.CRAWL_MIXED_PRODUCTS_DETAIL
+    TOOL_OPTIONS.CRAWL_MIXED_PRODUCTS_DETAIL,
   );
 
   const handleChangeTool = (value: string) => {
@@ -35,13 +36,7 @@ function CrawlTool() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 920,
-        margin: '20px auto',
-      }}
-    >
-      <h1>Product Info Scraper</h1>
+    <Container title="Crawl Tool">
       <Segmented
         options={Object.values(TOOL_OPTIONS)}
         block
@@ -60,7 +55,7 @@ function CrawlTool() {
           <SelectorSetup />
         </div>
       </Carousel>
-    </div>
+    </Container>
   );
 }
 

@@ -1,12 +1,12 @@
-'use client';
-import { Product } from '@/app/(page)/convert-file/ConvertFile';
-import { convertToAcronym } from '@/helper/common';
+"use client";
+import { Product } from "@/app/(page)/convert-file/ConvertFile";
+import { convertToAcronym } from "@/helper/common";
 import {
   DeleteOutlined,
   EditOutlined,
   RollbackOutlined,
   SplitCellsOutlined,
-} from '@ant-design/icons';
+} from "@ant-design/icons";
 import {
   Button,
   Col,
@@ -17,9 +17,9 @@ import {
   InputNumber,
   Row,
   Select,
-} from 'antd';
-import { isNumber, set } from 'lodash';
-import React, { useState } from 'react';
+} from "antd";
+import { isNumber, set } from "lodash";
+import React, { useState } from "react";
 interface ProductItemProps {
   data: {
     handleNameChange: (productKey: string, value: string) => void;
@@ -62,17 +62,17 @@ const ProductItem = function ProductItem({
 
     products.forEach((product) => {
       if (product.key === key) {
-        const imageArray = product.Images.split(',');
+        const imageArray = product.Images.split(",");
         const totalChunks = Math.ceil(imageArray.length / productSplit);
 
         for (let i = 0; i < totalChunks; i++) {
           const chunk = imageArray.slice(
             i * productSplit,
-            (i + 1) * productSplit
+            (i + 1) * productSplit,
           );
           const newProduct = {
             ...product,
-            Images: chunk.join(','),
+            Images: chunk.join(","),
             key: `${product.key}-${i}}`,
           };
           newProducts.push(newProduct);
@@ -87,19 +87,19 @@ const ProductItem = function ProductItem({
 
   return (
     <div
-      style={{ ...style, border: '1px solid #ccc', overflowY: 'auto' }}
+      style={{ ...style, border: "1px solid #ccc", overflowY: "auto" }}
       key={currentProduct.key}
     >
       <Row
         style={{
-          width: '100%',
+          width: "100%",
         }}
       >
         <Col span={24} lg={{ span: 8 }} style={{ padding: 12 }}>
-          <Flex style={{ width: '100%' }} gap={12} wrap justify='space-between'>
+          <Flex style={{ width: "100%" }} gap={12} wrap justify="space-between">
             <Select
               value={currentProduct.Categories}
-              placeholder='Select Category'
+              placeholder="Select Category"
               onChange={(value) =>
                 handleCategoryChange(currentProduct.key, value)
               }
@@ -107,77 +107,76 @@ const ProductItem = function ProductItem({
               showSearch
               suffixIcon={
                 <RollbackOutlined
-                  autoCapitalize=''
+                  autoCapitalize=""
                   onClick={setPrevCategory}
                   style={{
-                    fontSize: '20px',
-                    padding: '2px 12px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
+                    fontSize: "20px",
+                    padding: "2px 12px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
                   }}
                 />
               }
-              style={{ minWidth: '215px' }}
+              style={{ minWidth: "215px" }}
               filterOption={(input, option: any) => {
-                const searchFull = (option?.label ?? '')
+                const searchFull = (option?.label ?? "")
                   ?.toLowerCase()
                   .includes(input.toLowerCase());
                 const searchAcronym = convertToAcronym(
-                  option?.label ?? ''
+                  option?.label ?? "",
                 ).includes(input.toLowerCase());
                 return searchFull || searchAcronym;
               }}
             ></Select>
 
             <Button
+              size={"small"}
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDelete(currentProduct.key)}
               tabIndex={-1}
-            >
-              Xoá
-            </Button>
+            ></Button>
 
             <Input.TextArea
-              placeholder='Product Name'
+              placeholder="Product Name"
               rows={2}
-              value={currentProduct.Name}
+              value={currentProduct.Name.trim()}
               onChange={(e) =>
                 handleNameChange(currentProduct.key, e.target.value)
               }
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             />
           </Flex>
         </Col>
         <Col span={24} lg={{ span: 16 }} style={{ padding: 12 }}>
-          <Flex gap={12} wrap justify='space-between'>
+          <Flex gap={12} wrap justify="space-between">
             {isEdit ? (
               <Input.TextArea
-                placeholder='Image Urls'
+                placeholder="Image Urls"
                 rows={4}
-                value={currentProduct.Images.replaceAll(',', '\n')}
-                style={{ width: '100%' }}
+                value={currentProduct.Images.replaceAll(",", "\n")}
+                style={{ width: "100%" }}
                 onChange={(e) =>
                   handleImagesChange(
                     currentProduct.key,
-                    e.target.value.replaceAll('\n', ',').replaceAll(' ', '')
+                    e.target.value.replaceAll("\n", ",").replaceAll(" ", ""),
                   )
                 }
                 onBlur={() => setIsEdit(false)}
               />
             ) : (
               <Flex gap={12} wrap>
-                {currentProduct.Images?.split(',').map(
+                {currentProduct.Images?.split(",").map(
                   (img: string, idx: number) => (
                     <Image
                       src={img}
                       width={100}
                       height={100}
                       key={idx}
-                      alt='product'
-                      loading='lazy'
+                      alt="product"
+                      loading="lazy"
                     />
-                  )
+                  ),
                 )}
               </Flex>
             )}
@@ -190,7 +189,7 @@ const ProductItem = function ProductItem({
               </Button>
               <div>
                 <InputNumber
-                  placeholder='Split'
+                  placeholder="Split"
                   addonAfter={
                     <SplitCellsOutlined
                       onClick={() =>
@@ -201,7 +200,7 @@ const ProductItem = function ProductItem({
                   }
                   onChange={(value) => setProductSplit(value as number)}
                   value={productSplit}
-                  style={{ width: '90px' }}
+                  style={{ width: "90px" }}
                 />
               </div>
             </Flex>
