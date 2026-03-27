@@ -10,11 +10,13 @@ import { debounce } from "lodash";
 import Container from "@/components/commons/Container";
 
 const { Text } = Typography;
-
+interface Result extends Product {
+  uploadedAt: string;
+}
 function OriginalProduct() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Product[]>([]);
+  const [result, setResult] = useState<Result[]>([]);
 
   const searchProducts = async (keyword: string) => {
     if (!keyword) {
@@ -25,7 +27,7 @@ function OriginalProduct() {
     setLoading(true);
 
     try {
-      const { data } = await axios.get<Product[]>(endpoint.productData, {
+      const { data } = await axios.get<Result[]>(endpoint.productData, {
         params: { name: keyword },
       });
 
@@ -83,6 +85,17 @@ function OriginalProduct() {
                 }
               >
                 <Meta description={<Text>{product.Name}</Text>} />
+                <Meta
+                  description={
+                    <Text type="secondary">
+                      {product.uploadedAt
+                        ? new Date('10-10-2023 12:03:23').toLocaleDateString(
+                            "vi-VN",
+                          )
+                        : ""}
+                    </Text>
+                  }
+                />
               </Card>
             </Col>
           ))

@@ -180,8 +180,11 @@ function ConvertFile() {
 
   const uploadProductsToServer = async (products: Product[]) => {
     try {
-      const res = await axios.post(endpoint.productData, products);
-
+      const productsWithDate = products.map((p) => ({
+        ...p,
+        uploadedAt: new Date().toISOString(),
+      }));
+      const res = await axios.post(endpoint.productData, productsWithDate);
       if (res.status === 200) {
         message.success("Products uploaded successfully");
       }
