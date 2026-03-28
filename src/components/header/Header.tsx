@@ -1,19 +1,21 @@
 import { navigation } from "@/constant/navigation";
 import {
+  GlobalOutlined,
   LoginOutlined,
-  SettingFilled,
-  TeamOutlined,
   MenuOutlined,
+  SettingFilled,
+  ShoppingOutlined,
+  TeamOutlined
 } from "@ant-design/icons";
 import {
   Avatar,
-  Dropdown,
   Drawer,
+  Dropdown,
+  Grid,
   Layout,
   Menu,
   MenuProps,
   Typography,
-  Grid,
 } from "antd";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -52,16 +54,6 @@ const Header = () => {
     {
       label: <Link href={navigation.woo}>Woo tool</Link>,
       key: navigation.woo,
-      children: [
-        {
-          label: <Link href="/woo/config-categories">Config Categories</Link>,
-          key: navigation.configCategories,
-        },
-        {
-          label: <Link href="/woo/config-website">Config Website</Link>,
-          key: navigation.configWebsite,
-        },
-      ],
     },
     {
       label: <Link href={navigation.openaiContent}>Openai Content</Link>,
@@ -85,17 +77,26 @@ const Header = () => {
 
   const dropdownItems: MenuProps["items"] = [
     {
-      key: "setting",
+      key: navigation.setting,
       label: (
         <Link href={navigation.setting}>
           <SettingFilled /> Setting
         </Link>
       ),
     },
+
+    {
+      label: <Link href={navigation.configCategories}><ShoppingOutlined /> Config Categories</Link>,
+      key: navigation.configCategories,
+    },
+    {
+      label: <Link href={navigation.configWebsite}><GlobalOutlined /> Config Website</Link>,
+      key: navigation.configWebsite,
+    },
     ...(isAdmin
       ? [
           {
-            key: "manage-users",
+            key: navigation.managementUser,
             label: (
               <Link href={navigation.managementUser}>
                 <TeamOutlined /> Management Users
