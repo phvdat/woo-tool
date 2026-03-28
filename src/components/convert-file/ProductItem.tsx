@@ -140,7 +140,7 @@ const ProductItem = function ProductItem({
             <Input.TextArea
               placeholder="Product Name"
               rows={2}
-              value={currentProduct.Name.trim()}
+              value={currentProduct.Name}
               onChange={(e) =>
                 handleNameChange(currentProduct.key, e.target.value)
               }
