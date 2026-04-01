@@ -78,14 +78,15 @@ const InitialFile = () => {
   };
 
   const handlePasteImages = () => {
-    navigator.clipboard.readText().then((text) => {
-      const currentImages = form.getFieldValue('Images') || '';
-      form.setFieldValue(
-        'Images',
-        currentImages ? `${currentImages},${text}` : text
-      );
-    });
-  };
+  navigator.clipboard.readText().then((text) => {
+    const currentImages = form.getFieldValue('Images') || '';
+    const newItems = text.split(/,|\n/).map((s) => s.trim()).filter(Boolean);
+    const currentItems = currentImages
+      ? currentImages.split('\n').map((s: string) => s.trim()).filter(Boolean)
+      : [];
+    form.setFieldValue('Images', [...currentItems, ...newItems].join('\n'));
+  });
+};
 
   const setPrevCategory = () => {
     const prevCategory = dataFile[dataFile.length - 1]?.Categories || '';
@@ -93,20 +94,22 @@ const InitialFile = () => {
   };
 
   const handleSubmit = async (values: InitialFileValues) => {
-    const { website, ...data } = values;
-    const name = data.Name.replace(/\n/g, '').trim();
-    const isExistProductName = dataFile.find((item) => item.Name === name);
-    if (isExistProductName) {
-      message.error('Product name already exist!');
-    } else {
-      setDataFile((prev) => [...prev, data]);
-      setDataLocal(JSON.stringify([...dataFile, data]));
-      form.setFieldValue('Name', '');
-      form.setFieldValue('Images', '');
-      form.setFieldValue('Categories', '');
-      message.success('Product added successfully!');
-    }
-  };
+  const { website, ...data } = values;
+  const name = data.Name.replace(/\n/g, '').trim();
+  const images = data.Images.split('\n').map((s) => s.trim()).filter(Boolean).join(',');
+  const normalizedData = { ...data, Name: name, Images: images };
+  const isExistProductName = dataFile.find((item) => item.Name === name);
+  if (isExistProductName) {
+    message.error('Product name already exist!');
+  } else {
+    setDataFile((prev) => [...prev, normalizedData]);
+    setDataLocal(JSON.stringify([...dataFile, normalizedData]));
+    form.setFieldValue('Name', '');
+    form.setFieldValue('Images', '');
+    form.setFieldValue('Categories', '');
+    message.success('Product added successfully!');
+  }
+};
 
   const removeRecordByName = (name: string) => {
     setDataFile((prev) => prev.filter((item) => item.Name !== name));
