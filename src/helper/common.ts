@@ -1,6 +1,7 @@
 import stringSimilarity from 'string-similarity';
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import _get from 'lodash/get';
 
 export function handleErrorMongoDB(error: unknown) {
@@ -19,6 +20,8 @@ export function normFile(event: unknown) {
   return event && _get(event, 'fileList');
 }
 
+dayjs.extend(utc);
+
 export function publishedTimeHelper(
   data: any[],
   after: number,
@@ -31,7 +34,9 @@ export function publishedTimeHelper(
       return row;
     });
   }
-  let publishedDate = dayjs().add(after, 'minute');
+
+  let publishedDate = dayjs.utc().utcOffset(7).add(after, 'minute');
+
   const result = data.map((row, index) => {
     const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;
     if (index != 0) {
@@ -43,6 +48,7 @@ export function publishedTimeHelper(
       'Published Date': publishedDate.format('YYYY-MM-DD HH:mm:ss'),
     };
   });
+
   return result;
 }
 
