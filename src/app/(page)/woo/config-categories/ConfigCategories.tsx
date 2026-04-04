@@ -1,22 +1,24 @@
-'use client';
-import { useCategories } from '@/app/hooks/useCategories';
-import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
-import CategoryItem from '@/components/woo/CategoryItem';
+"use client";
+import { useCategories } from "@/app/hooks/useCategories";
+import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
+import CategoryItem from "@/components/woo/CategoryItem";
 import UpdateCategory, {
   TypeUpdateCategory,
-} from '@/components/woo/UpdateCategoryModal';
-import { Flex, List, Radio, Typography } from 'antd';
-import { useSession } from 'next-auth/react';
-import { useState } from 'react';
-import _toString from 'lodash/toString';
-import DuplicateAllCate from '@/components/woo/DuplicateAllCate';
+} from "@/components/woo/UpdateCategoryModal";
+import { Flex, List, Radio, Spin, Typography } from "antd";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
+import _toString from "lodash/toString";
+import DuplicateAllCate from "@/components/woo/DuplicateAllCate";
 const { Title } = Typography;
 
 const ConfigCategories = () => {
   const { data } = useSession();
-  const [webSite, setWebSite] = useState('');
-  const { categories, isLoading, mutate } = useCategories(webSite);
-  const { websiteConfigList } = useConfigWebsite(data?.user?.email || '');
+  const [webSite, setWebSite] = useState("");
+  const { categories, isLoading: cateLoading, mutate } = useCategories(webSite);
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
+    data?.user?.email || "",
+  );
   const options =
     websiteConfigList?.map((item) => ({
       label: item.shopName,
@@ -25,32 +27,36 @@ const ConfigCategories = () => {
 
   return (
     <Flex gap={20} vertical style={{ marginTop: 24 }}>
-      <Radio.Group
-        options={[{ label: 'All', value: '' }, ...options]}
-        defaultValue=''
-        optionType='button'
-        buttonStyle='solid'
-        onChange={(e) => setWebSite(e.target.value)}
-        style={{ textAlign: 'center' }}
-      />
+      {websiteLoading ? (
+        <Spin />
+      ) : (
+        <Radio.Group
+          options={[...options, { label: "All", value: "" }]}
+          defaultValue={options[0]?.value}
+          optionType="button"
+          buttonStyle="solid"
+          onChange={(e) => setWebSite(e.target.value)}
+          style={{ textAlign: "center" }}
+        />
+      )}
       <DuplicateAllCate />
       <List
-        loading={isLoading}
+        loading={cateLoading}
         header={
-          <Title level={4} style={{ textAlign: 'center' }}>
+          <Title level={4} style={{ textAlign: "center" }}>
             Config Categories
           </Title>
         }
         bordered
         dataSource={categories.sort((a, b) =>
-          _toString(a.shopID).localeCompare(_toString(b.shopID))
+          _toString(a.shopID).localeCompare(_toString(b.shopID)),
         )}
         renderItem={(item) => (
           <List.Item>
             <CategoryItem
               key={item._id}
               category={item}
-              accessAble={webSite !== ''}
+              accessAble={webSite !== ""}
               refresh={mutate}
             />
           </List.Item>

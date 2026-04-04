@@ -1,33 +1,33 @@
-'use client';
-import { useLocalStorage } from '@/app/hooks/useLocalStorage';
-import { normFile } from '@/helper/common';
-import { UploadOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Upload } from 'antd';
-import _get from 'lodash/get';
-import { useEffect, useState } from 'react';
-import { useMediaQuery } from 'usehooks-ts';
-import * as XLSX from 'xlsx';
-import ProductSorter from './ProductSorter';
-import Container from '@/components/commons/Container';
+"use client";
+import { useLocalStorage } from "@/app/hooks/useLocalStorage";
+import { normFile } from "@/helper/common";
+import { UploadOutlined } from "@ant-design/icons";
+import { Button, Card, Form, Input, Upload } from "antd";
+import _get from "lodash/get";
+import { useEffect, useState } from "react";
+import { useMediaQuery } from "usehooks-ts";
+import * as XLSX from "xlsx";
+import ProductSorter from "./ProductSorter";
+import Container from "@/components/commons/Container";
 
-const SPLIT_NAME_LOCAL_KEY = 'splitName';
+const SPLIT_NAME_LOCAL_KEY = "splitName";
 
 const ExcelSplitter = () => {
-  const matches = useMediaQuery('(min-width: 992px)');
+  const matches = useMediaQuery("(min-width: 992px)");
   const [form] = Form.useForm();
   const [items, setItems] = useState<any[]>([]);
   const [websiteNames, setWebsiteNames] = useLocalStorage(
     SPLIT_NAME_LOCAL_KEY,
-    ''
+    "",
   );
 
   const handleSubmit = async (values: any) => {
     setWebsiteNames(values.websiteNames);
     const file = values.file;
-    const fileOrigin = _get(file[0], 'originFileObj') as unknown as File;
+    const fileOrigin = _get(file[0], "originFileObj") as unknown as File;
 
     const workbook = XLSX.read(await fileOrigin.arrayBuffer(), {
-      type: 'array',
+      type: "array",
     });
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const rawData = XLSX.utils.sheet_to_json(wordSheet);
@@ -43,53 +43,55 @@ const ExcelSplitter = () => {
 
   useEffect(() => {
     if (websiteNames) {
-      form.setFieldValue('websiteNames', websiteNames);
+      form.setFieldValue("websiteNames", websiteNames);
     }
   }, [websiteNames]);
 
   return (
     <>
-      <Container title='Excel Splitter'>
-        <Form onFinish={handleSubmit} layout='vertical' form={form}>
-          <Form.Item
-            label='Website Names'
-            name='websiteNames'
-            rules={[
-              {
-                required: true,
-                message: 'Please input website names!',
-              },
-            ]}
-          >
-            <Input
-              style={{ width: '100%' }}
-              placeholder='Website names split by comma'
-            />
-          </Form.Item>
+      <Container title="Excel Splitter">
+        <Card>
+          <Form onFinish={handleSubmit} layout="vertical" form={form}>
+            <Form.Item
+              label="Website Names"
+              name="websiteNames"
+              rules={[
+                {
+                  required: true,
+                  message: "Please input website names!",
+                },
+              ]}
+            >
+              <Input
+                style={{ width: "100%" }}
+                placeholder="Website names split by comma"
+              />
+            </Form.Item>
 
-          <Form.Item
-            name='file'
-            valuePropName='fileList'
-            label='Upload File'
-            getValueFromEvent={normFile}
-            rules={[{ required: true, message: 'Please upload file!' }]}
-          >
-            <Upload beforeUpload={() => false} maxCount={1}>
-              <Button icon={<UploadOutlined />} block>
-                Upload Excel
+            <Form.Item
+              name="file"
+              valuePropName="fileList"
+              label="Upload File"
+              getValueFromEvent={normFile}
+              rules={[{ required: true, message: "Please upload file!" }]}
+            >
+              <Upload beforeUpload={() => false} maxCount={1}>
+                <Button icon={<UploadOutlined />} block>
+                  Upload Excel
+                </Button>
+              </Upload>
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block>
+                Load Data
               </Button>
-            </Upload>
-          </Form.Item>
-
-          <Form.Item>
-            <Button type='primary' htmlType='submit'>
-              Load Data
-            </Button>
-          </Form.Item>
-        </Form>
+            </Form.Item>
+          </Form>
+        </Card>
       </Container>
       {items.length > 0 && (
-        <ProductSorter items={items} webArray={websiteNames.split(',')} />
+        <ProductSorter items={items} webArray={websiteNames.split(",")} />
       )}
     </>
   );

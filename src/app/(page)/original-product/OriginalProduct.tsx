@@ -56,12 +56,14 @@ function OriginalProduct() {
   return (
     <>
       <Container title="Original Product">
-        <Input
-          placeholder="Search product by name"
-          size="large"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-        />
+        <Card>
+          <Input
+            placeholder="Search product by name"
+            size="large"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
+        </Card>
       </Container>
       <Row gutter={[16, 16]}>
         {loading ? (
@@ -89,7 +91,7 @@ function OriginalProduct() {
                   description={
                     <Text type="secondary">
                       {product.uploadedAt
-                        ? new Date('10-10-2023 12:03:23').toLocaleDateString(
+                        ? new Date("10-10-2023 12:03:23").toLocaleDateString(
                             "vi-VN",
                           )
                         : ""}

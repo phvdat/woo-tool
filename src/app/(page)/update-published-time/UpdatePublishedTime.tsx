@@ -1,11 +1,12 @@
-'use client';
-import Container from '@/components/commons/Container';
-import { normFile, publishedTimeHelper } from '@/helper/common';
-import { handleDownloadFile } from '@/helper/woo';
-import { WooCommerce } from '@/types/woo';
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
+"use client";
+import Container from "@/components/commons/Container";
+import { normFile, publishedTimeHelper } from "@/helper/common";
+import { handleDownloadFile } from "@/helper/woo";
+import { WooCommerce } from "@/types/woo";
+import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
 import {
   Button,
+  Card,
   Col,
   Form,
   InputNumber,
@@ -13,16 +14,16 @@ import {
   Row,
   Switch,
   Upload,
-} from 'antd';
-import { shuffle } from 'lodash';
-import _get from 'lodash/get';
-import { useEffect, useState } from 'react';
-import { useLocalStorage } from 'usehooks-ts';
-import * as XLSX from 'xlsx';
+} from "antd";
+import { shuffle } from "lodash";
+import _get from "lodash/get";
+import { useEffect, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
+import * as XLSX from "xlsx";
 
-const PUB_TIME_AFTER = 'PUB_TIME_AFTER';
-const GAP_FROM = 'GAP_FROM';
-const GAP_TO = 'GAP_TO';
+const PUB_TIME_AFTER = "PUB_TIME_AFTER";
+const GAP_FROM = "GAP_FROM";
+const GAP_TO = "GAP_TO";
 
 interface FormValues {
   after: number;
@@ -44,10 +45,10 @@ const UpdatePublishedTime = () => {
     setAfterLocal(after);
     setGapFromTimeLocal(gapFrom);
     setGapToTimeLocal(gapTo);
-    const fileOrigin = _get(file[0], 'originFileObj') as unknown as File;
+    const fileOrigin = _get(file[0], "originFileObj") as unknown as File;
 
     const workbook = XLSX.read(await fileOrigin.arrayBuffer(), {
-      type: 'array',
+      type: "array",
     });
     const wordSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data: WooCommerce[] = XLSX.utils.sheet_to_json(wordSheet);
@@ -58,95 +59,97 @@ const UpdatePublishedTime = () => {
     }
     const result = publishedTimeHelper(dataMixed, after, gapFrom, gapTo);
     setDataFile(result);
-    message.success('File processed successfully!');
+    message.success("File processed successfully!");
   };
 
   useEffect(() => {
-    form.setFieldValue('after', Number(afterLocal));
-    form.setFieldValue('gapFrom', Number(gapFromLocal));
-    form.setFieldValue('gapTo', gapToLocal);
-    form.setFieldValue('mixed', true);
+    form.setFieldValue("after", Number(afterLocal));
+    form.setFieldValue("gapFrom", Number(gapFromLocal));
+    form.setFieldValue("gapTo", gapToLocal);
+    form.setFieldValue("mixed", true);
   }, []);
 
   return (
-    <Container title='Set Published Time'>
-      <Form onFinish={handleSubmit} layout='vertical' form={form}>
-        <Form.Item<FormValues>
-          label='After'
-          name='after'
-          rules={[{ required: true, message: 'Please input after time!' }]}
-        >
-          <InputNumber min={0} style={{ width: '100%' }} />
-        </Form.Item>
-        <Row gutter={[20, 20]}>
-          <Col span={12}>
-            <Form.Item<FormValues>
-              label='Gap Time From'
-              name='gapFrom'
-              rules={[{ required: true, message: 'Please input gap time!' }]}
-            >
-              <InputNumber
-                min={0}
-                style={{ width: '100%' }}
-                placeholder='From'
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item<FormValues>
-              label='Gap Time To'
-              name='gapTo'
-              rules={[{ required: true, message: 'Please input gap time!' }]}
-            >
-              <InputNumber
-                min={0}
-                style={{ width: '100%' }}
-                placeholder='From'
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Form.Item<FormValues>
-          name='file'
-          valuePropName='fileList'
-          label='File'
-          getValueFromEvent={normFile}
-          rules={[{ required: true, message: 'Please upload file!' }]}
-        >
-          <Upload
-            beforeUpload={() => false}
-            style={{ width: '100%' }}
-            maxCount={1}
+    <Container title="Set Published Time">
+      <Card>
+        <Form onFinish={handleSubmit} layout="vertical" form={form}>
+          <Form.Item<FormValues>
+            label="After"
+            name="after"
+            rules={[{ required: true, message: "Please input after time!" }]}
           >
-            <Button icon={<UploadOutlined />} block>
-              Upload Excel
-            </Button>
-          </Upload>
-        </Form.Item>
-        <Form.Item<FormValues>
-          name='mixed'
-          valuePropName='checked'
-          label='Mixed'
-        >
-          <Switch defaultChecked />
-        </Form.Item>
-        <Form.Item>
-          <Button type='primary' htmlType='submit'>
-            Submit
-          </Button>
-          {dataFile.length > 0 ? (
-            <Button
-              type='default'
-              icon={<DownloadOutlined />}
-              onClick={() => handleDownloadFile(dataFile, 'published-time')}
-              style={{ marginLeft: 10 }}
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+          <Row gutter={[20, 20]}>
+            <Col span={12}>
+              <Form.Item<FormValues>
+                label="Gap Time From"
+                name="gapFrom"
+                rules={[{ required: true, message: "Please input gap time!" }]}
+              >
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="From"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item<FormValues>
+                label="Gap Time To"
+                name="gapTo"
+                rules={[{ required: true, message: "Please input gap time!" }]}
+              >
+                <InputNumber
+                  min={0}
+                  style={{ width: "100%" }}
+                  placeholder="From"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item<FormValues>
+            name="file"
+            valuePropName="fileList"
+            label="File"
+            getValueFromEvent={normFile}
+            rules={[{ required: true, message: "Please upload file!" }]}
+          >
+            <Upload
+              beforeUpload={() => false}
+              style={{ width: "100%" }}
+              maxCount={1}
             >
-              Download Processed File
+              <Button icon={<UploadOutlined />} block>
+                Upload Excel
+              </Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item<FormValues>
+            name="mixed"
+            valuePropName="checked"
+            label="Mixed"
+          >
+            <Switch defaultChecked />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Submit
             </Button>
-          ) : null}
-        </Form.Item>
-      </Form>
+            {dataFile.length > 0 ? (
+              <Button
+                type="default"
+                icon={<DownloadOutlined />}
+                onClick={() => handleDownloadFile(dataFile, "published-time")}
+                block
+              >
+                Download Processed File
+              </Button>
+            ) : null}
+          </Form.Item>
+        </Form>
+      </Card>
     </Container>
   );
 };

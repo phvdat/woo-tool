@@ -17,6 +17,7 @@ import { handleDownloadFile } from "@/helper/woo";
 import { DownloadOutlined } from "@ant-design/icons";
 import {
   Button,
+  Card,
   Col,
   Flex,
   Form,
@@ -235,83 +236,85 @@ function ConvertFile() {
   return (
     <div>
       <Container title="Display File Data">
-        <Form name="initial-file" layout="vertical" form={form}>
-          {(categoriesLoading || websiteLoading || cateKeywordLoading) && (
-            <Spin
-              size="large"
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                zIndex: 100,
-                transform: "translateX(-50%)",
-              }}
-            />
-          )}
-          <Row gutter={16}>
-            <Col span={24} sm={{ span: 12 }}>
-              <Form.Item
-                name="website"
-                label={
-                  <>
-                    Website &nbsp;
-                    {watchShopId ? (
-                      <CateKeywordConfig
-                        categoriesOptions={categoriesOptions.map(
-                          (item) => item.value,
-                        )}
-                      />
-                    ) : null}
-                  </>
-                }
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select for website!",
-                  },
-                ]}
-              >
-                <Select
-                  placeholder="Select Website"
-                  options={websiteOptions}
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? "")
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
+        <Card>
+          <Form name="initial-file" layout="vertical" form={form}>
+            {(categoriesLoading || websiteLoading || cateKeywordLoading) && (
+              <Spin
+                size="large"
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  zIndex: 100,
+                  transform: "translateX(-50%)",
+                }}
+              />
+            )}
+            <Row gutter={16}>
+              <Col span={24} sm={{ span: 12 }}>
+                <Form.Item
+                  name="website"
+                  label={
+                    <>
+                      Website &nbsp;
+                      {watchShopId ? (
+                        <CateKeywordConfig
+                          categoriesOptions={categoriesOptions.map(
+                            (item) => item.value,
+                          )}
+                        />
+                      ) : null}
+                    </>
                   }
-                />
-              </Form.Item>
-            </Col>
-            <Col span={24} sm={{ span: 12 }}>
-              <Form.Item
-                name="file"
-                valuePropName="fileList"
-                label="File"
-                getValueFromEvent={normFile}
-                rules={[{ required: true, message: "Please upload file!" }]}
-              >
-                <Upload
-                  style={{ width: "100%" }}
-                  multiple
-                  beforeUpload={beforeUploadFile}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please select for website!",
+                    },
+                  ]}
                 >
-                  <Button block>Upload file excel</Button>
-                </Upload>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="search">
-            <Input
-              placeholder="Search"
-              style={{ marginBottom: 16 }}
-              allowClear
-              onChange={(e) => {
-                handleSearch(e.target.value);
-              }}
-            />
-          </Form.Item>
-        </Form>
+                  <Select
+                    placeholder="Select Website"
+                    options={websiteOptions}
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={24} sm={{ span: 12 }}>
+                <Form.Item
+                  name="file"
+                  valuePropName="fileList"
+                  label="File"
+                  getValueFromEvent={normFile}
+                  rules={[{ required: true, message: "Please upload file!" }]}
+                >
+                  <Upload
+                    style={{ width: "100%" }}
+                    multiple
+                    beforeUpload={beforeUploadFile}
+                  >
+                    <Button block>Upload file excel</Button>
+                  </Upload>
+                </Form.Item>
+              </Col>
+            </Row>
+            <Form.Item name="search">
+              <Input
+                placeholder="Search"
+                style={{ marginBottom: 16 }}
+                allowClear
+                onChange={(e) => {
+                  handleSearch(e.target.value);
+                }}
+              />
+            </Form.Item>
+          </Form>
+        </Card>
       </Container>
       {products.length > 0 && (
         <>
