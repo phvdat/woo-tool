@@ -21,6 +21,7 @@ import Meta from 'antd/es/card/Meta';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import SearchProductDialog from './SearchProductDialog';
+import { useSession } from 'next-auth/react';
 const { Text } = Typography;
 
 interface DuplicatedCheckerProps {
@@ -83,6 +84,7 @@ const ProductGallery = ({
     products: Product[];
     handleDelete: (index: string) => void;
   }) => {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
     const [existingProducts, setExistingProducts] = useState<Product[]>([]);
   const productsSortByName = products.sort((a, b) =>
@@ -94,7 +96,7 @@ const ProductGallery = ({
       setLoading(true);
       try {
         const res = await axios.get(endpoint.productData, {
-          params: { categories: products[0].Categories },
+          params: { categories: products[0].Categories, email: session?.user?.email },
         });
         const data: Product[] = res.data;
         setExistingProducts(data);

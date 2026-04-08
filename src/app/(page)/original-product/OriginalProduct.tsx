@@ -8,12 +8,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Product } from "../convert-file/ConvertFile";
 import { debounce } from "lodash";
 import Container from "@/components/commons/Container";
+import { useSession } from "next-auth/react";
 
 const { Text } = Typography;
 interface Result extends Product {
   uploadedAt: string;
 }
 function OriginalProduct() {
+  const { data: session } = useSession();
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result[]>([]);
@@ -27,8 +29,9 @@ function OriginalProduct() {
     setLoading(true);
 
     try {
+      const email = session?.user?.email;
       const { data } = await axios.get<Result[]>(endpoint.productData, {
-        params: { name: keyword },
+        params: { name: keyword, email },
       });
 
       setResult(data.slice(0, 100));

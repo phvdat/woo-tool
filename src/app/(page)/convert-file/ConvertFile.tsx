@@ -181,11 +181,19 @@ function ConvertFile() {
 
   const uploadProductsToServer = async (products: Product[]) => {
     try {
-      const productsWithDate = products.map((p) => ({
+      const email = session?.user?.email;
+
+      if (!email) {
+        message.error("Missing user email");
+        return;
+      }
+
+      const payload = products.map((p) => ({
         ...p,
-        uploadedAt: new Date().toISOString(),
+        email,
+        createdAt: new Date(),
       }));
-      const res = await axios.post(endpoint.productData, productsWithDate);
+      const res = await axios.post(endpoint.productData, payload);
       if (res.status === 200) {
         message.success("Products uploaded successfully");
       }
