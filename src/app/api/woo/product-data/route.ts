@@ -10,11 +10,11 @@ export async function GET(request: Request) {
   const email = searchParams.get('email') || '';
   const categories = searchParams.get('categories') || '';
   const name = searchParams.get('name') || '';
+  const { db } = await connectToDatabase();
+  const pipeline: any[] = [];
 
-  let { db } = await connectToDatabase();
-
-  const response = await db.collection(PRODUCT_DATA_COLLECTION).aggregate([
-    {
+  if (name.trim()) {
+    pipeline.push({
       $search: {
         index: "product",
         text: {
@@ -23,21 +23,27 @@ export async function GET(request: Request) {
           fuzzy: { maxEdits: 2 }
         }
       }
-    },
-    {
-      $match: {
-        email,
-        ...(categories ? { Categories: categories } : {})
-      }
-    },
-    {
+    });
+  }
+
+  pipeline.push({
+    $match: {
+      email,
+      ...(categories ? { Categories: categories } : {})
+    }
+  });
+
+  if (name.trim()) {
+    pipeline.push({
       $sort: {
         score: { $meta: "searchScore" }
       }
-    }
-  ]).toArray();
-  console.log(response);
-  
+    });
+  }
+  const response = await db
+    .collection(PRODUCT_DATA_COLLECTION)
+    .aggregate(pipeline)
+    .toArray();
   return Response.json(response, { status: 200 });
 }
 
