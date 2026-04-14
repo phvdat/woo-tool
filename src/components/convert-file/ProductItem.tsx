@@ -2,9 +2,13 @@
 import { Product } from "@/app/(page)/convert-file/ConvertFile";
 import { convertToAcronym } from "@/helper/common";
 import {
+  CloseOutlined,
   DeleteOutlined,
   EditOutlined,
+  MergeCellsOutlined,
+  PlusSquareOutlined,
   RollbackOutlined,
+  ScissorOutlined,
   SplitCellsOutlined,
 } from "@ant-design/icons";
 import {
@@ -30,6 +34,9 @@ interface ProductItemProps {
     handleImagesChange: (productKey: string, value: string) => void;
     handleDuplicateRow: (productKey: string) => void;
     setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+    mergeSourceKey: string | null;
+    setMergeSourceKey: React.Dispatch<React.SetStateAction<string | null>>;
+    handleMergeProduct: (productKey: string) => void;
   };
   index: number;
   style: any;
@@ -44,6 +51,9 @@ const ProductItem = function ProductItem({
     products,
     handleDuplicateRow,
     setProducts,
+    mergeSourceKey,
+    setMergeSourceKey,
+    handleMergeProduct,
   },
   index,
   style,
@@ -87,7 +97,14 @@ const ProductItem = function ProductItem({
 
   return (
     <div
-      style={{ ...style, border: "1px solid #ccc", overflowY: "auto" }}
+      style={{
+        ...style,
+        overflowY: "auto",
+        border:
+          currentProduct.key === mergeSourceKey
+            ? "1px solid #41ff16"
+            : "1px solid #ccc",
+      }}
       key={currentProduct.key}
     >
       <Row
@@ -95,7 +112,7 @@ const ProductItem = function ProductItem({
           width: "100%",
         }}
       >
-        <Col span={24} lg={{ span: 8 }} style={{ padding: 12 }}>
+        <Col span={24} lg={{ span: 8 }} style={{ padding: "12px 4px" }}>
           <Flex style={{ width: "100%" }} gap={12} wrap justify="space-between">
             <Select
               value={currentProduct.Categories}
@@ -148,61 +165,110 @@ const ProductItem = function ProductItem({
             />
           </Flex>
         </Col>
-        <Col span={24} lg={{ span: 16 }} style={{ padding: 12 }}>
-          <Flex gap={12} wrap justify="space-between">
-            {isEdit ? (
-              <Input.TextArea
-                placeholder="Image Urls"
-                rows={4}
-                value={currentProduct.Images.replaceAll(",", "\n")}
-                style={{ width: "100%" }}
-                onChange={(e) =>
-                  handleImagesChange(
-                    currentProduct.key,
-                    e.target.value.replaceAll("\n", ",").replaceAll(" ", ""),
-                  )
-                }
-                onBlur={() => setIsEdit(false)}
-              />
-            ) : (
-              <Flex gap={12} wrap>
-                {currentProduct.Images?.split(",").map(
-                  (img: string, idx: number) => (
-                    <Image
-                      src={img}
-                      width={100}
-                      height={100}
-                      key={idx}
-                      alt="product"
-                      loading="lazy"
-                    />
-                  ),
-                )}
-              </Flex>
-            )}
-            <Flex gap={4} wrap>
-              <Button onClick={() => setIsEdit((prev) => !prev)}>
+        <Col span={24} lg={{ span: 16 }} style={{ padding: "12px 4px" }}>
+          <Flex>
+            <div style={{ flex: 1 }}>
+              {isEdit ? (
+                <Input.TextArea
+                  placeholder="Image Urls"
+                  rows={4}
+                  value={currentProduct.Images.replaceAll(",", "\n")}
+                  style={{ width: "100%" }}
+                  onChange={(e) =>
+                    handleImagesChange(
+                      currentProduct.key,
+                      e.target.value.replaceAll("\n", ",").replaceAll(" ", ""),
+                    )
+                  }
+                  onBlur={() => setIsEdit(false)}
+                />
+              ) : (
+                <>
+                  {currentProduct.Images?.split(",").map(
+                    (img: string, idx: number) => (
+                      <div
+                        key={idx}
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                        }}
+                      >
+                        <Image
+                          src={img}
+                          width={100}
+                          height={100}
+                          alt="product"
+                          loading="lazy"
+                        />
+                        <CloseOutlined
+                          onClick={() => {
+                            const newImages = currentProduct.Images.split(",")
+                              .filter((_, i) => i !== idx)
+                              .join(",");
+
+                            handleImagesChange(currentProduct.key, newImages);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top:4,
+                            right: 4,
+                            width: 18,
+                            height: 18,
+                            borderRadius: "50%",
+                            background: "rgba(0,0,0,0.6)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            color: "#fff",
+                            fontSize: 12,
+                          }}
+                        />
+                      </div>
+                    ),
+                  )}
+                </>
+              )}
+            </div>
+
+            <Flex gap={4} wrap justify="space-around" style={{ maxWidth: 150 }}>
+              <Button
+                onClick={() => setIsEdit((prev) => !prev)}
+                style={{ padding: "2px 8px" }}
+              >
                 <EditOutlined />
               </Button>
               <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
-                Dup
+                <PlusSquareOutlined />
               </Button>
-              <div>
-                <InputNumber
-                  placeholder="Split"
-                  addonAfter={
-                    <SplitCellsOutlined
-                      onClick={() =>
-                        isNumber(productSplit) &&
-                        handleSplitter(currentProduct.key, productSplit)
-                      }
-                    />
+              <Button
+                type={
+                  currentProduct.key === mergeSourceKey ? "primary" : "default"
+                }
+                onClick={() => {
+                  if (!mergeSourceKey) {
+                    setMergeSourceKey(currentProduct.key);
+                  } else {
+                    handleMergeProduct(currentProduct.key);
                   }
-                  onChange={(value) => setProductSplit(value as number)}
-                  value={productSplit}
-                  style={{ width: "90px" }}
-                />
-              </div>
+                }}
+              >
+                <MergeCellsOutlined />
+              </Button>
+              <InputNumber
+                placeholder="Split"
+                addonAfter={
+                  <ScissorOutlined
+                    onClick={() =>
+                      isNumber(productSplit) &&
+                      handleSplitter(currentProduct.key, productSplit)
+                    }
+                  />
+                }
+                onChange={(value) => setProductSplit(value as number)}
+                value={productSplit}
+                style={{ width: "90px" }}
+              />
             </Flex>
           </Flex>
         </Col>

@@ -50,9 +50,12 @@ function ConvertFile() {
   const { data: session } = useSession();
   const matches = useMediaQuery("(min-width: 992px)");
   const [form] = Form.useForm();
+
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [uploadAble, setUploadable] = useState(true);
+  const [mergeSourceKey, setMergeSourceKey] = useState<string | null>(null);
+
   const { cateKeyword, isLoading: cateKeywordLoading } =
     useGlobalCateKeywordConfig();
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
@@ -143,6 +146,34 @@ function ConvertFile() {
       ...products.slice(index + 1),
     ];
     setProducts(newProducts);
+  };
+
+  const handleMergeProduct = (targetKey: string) => {
+    if (!mergeSourceKey || mergeSourceKey === targetKey) {
+      setMergeSourceKey(null);
+      return;
+    }
+    updateBoth((list) => {
+      let sourceProduct = list.find((p) => p.key === mergeSourceKey);
+      let targetProduct = list.find((p) => p.key === targetKey);
+      if (!sourceProduct || !targetProduct) return list;
+      const mergedImages = [
+        ...sourceProduct.Images.split(","),
+        ...targetProduct.Images.split(","),
+      ];
+      return list
+        .map((p) => {
+          if (p.key === mergeSourceKey) {
+            return {
+              ...p,
+              Images: Array.from(new Set(mergedImages)).join(","),
+            };
+          }
+          return p;
+        })
+        .filter((p) => p.key !== targetKey);
+    })
+    setMergeSourceKey(null);
   };
 
   const handleSearch = (value: string) => {
@@ -330,7 +361,7 @@ function ConvertFile() {
               borderRadius: 4,
             }}
             height={800}
-            itemSize={matches ? 127 : 252}
+            itemSize={matches ? 127 : 310}
             itemCount={searchProduct ? searchProduct.length : products.length}
             overscanCount={5}
             itemData={{
@@ -342,6 +373,9 @@ function ConvertFile() {
               handleImagesChange,
               handleDuplicateRow,
               setProducts,
+              mergeSourceKey,
+              setMergeSourceKey,
+              handleMergeProduct,
             }}
             width={"100%"}
           >
