@@ -1,7 +1,7 @@
 "use client";
 
 import { endpoint } from "@/constant/endpoint";
-import { Card, Carousel, Col, Flex, Image, Input, Row, Typography } from "antd";
+import { Card, Carousel, Col, Flex, Image, Input, message, Row, Typography } from "antd";
 import Meta from "antd/es/card/Meta";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -9,10 +9,11 @@ import { Product } from "../convert-file/ConvertFile";
 import { debounce } from "lodash";
 import Container from "@/components/commons/Container";
 import { useSession } from "next-auth/react";
+import { CopyOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 interface Result extends Product {
-  uploadedAt: string;
+  createdAt: string;
 }
 function OriginalProduct() {
   const { data: session } = useSession();
@@ -25,9 +26,7 @@ function OriginalProduct() {
       setResult([]);
       return;
     }
-
     setLoading(true);
-
     try {
       const email = session?.user?.email;
       const { data } = await axios.get<Result[]>(endpoint.productData, {
@@ -52,7 +51,7 @@ function OriginalProduct() {
     searchProductsDebounced(keyword);
 
     return () => {
-      searchProductsDebounced.cancel(); // cleanup
+      searchProductsDebounced.cancel();
     };
   }, [keyword, searchProductsDebounced]);
 
@@ -93,11 +92,13 @@ function OriginalProduct() {
                 <Meta
                   description={
                     <Text type="secondary">
-                      {product.uploadedAt
+                      {product.createdAt
                         ? new Date("10-10-2023 12:03:23").toLocaleDateString(
                             "vi-VN",
                           )
                         : ""}
+                        &nbsp;
+                        <CopyOutlined onClick={()=> navigator.clipboard.writeText(product.Link).then(() => message.success('Copy successfully'))}/>
                     </Text>
                   }
                 />

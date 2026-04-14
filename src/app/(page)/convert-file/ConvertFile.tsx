@@ -44,6 +44,7 @@ export interface Product {
   Name: string;
   Images: string;
   Categories: string;
+  Link: string;
 }
 function ConvertFile() {
   const { data: session } = useSession();
@@ -100,6 +101,7 @@ function ConvertFile() {
         Categories:
           productsData[i]?.Categories ||
           detectCategory(productsData[i].Name, cateKeyword),
+        Link: productsData[i].Link,
       });
     }
     setNewProducts((prev) => [...prev, ...formattedProduct]);
@@ -227,6 +229,7 @@ function ConvertFile() {
       return;
     }
     handleDownloadFile(products, "Converted");
+    
     if (uploadAble) {
       await uploadProductsToServer(products);
     }
