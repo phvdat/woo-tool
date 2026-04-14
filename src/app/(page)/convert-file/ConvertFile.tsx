@@ -58,16 +58,14 @@ function ConvertFile() {
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
     session?.user?.email || "",
   );
-  const { categories, isLoading: categoriesLoading } = useCategories();
   const watchShopId = Form.useWatch("website", form);
+  const { categories, isLoading: categoriesLoading } =
+    useCategories(watchShopId);
   const [searchProduct, setSearchProduct] = useState<Product[] | null>(null);
   const debounceProducts: Product[] = useDebounce(newProducts, 400);
   const categoriesOptions = useMemo(() => {
-    const categoriesByShop = categories?.filter(
-      (category) => category.shopID === watchShopId,
-    );
-    if (!categoriesByShop) return [];
-    return categoriesByShop.map((category) => ({
+    if (!categories) return [];
+    return categories.map((category) => ({
       label: category.category,
       value: category.category,
     }));
@@ -107,56 +105,31 @@ function ConvertFile() {
     setNewProducts((prev) => [...prev, ...formattedProduct]);
   };
 
-  const handleNameChange = (productKey: string, value: string) => {
-    const newProducts = products.map((product) =>
-      product.key === productKey ? { ...product, Name: value } : product,
-    );
-    setProducts(newProducts);
+  const updateBoth = (updater: (list: Product[]) => Product[]) => {
+    setProducts((prev) => updater(prev));
+    setSearchProduct((prev) => (prev ? updater(prev) : prev));
+  };
 
-    const newSearchProduct = searchProduct?.map((product) =>
-      product.key === productKey ? { ...product, Name: value } : product,
+  const handleNameChange = (productKey: string, value: string) => {
+    updateBoth((list) =>
+      list.map((p) => (p.key === productKey ? { ...p, Name: value } : p)),
     );
-    setSearchProduct(newSearchProduct || null);
   };
 
   const handleCategoryChange = (productKey: string, value: string) => {
-    const newProducts = products.map((product) => {
-      return product.key === productKey
-        ? { ...product, Categories: value }
-        : product;
-    });
-    setProducts(newProducts);
-
-    const newSearchProduct = searchProduct?.map((product) => {
-      return product.key === productKey
-        ? { ...product, Categories: value }
-        : product;
-    });
-    setSearchProduct(newSearchProduct || null);
+    updateBoth((list) =>
+      list.map((p) => (p.key === productKey ? { ...p, Categories: value } : p)),
+    );
   };
 
   const handleImagesChange = (productKey: string, value: string) => {
-    const newProducts = products.map((product) =>
-      product.key === productKey ? { ...product, Images: value } : product,
+    updateBoth((list) =>
+      list.map((p) => (p.key === productKey ? { ...p, Images: value } : p)),
     );
-    setProducts(newProducts);
-
-    const newSearchProduct = searchProduct?.map((product) =>
-      product.key === productKey ? { ...product, Images: value } : product,
-    );
-    setSearchProduct(newSearchProduct || null);
   };
 
   const handleDelete = (productKey: string) => {
-    const newProducts = products.filter(
-      (product) => product.key !== productKey,
-    );
-    setProducts(newProducts);
-
-    const newSearchProduct = searchProduct?.filter(
-      (product) => product.key !== productKey,
-    );
-    setSearchProduct(newSearchProduct || null);
+    updateBoth((list) => list.filter((p) => p.key !== productKey));
   };
 
   const handleDuplicateRow = (productKey: string) => {
@@ -173,6 +146,10 @@ function ConvertFile() {
   };
 
   const handleSearch = (value: string) => {
+    if (!value) {
+      setSearchProduct(null);
+      return;
+    }
     const newProducts = products.filter(
       (product) =>
         product.Name.toLowerCase().includes(value.toLowerCase()) ||
@@ -229,7 +206,7 @@ function ConvertFile() {
       return;
     }
     handleDownloadFile(products, "Converted");
-    
+
     if (uploadAble) {
       await uploadProductsToServer(products);
     }
