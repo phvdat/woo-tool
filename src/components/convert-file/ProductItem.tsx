@@ -231,7 +231,7 @@ const ProductItem = function ProductItem({
               )}
             </div>
 
-            <Flex gap={4} wrap justify="space-around" style={{ maxWidth: 150 }}>
+            <Flex gap={4} wrap justify="space-around" style={{ maxWidth: 136 }}>
               <Button
                 onClick={() => setIsEdit((prev) => !prev)}
                 style={{ padding: "2px 8px" }}

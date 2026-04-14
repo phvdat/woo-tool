@@ -16,8 +16,10 @@ socket.connect();
 function formatName(rawName: string): string {
   if (!rawName) return '';
   let name = rawName;
-  name = name.replace(/^[.\-_,* \s\n]+|[.\-_* \s\n]+$/g, '');
+  name = name.replace(/^[.\u2026\s]+|[.\u2026\s]+$/g, '');
+  name = name.replace(/^[\-_,* \s\n]+|[\-_* \s\n]+$/g, '');
   name = name.replace(/\s*[-–—]?\s*[A-Z0-9]{4,}\s*$/g, '');
+  name = name.replace(/–/g, '-');
   name = name.replace(/\s+/g, ' ');
   name = name.replace('amp;', '');
   return name.trim();
