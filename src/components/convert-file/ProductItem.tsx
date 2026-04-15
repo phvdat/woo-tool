@@ -5,24 +5,22 @@ import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
-  MergeCellsOutlined,
+  MergeOutlined,
   PlusSquareOutlined,
   RollbackOutlined,
-  ScissorOutlined,
-  SplitCellsOutlined,
+  ScissorOutlined
 } from "@ant-design/icons";
 import {
   Button,
   Col,
-  Divider,
   Flex,
   Image,
   Input,
   InputNumber,
   Row,
-  Select,
+  Select
 } from "antd";
-import { isNumber, set } from "lodash";
+import { isNumber } from "lodash";
 import React, { useState } from "react";
 interface ProductItemProps {
   data: {
@@ -253,7 +251,7 @@ const ProductItem = function ProductItem({
                   }
                 }}
               >
-                <MergeCellsOutlined />
+                <MergeOutlined />
               </Button>
               <InputNumber
                 placeholder="Split"
