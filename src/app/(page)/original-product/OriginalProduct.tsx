@@ -93,7 +93,7 @@ function OriginalProduct() {
                   description={
                     <Text type="secondary">
                       {product.createdAt
-                        ? new Date("10-10-2023 12:03:23").toLocaleDateString(
+                        ? new Date(product.createdAt).toLocaleDateString(
                             "vi-VN",
                           )
                         : ""}
