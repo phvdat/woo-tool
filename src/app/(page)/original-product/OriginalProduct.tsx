@@ -53,7 +53,7 @@ function OriginalProduct() {
     return () => {
       searchProductsDebounced.cancel();
     };
-  }, [keyword, searchProductsDebounced]);
+  }, [keyword, searchProductsDebounced, session]);
 
   return (
     <>
