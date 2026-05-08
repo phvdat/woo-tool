@@ -41,8 +41,8 @@ export async function POST(request: Request) {
   const payload = await request.formData();
 
   const file = payload.get('file') as File;
-  const watermarkObject = JSON.parse(
-    _toString(payload.get('watermarkObject'))
+  const websiteObject = JSON.parse(
+    _toString(payload.get('websiteObject'))
   ) as WooWebsitePayload;
   const telegramId = payload.get('telegramId') as string;
   const publicTime = Number(payload.get('publicTime'));
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   const socketId = Number(payload.get('socketId'));
   const categoriesList = await db
     .collection(CATEGORIES_COLLECTION)
-    .find({ shopID: { $regex: watermarkObject._id, $options: 'i' } })
+    .find({ shopID: { $regex: websiteObject._id, $options: 'i' } })
     .toArray();
 
   try {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return Response.json({ message: 'Invalid excel file' }, { status: 400 });
     }
     const result: WooCommerce[] = [];
-    const logoResponse = await axios.get(watermarkObject.logoUrl, {
+    const logoResponse = await axios.get(websiteObject.logoUrl, {
       responseType: 'arraybuffer',
     });
     let i = 0;
@@ -72,7 +72,6 @@ export async function POST(request: Request) {
       i += 1;
       const rowData = row as any;
       const name: string = rowData['Name'];
-      const fit = rowData['Fit'];
       if (!rowData['Images']) {
         continue;
       }
@@ -87,17 +86,18 @@ export async function POST(request: Request) {
       }
       const imageUrls: string[] = rowData['Images'].split(',');
 
+      const uploadFolder = `/var/www/html/uploads/${websiteObject.shopName.replace('.com', '')}`;
       const urlImageList = await addWatermark({
-        imageHeight: Number(watermarkObject.imageHeight),
-        imageWidth: Number(watermarkObject.imageWidth),
-        logoHeight: Number(watermarkObject.logoHeight),
-        logoWidth: Number(watermarkObject.logoWidth),
-        quality: Number(watermarkObject.quality),
-        shopName: watermarkObject.shopName,
+        imageHeight: Number(websiteObject.imageHeight),
+        imageWidth: Number(websiteObject.imageWidth),
+        logoHeight: Number(websiteObject.logoHeight),
+        logoWidth: Number(websiteObject.logoWidth),
+        quality: Number(websiteObject.quality),
+        shopName: websiteObject.shopName,
         images: imageUrls,
         name: name,
-        fit: fit,
         logoResponse,
+        uploadFolder: uploadFolder,
         category: rowData['Categories'],
       });
 
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     XLSX.utils.book_append_sheet(wb, ws, 'result');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'csv' });
     const date = moment().format('YYYY-MM-DD-HH-mm-ss');
-    const fileName = `${watermarkObject.shopName.split('.')[0]
+    const fileName = `${websiteObject.shopName.split('.')[0]
       }-WOO-${date}.csv`;
     writeFileSync(fileName, buffer);
     const stream = createReadStream(fileName);

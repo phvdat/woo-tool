@@ -73,6 +73,10 @@ const Header = () => {
       label: <Link href={navigation.originalProduct}>Original Product</Link>,
       key: navigation.originalProduct,
     },
+    {
+      label: <Link href={navigation.formatImage}>Format Image</Link>,
+      key: navigation.formatImage,
+    },
   ];
 
   const dropdownItems: MenuProps["items"] = [

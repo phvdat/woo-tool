@@ -1,5 +1,4 @@
 "use client";
-import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import { endpoint } from "@/constant/endpoint";
 import { handleErrorMongoDB } from "@/helper/common";
 import {
@@ -12,6 +11,7 @@ import {
   Input,
   Modal,
   Row,
+  Segmented,
   Select,
   message,
 } from "antd";
@@ -25,15 +25,22 @@ interface AddNewCategoryProps {
   refresh: () => void;
 }
 
+enum Position {
+  northwest = "northwest",
+  northeast = "northeast",
+  southeast = "southeast",
+  southwest = "southwest",
+}
 export interface WebsiteFormValue {
   logoUrl: string;
   logoWidth: number;
   logoHeight: number;
+  logoPosition: Position;
   imageWidth: number;
   imageHeight: number;
   shopName: string;
   quality: number;
-  members?: string[]; // thêm
+  members?: string[];
 }
 
 const defaultFormValue: WebsiteFormValue = {
@@ -42,6 +49,7 @@ const defaultFormValue: WebsiteFormValue = {
   logoHeight: 1000,
   imageWidth: 1000,
   imageHeight: 1000,
+  logoPosition: Position.northwest,
   shopName: "",
   quality: 80,
   members: [],
@@ -93,11 +101,9 @@ const UpdateWebsiteListModal = ({
         content: "Update category successfully!",
       });
       refresh();
-      console.log("thanh cong");
       setIsModalOpen(false);
     } catch (error) {
-      console.log("errrr ???", error);
-
+      console.log("error", error);
       const { errorMessage } = handleErrorMongoDB(error);
       setError(errorMessage);
     }
@@ -136,13 +142,6 @@ const UpdateWebsiteListModal = ({
           initialValues={initialForm}
         >
           <Card>
-            <Form.Item<WebsiteFormValue>
-              name="logoUrl"
-              label="Logo URL"
-              rules={[{ required: true, message: "Please input Logo URL!" }]}
-            >
-              <Input type="text" placeholder="Logo URL" />
-            </Form.Item>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item<WebsiteFormValue>
@@ -165,6 +164,33 @@ const UpdateWebsiteListModal = ({
                 </Form.Item>
               </Col>
 
+              <Col span={12}>
+                <Form.Item<WebsiteFormValue>
+                  name="logoUrl"
+                  label="Logo URL"
+                  rules={[
+                    { required: true, message: "Please input Logo URL!" },
+                  ]}
+                >
+                  <Input type="text" placeholder="Logo URL" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item<WebsiteFormValue>
+                  name="logoPosition"
+                  label="Position"
+                >
+                  <Segmented
+                    shape="round"
+                    options={[
+                      { value: Position.northwest, label: "TL" },
+                      { value: Position.northeast, label: "TR" },
+                      { value: Position.southeast, label: "BR" },
+                      { value: Position.southwest, label: "BL" },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
               <Col span={12}>
                 <Form.Item<WebsiteFormValue>
                   name="logoWidth"
@@ -211,18 +237,18 @@ const UpdateWebsiteListModal = ({
                 </Form.Item>
               </Col>
             </Row>
+            <Form.Item<WebsiteFormValue>
+              name="members"
+              label="Members (emails)"
+              tooltip="Press enter after each email"
+            >
+              <Select
+                mode="tags"
+                placeholder="Enter member email"
+                tokenSeparators={[",", " "]}
+              />
+            </Form.Item>
           </Card>
-          <Form.Item<WebsiteFormValue>
-            name="members"
-            label="Members (emails)"
-            tooltip="Press enter after each email"
-          >
-            <Select
-              mode="tags"
-              placeholder="Enter member email"
-              tokenSeparators={[",", " "]}
-            />
-          </Form.Item>
           <Flex justify="center" gap={16} style={{ marginTop: 24 }}>
             <Button htmlType="submit" loading={loading}>
               Submit

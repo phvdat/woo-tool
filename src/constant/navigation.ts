@@ -12,5 +12,6 @@ const navigation = {
   convertFile: '/convert-file',
   excelSplitter: '/excel-splitter',
   originalProduct: '/original-product',
+  formatImage: '/format-image',
 };
 export { navigation };

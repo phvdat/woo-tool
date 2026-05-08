@@ -21,17 +21,18 @@ function getUniqueFileName(folder: string, baseName: string) {
   return finalName;
 }
 interface CreateWebsiteParam {
-  logoWidth: number;
-  logoHeight: number;
-  imageWidth: number;
-  imageHeight: number;
+  logoWidth?: number;
+  logoHeight?: number;
+  imageWidth?: number;
+  imageHeight?: number;
   shopName: string;
   quality: number;
   images: string[];
   name: string;
-  fit: 'contain' | 'cover' | 'fill';
+  position?: string;
   logoResponse: any;
   category: string;
+  uploadFolder: string
 }
 
 const formatNameRegex = /[^a-zA-Z0-9\s]/g;
@@ -45,24 +46,17 @@ export async function addWatermark({
   quality,
   images,
   name: originName,
-  fit,
+  position,
   logoResponse,
-  category
+  category,
+  uploadFolder
 }: CreateWebsiteParam) {
-  // LƯU FILE NGOÀI NEXTJS
-  const baseUploadFolder = `/var/www/html/uploads`;
-  const uploadFolder = `${baseUploadFolder}/${shopName.replace('.com', '')}`;
-
   const tempFolder = `/tmp/media-temp`;
 
   mkdirSync(tempFolder, { recursive: true });
   mkdirSync(uploadFolder, { recursive: true });
 
   try {
-    const resizedLogo = await sharp(logoResponse.data)
-      .resize(logoWidth, logoHeight)
-      .toBuffer();
-
     const name = originName.replace(formatNameRegex, '');
     const list: string[] = [];
 
@@ -85,15 +79,33 @@ export async function addWatermark({
           maxBodyLength: Infinity,
         });
 
+        // Lấy metadata ảnh gốc
+        const imageSharp = sharp(imageResponse);
+        const metadata = await imageSharp.metadata();
+
+        const originalWidth = metadata.width || 1000;
+        const originalHeight = metadata.height || 1000;
+
+        const finalImageWidth = imageWidth || originalWidth;
+        const finalImageHeight = imageHeight || originalHeight;
+
+        const defaultLogoSize = Math.min(finalImageWidth, finalImageHeight);
+
+        const finalLogoWidth = logoWidth || defaultLogoSize;
+        const finalLogoHeight = logoHeight || defaultLogoSize;
+
+        const resizedLogo = await sharp(logoResponse.data)
+          .resize(finalLogoWidth, finalLogoHeight)
+          .toBuffer();
+
         // Resize + watermark
-        const buffer = await sharp(imageResponse)
+        const buffer = await imageSharp
           .resize({
-            width: imageWidth,
-            height: imageHeight,
-            fit: fit || 'cover',
+            width: finalImageWidth,
+            height: finalImageHeight,
             background: { r: 255, g: 255, b: 255, alpha: 1 },
           })
-          .composite([{ input: resizedLogo, gravity: 'center' }])
+          .composite([{ input: resizedLogo, gravity: position }])
           .jpeg({ quality })
           .toBuffer();
 

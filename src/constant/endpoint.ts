@@ -14,6 +14,7 @@ export const endpoint = {
   productData: '/api/woo/product-data',
   addSelector: '/api/crawl/add-selector',
   crawlMixedProductDetail: '/api/crawl/detail-mixed-product',
+  formatImage: '/api/format-image',
 
   globalConfigCateKeyword: '/api/global-config/cate-keyword',
   globalConfigSizeChartLinks: '/api/global-config/size-chart-links',
