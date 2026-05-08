@@ -22,6 +22,7 @@ import {
 } from "antd";
 import { isNumber } from "lodash";
 import React, { useState } from "react";
+
 interface ProductItemProps {
   data: {
     handleNameChange: (productKey: string, value: string) => void;
@@ -35,10 +36,12 @@ interface ProductItemProps {
     mergeSourceKey: string | null;
     setMergeSourceKey: React.Dispatch<React.SetStateAction<string | null>>;
     handleMergeProduct: (productKey: string) => void;
+    handleSplitProduct: (productKey: string, splitCount: number) => void;
   };
   index: number;
   style: any;
 }
+
 const ProductItem = function ProductItem({
   data: {
     handleNameChange,
@@ -48,10 +51,10 @@ const ProductItem = function ProductItem({
     categoriesOptions,
     products,
     handleDuplicateRow,
-    setProducts,
     mergeSourceKey,
     setMergeSourceKey,
     handleMergeProduct,
+    handleSplitProduct,
   },
   index,
   style,
@@ -60,37 +63,11 @@ const ProductItem = function ProductItem({
   const [productSplit, setProductSplit] = useState<number>();
 
   const currentProduct = products[index];
+
   const setPrevCategory = () => {
     const prevProduct = products[index - 1];
     const prevCategory = prevProduct?.Categories || currentProduct.Categories;
     handleCategoryChange(currentProduct.key, prevCategory);
-  };
-  const handleSplitter = (key: string, productSplit: number) => {
-    const newProducts: any[] = [];
-
-    products.forEach((product) => {
-      if (product.key === key) {
-        const imageArray = product.Images.split(",");
-        const totalChunks = Math.ceil(imageArray.length / productSplit);
-
-        for (let i = 0; i < totalChunks; i++) {
-          const chunk = imageArray.slice(
-            i * productSplit,
-            (i + 1) * productSplit,
-          );
-          const newProduct = {
-            ...product,
-            Images: chunk.join(","),
-            key: `${product.key}-${i}}`,
-          };
-          newProducts.push(newProduct);
-        }
-      } else {
-        newProducts.push(product);
-      }
-    });
-
-    setProducts(newProducts);
   };
 
   return (
@@ -203,12 +180,11 @@ const ProductItem = function ProductItem({
                             const newImages = currentProduct.Images.split(",")
                               .filter((_, i) => i !== idx)
                               .join(",");
-
                             handleImagesChange(currentProduct.key, newImages);
                           }}
                           style={{
                             position: "absolute",
-                            top:4,
+                            top: 4,
                             right: 4,
                             width: 18,
                             height: 18,
@@ -259,7 +235,7 @@ const ProductItem = function ProductItem({
                   <ScissorOutlined
                     onClick={() =>
                       isNumber(productSplit) &&
-                      handleSplitter(currentProduct.key, productSplit)
+                      handleSplitProduct(currentProduct.key, productSplit)
                     }
                   />
                 }

@@ -148,6 +148,30 @@ function ConvertFile() {
     setProducts(newProducts);
   };
 
+  const handleSplitProduct = (key: string, splitCount: number) => {
+    setProducts((prev) => {
+      const newList: Product[] = [];
+      prev.forEach((product) => {
+        if (product.key === key) {
+          const imageArray = product.Images.split(",");
+          const totalChunks = Math.ceil(imageArray.length / splitCount);
+          for (let i = 0; i < totalChunks; i++) {
+            const chunk = imageArray.slice(i * splitCount, (i + 1) * splitCount);
+            newList.push({
+              ...product,
+              Images: chunk.join(","),
+              key: `${product.key}-${i}`,
+            });
+          }
+        } else {
+          newList.push(product);
+        }
+      });
+      return newList;
+    });
+    setSearchProduct(null);
+  };
+
   const handleMergeProduct = (targetKey: string) => {
     if (!mergeSourceKey || mergeSourceKey === targetKey) {
       setMergeSourceKey(null);
@@ -376,6 +400,7 @@ function ConvertFile() {
               mergeSourceKey,
               setMergeSourceKey,
               handleMergeProduct,
+              handleSplitProduct,
             }}
             width={"100%"}
           >
