@@ -21,39 +21,33 @@ function OriginalProduct() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result[]>([]);
 
-  const searchProducts = async (keyword: string) => {
-    if (!keyword) {
-      setResult([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const email = session?.user?.email;
-      const { data } = await axios.get<Result[]>(endpoint.productData, {
-        params: { name: keyword, email },
-      });
-
-      setResult(data.slice(0, 100));
-    } catch (error) {
-      console.error("Error fetching product data: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const searchProductsDebounced = useMemo(() => {
-    return debounce((value: string) => {
-      searchProducts(value);
+    return debounce(async (value: string, email: string | null | undefined) => {
+      if (!value) {
+        setResult([]);
+        return;
+      }
+      setLoading(true);
+      try {
+        const { data } = await axios.get<Result[]>(endpoint.productData, {
+          params: { name: value, email },
+        });
+        setResult(data.slice(0, 100));
+      } catch (error) {
+        console.error("Error fetching product data: ", error);
+      } finally {
+        setLoading(false);
+      }
     }, 500);
   }, []);
 
   useEffect(() => {
-    searchProductsDebounced(keyword);
+    searchProductsDebounced(keyword, session?.user?.email);
 
     return () => {
       searchProductsDebounced.cancel();
     };
-  }, [keyword, searchProductsDebounced, session]);
+  }, [keyword, searchProductsDebounced]);
 
   return (
     <>
