@@ -5,10 +5,11 @@ import {
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
+  LinkOutlined,
   MergeOutlined,
   PlusSquareOutlined,
   RollbackOutlined,
-  ScissorOutlined
+  ScissorOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -18,9 +19,10 @@ import {
   Input,
   InputNumber,
   Row,
-  Select
+  Select,
 } from "antd";
 import { isNumber } from "lodash";
+import Link from "next/link";
 import React, { useState } from "react";
 
 interface ProductItemProps {
@@ -121,6 +123,11 @@ const ProductItem = function ProductItem({
               }}
             ></Select>
 
+            <Link href={currentProduct.Link || ""}>
+              <Button>
+                <LinkOutlined />
+              </Button>
+            </Link>
             <Button
               size={"small"}
               danger
