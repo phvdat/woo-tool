@@ -24,9 +24,12 @@ import {
   Input,
   message,
   Row,
+  Segmented,
   Select,
   Spin,
   Switch,
+  Tabs,
+  TabsProps,
   Typography,
   Upload,
 } from "antd";
@@ -81,6 +84,23 @@ function ConvertFile() {
       value: website._id,
     }));
   }, [websiteConfigList]);
+
+  const categoryOptions: string[] = [
+    "All Cate",
+    ...Array.from(
+      new Set(
+        products.map((product) =>
+          product.Categories?.trim() ? product.Categories : "Missing Cate",
+        ),
+      ),
+    ).sort((a, b) => {
+      if (a === "Missing Cate") return -1;
+      if (b === "Missing Cate") return 1;
+      const cateA = a.split(">").pop()?.trim() || "";
+      const cateB = b.split(">").pop()?.trim() || "";
+      return cateA.localeCompare(cateB);
+    }),
+  ];
 
   const beforeUploadFile = async (file: any) => {
     setNewProducts([]);
@@ -354,13 +374,28 @@ function ConvertFile() {
             <Form.Item name="search">
               <Input
                 placeholder="Search"
-                style={{ marginBottom: 16 }}
                 allowClear
                 onChange={(e) => {
                   handleSearch(e.target.value);
                 }}
               />
             </Form.Item>
+            <Segmented<string>
+              options={categoryOptions}
+              onChange={(value) => {
+                setSearchProduct(
+                  products.filter((p) => {
+                    if (value === "All Cate") return true;
+
+                    const category = p.Categories?.trim()
+                      ? p.Categories
+                      : "Missing Cate";
+
+                    return category === value;
+                  }),
+                );
+              }}
+            />
           </Form>
         </Card>
       </Container>
