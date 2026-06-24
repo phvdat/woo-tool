@@ -24,15 +24,15 @@ import SearchProductDialog from './SearchProductDialog';
 import { useSession } from 'next-auth/react';
 const { Text } = Typography;
 
-interface DuplicatedCheckerProps {
+interface ExistCheckerProps {
   products: Product[];
   handleDelete: (index: string) => void;
 }
 
-const DuplicatedChecker = ({
+const ExistChecker = ({
   products,
   handleDelete,
-}: DuplicatedCheckerProps) => {
+}: ExistCheckerProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categoriesList: string[] = Array.from(
@@ -59,7 +59,7 @@ const DuplicatedChecker = ({
   return (
     <div>
       <Button type='primary' onClick={() => setIsModalOpen(true)}>
-        Duplicated Checker
+        Exist Checker
       </Button>
       <Modal
         width={'100%'}
@@ -75,7 +75,7 @@ const DuplicatedChecker = ({
   );
 };
 
-export default DuplicatedChecker;
+export default ExistChecker;
 
 const ProductGallery = ({
     products,

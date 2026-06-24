@@ -7,7 +7,7 @@ import { useGlobalCateKeywordConfig } from "@/app/hooks/useGlobalCateKeywordConf
 import { useLocalStorage } from "@/app/hooks/useLocalStorage";
 import Container from "@/components/commons/Container";
 import CateKeywordConfig from "@/components/convert-file/CateKeywordConfig";
-import DuplicatedChecker from "@/components/convert-file/DuplicatedChecker";
+import ExistChecker from "@/components/convert-file/ExistChecker";
 import ExcludeSizeChartLink from "@/components/convert-file/ExcludeSizeChartLink";
 import ProductItem from "@/components/convert-file/ProductItem";
 import { endpoint } from "@/constant/endpoint";
@@ -156,7 +156,10 @@ function ConvertFile() {
           const imageArray = product.Images.split(",");
           const totalChunks = Math.ceil(imageArray.length / splitCount);
           for (let i = 0; i < totalChunks; i++) {
-            const chunk = imageArray.slice(i * splitCount, (i + 1) * splitCount);
+            const chunk = imageArray.slice(
+              i * splitCount,
+              (i + 1) * splitCount,
+            );
             newList.push({
               ...product,
               Images: chunk.join(","),
@@ -196,7 +199,7 @@ function ConvertFile() {
           return p;
         })
         .filter((p) => p.key !== targetKey);
-    })
+    });
     setMergeSourceKey(null);
   };
 
@@ -249,6 +252,8 @@ function ConvertFile() {
     const duplicateNames = getDuplicateNames(products);
     if (duplicateNames.length > 0) {
       message.error(duplicateNames[0]);
+      form.setFieldValue("search", duplicateNames[0]);
+      handleSearch(duplicateNames[0]);
       return;
     } else {
       message.success("No duplicate names found");
@@ -362,11 +367,10 @@ function ConvertFile() {
       {products.length > 0 && (
         <>
           <Flex justify="space-between" style={{ marginBottom: 16 }}>
-            <DuplicatedChecker
-              products={products}
-              handleDelete={handleDelete}
-            />
-            {products.length} items
+            <ExistChecker products={products} handleDelete={handleDelete} />
+            <Button type="primary" onClick={handleCheckDuplicate}>
+              Check duplicate
+            </Button>
             <ExcludeSizeChartLink
               products={products}
               setProducts={setProducts}
@@ -376,7 +380,7 @@ function ConvertFile() {
               onClick={() => setProducts([])}
               style={{ marginLeft: 16 }}
             >
-              Clear All
+              Clear All {products.length} items
             </Button>
           </Flex>
           <List
@@ -412,9 +416,6 @@ function ConvertFile() {
               <Text>Upload to server: </Text>
               <Switch value={uploadAble} onChange={(e) => setUploadable(e)} />
             </div>
-            <Button type="primary" onClick={handleCheckDuplicate}>
-              Check duplicate
-            </Button>
             <Button
               type="primary"
               icon={<DownloadOutlined />}

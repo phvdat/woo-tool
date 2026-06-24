@@ -130,6 +130,10 @@ const WooForm = () => {
     };
   }, [socketId]);
 
+  useEffect(() => {
+    form.setFieldValue("website", websiteOptions[0]?.value);
+  }, [websiteOptions]);
+
   return (
     <Form
       form={form}

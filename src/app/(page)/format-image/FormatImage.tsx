@@ -4,18 +4,8 @@ import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import { useUser } from "@/app/hooks/useUser";
 import Container from "@/components/commons/Container";
 import { endpoint } from "@/constant/endpoint";
-import { CopyOutlined } from "@ant-design/icons";
-import {
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  Row,
-  Segmented,
-  Select,
-  Spin,
-} from "antd";
+import { CopyOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Button, Card, Form, Input, Select, Spin } from "antd";
 import { useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 
@@ -69,6 +59,7 @@ const FormatImage = () => {
 
   const handleSubmit = async (values: FormatImageValues) => {
     setLoading(true);
+    setLinkDownload("");
     const websiteObject = websiteConfigList?.find(
       (item) => item._id === values.website,
     );
@@ -182,11 +173,11 @@ const FormatImage = () => {
           </Form.Item>
         </Form>
         {linkDownload && (
-          <div className="mt-4">
+          <Button htmlType="button" block>
             <a href={linkDownload} target="_blank" rel="noopener noreferrer">
-              Download
+              <DownloadOutlined /> Download
             </a>
-          </div>
+          </Button>
         )}
       </Card>
     </Container>

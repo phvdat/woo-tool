@@ -7,7 +7,7 @@ import UpdateCategory, {
 } from "@/components/woo/UpdateCategoryModal";
 import { Flex, List, Radio, Spin, Typography } from "antd";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import _toString from "lodash/toString";
 import DuplicateAllCate from "@/components/woo/DuplicateAllCate";
 const { Title } = Typography;
@@ -24,6 +24,10 @@ const ConfigCategories = () => {
       label: item.shopName,
       value: item._id as string,
     })) || [];
+    
+  useEffect(() => {
+    setWebSite(options[0]?.value || "");
+  }, [websiteConfigList]);
 
   return (
     <Flex gap={20} vertical style={{ marginTop: 24 }}>
