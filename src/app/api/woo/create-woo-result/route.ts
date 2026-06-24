@@ -31,7 +31,7 @@ socket.connect();
 interface SheetData {
   Name: string;
   Images: string;
-  Contain?: string;
+  Link?: string;
 }
 
 const bot = telegramBot;
@@ -110,6 +110,8 @@ export async function POST(request: Request) {
             {
               ...rowData,
               Images: urlImageList?.join(','),
+              "Image Origin": row['Images'],
+              Link: row['Link'],
             }
           )
         );
