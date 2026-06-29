@@ -7,8 +7,8 @@ import { useGlobalCateKeywordConfig } from "@/app/hooks/useGlobalCateKeywordConf
 import { useLocalStorage } from "@/app/hooks/useLocalStorage";
 import Container from "@/components/commons/Container";
 import CateKeywordConfig from "@/components/convert-file/CateKeywordConfig";
-import ExistChecker from "@/components/convert-file/ExistChecker";
 import ExcludeSizeChartLink from "@/components/convert-file/ExcludeSizeChartLink";
+import ExistChecker from "@/components/convert-file/ExistChecker";
 import ProductItem from "@/components/convert-file/ProductItem";
 import { endpoint } from "@/constant/endpoint";
 import { normFile } from "@/helper/common";
@@ -23,13 +23,11 @@ import {
   Form,
   Input,
   message,
+  Radio,
   Row,
-  Segmented,
   Select,
   Spin,
   Switch,
-  Tabs,
-  TabsProps,
   Typography,
   Upload,
 } from "antd";
@@ -40,7 +38,7 @@ import { FixedSizeList as List } from "react-window";
 import { useMediaQuery } from "usehooks-ts";
 import * as XLSX from "xlsx";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 export const CONVERT_DATA = "CONVERT_DATA";
 export interface Product {
   key: string;
@@ -380,17 +378,17 @@ function ConvertFile() {
                 }}
               />
             </Form.Item>
-            <Segmented<string>
+            <Radio.Group
               options={categoryOptions}
-              onChange={(value) => {
+              optionType="button"
+              onChange={(e) => {
+                const value = e.target.value;
                 setSearchProduct(
                   products.filter((p) => {
                     if (value === "All Cate") return true;
-
                     const category = p.Categories?.trim()
                       ? p.Categories
                       : "Missing Cate";
-
                     return category === value;
                   }),
                 );
