@@ -79,3 +79,12 @@ export function getMatchedWordsForBestMatch(
   }
   return bestMatchedProducts;
 }
+
+export function upscaleImage(url: string) {
+  return url.replace(/\/(\d+)\/(\d+)\//, (match, w, h) => {
+    if (Number(w) < 1000 && Number(h) < 1000) {
+      return "/2000/2000/";
+    }
+    return match;
+  });
+}

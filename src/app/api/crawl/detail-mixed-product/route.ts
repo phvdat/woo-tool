@@ -7,6 +7,7 @@ import { createReadStream, unlinkSync, writeFileSync } from 'fs';
 import { telegramBot } from '@/services/telegram';
 import { SelectorFormValues } from '@/components/crawl-tool/SelectorSetup';
 import { getSocket } from '@/config/socket';
+import { upscaleImage } from '@/helper/common';
 
 const bot = telegramBot;
 
@@ -24,16 +25,6 @@ function formatName(rawName: string): string {
   name = name.replace('amp;', '');
   return name.trim();
 }
-
-function upscaleImage(url: string) {
-  return url.replace(/\/(\d+)\/(\d+)\//, (match, w, h) => {
-    if (Number(w) < 1000 && Number(h) < 1000) {
-      return "/2000/2000/";
-    }
-    return match;
-  });
-}
-
 function formatImages(imgLinks: string[]): string[] {
   const processedLinks = imgLinks.map((link) => {
     const trimmedLink = link.trim();

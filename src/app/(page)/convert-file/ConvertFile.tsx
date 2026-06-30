@@ -11,7 +11,7 @@ import ExcludeSizeChartLink from "@/components/convert-file/ExcludeSizeChartLink
 import ExistChecker from "@/components/convert-file/ExistChecker";
 import ProductItem from "@/components/convert-file/ProductItem";
 import { endpoint } from "@/constant/endpoint";
-import { normFile } from "@/helper/common";
+import { normFile, upscaleImage } from "@/helper/common";
 import detectCategory from "@/helper/detect-category";
 import { handleDownloadFile } from "@/helper/woo";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -116,7 +116,7 @@ function ConvertFile() {
       formattedProduct.push({
         key: file.uid + i,
         Name: productsData[i].Name,
-        Images: productsData[i].Images.replace(/,+$/, ""),
+        Images: upscaleImage(productsData[i].Images.replace(/,+$/, "")),
         Categories:
           productsData[i]?.Categories ||
           detectCategory(productsData[i].Name, cateKeyword),
