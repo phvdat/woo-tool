@@ -88,3 +88,11 @@ export function upscaleImage(url: string) {
     return match;
   });
 }
+
+export function fixEncoding(text = "") {
+  return text
+    .replace(/Ã¢ÂÂ/g, "'")
+    .replace(/Ã¢ÂÂ|Ã¢ÂÂ/g, '"')
+    .replace(/Ã¢ÂÂ/g, "-")
+    .replace(/Ã¢ÂÂ¦/g, "...");
+}
