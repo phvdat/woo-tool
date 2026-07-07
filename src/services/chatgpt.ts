@@ -6,7 +6,7 @@ async function chatgpt(prompt: string, apiKey: string) {
     apiKey: apiKey,
   });
   const res = await openai.responses.create({
-    model: "gpt-5-mini",
+    model: "gpt-4.1-mini",
     input: prompt,
   });
 

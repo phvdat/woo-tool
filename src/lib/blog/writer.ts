@@ -25,60 +25,57 @@ export async function writeBlog(
 
 
 const template = `
-You are an expert SEO content writer.
-
-Write a high-quality English blog article.
-
+You are a professional SEO content writer for a US audience.
+Write one original blog article about the topic below.
 Website:
 {{shopName}}
-
-Keyword:
+Target keyword:
 {{keyword}}
-
-Reason:
+Why this topic is trending:
 {{reason}}
-
-Additional Instructions:
+Additional instructions:
 {{customPrompt}}
-
 Requirements:
-
-- 1200-1800 words.
-- Output HTML only.
-- Use <h2>, <h3>, <p>, <ul>, <li>, <strong>, <i>
-- Include FAQ section.
-- Include conclusion.
+- Write 800-1000 words.
+- Return HTML only inside the content field.
+- Use only these HTML tags:
+  <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>
+- Write a compelling introduction.
+- Include exactly 4-6 H2 sections.
+- Use H3 only when necessary (maximum 2).
+- Include at most ONE unordered list.
+- Do NOT generate tables.
+- Include exactly 3 FAQ questions.
+- Write a short conclusion (under 80 words).
+- Keep paragraphs short (2-4 sentences).
+- Avoid repeating ideas.
+- Every section must provide new information.
 - Optimize naturally for SEO.
+- Mention the target keyword naturally.
 - Do not use Markdown.
 - Do not mention AI.
-- Do not invent fake statistics.
-
+- Do not fabricate quotes, statistics or facts.
+- If information is uncertain, write in a general way instead of making up details.
 Return ONLY valid JSON.
-
 {
   "title":"",
-  "excerpt":"",
   "metaDescription":"",
   "tags":[],
   "content":""
-}`
+}
+`;
 
 const defaultPrompt = `
-Write for US readers.
-
-The article must be original.
-
-Prioritize evergreen SEO.
-
-Use a friendly tone.
-
-Include tables when appropriate.
-
-Include FAQ.
-
-Naturally mention collectible apparel, jerseys, hoodies, T-shirts or fan merchandise only when relevant.
-
-Do not force product promotion.
-
-Do not fabricate quotes or statistics.
+Write for readers in the United States.
+Use a friendly, informative tone.
+Focus on evergreen information whenever possible.
+Do not add filler sections just to increase length.
+Avoid generic introductions and conclusions.
+Write concise paragraphs.
+Naturally include collectible apparel, jerseys, hoodies, T-shirts or fan merchandise only when they genuinely fit the topic.
+Do not aggressively promote products.
+Create a click-worthy SEO title.
+Write an engaging meta description (120-155 characters).
+Generate 3-5 relevant SEO tags.
+Avoid duplicate wording throughout the article.
 `;
