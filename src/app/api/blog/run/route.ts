@@ -1,3 +1,4 @@
+import { filterTrends } from "@/lib/blog/filterTrends";
 import { getGoogleTrends } from "@/lib/blog/getTrends";
 import { runAutoBlog } from "@/lib/blog/runAutoBlog";
 import { connectToDatabase } from "@/lib/mongodb";
@@ -25,7 +26,8 @@ export async function POST() {
         );
     }
 
-    const trends = await getGoogleTrends()
+    const trends = filterTrends(await getGoogleTrends());
+
 
     const usedKeywords = new Set<string>();
 

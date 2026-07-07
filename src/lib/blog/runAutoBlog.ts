@@ -23,7 +23,7 @@ export async function runAutoBlog(
   const selected = await selectTrends(
     trends,
     website.autoBlog.keywords,
-    20
+    10
   );
   const historyKeywords = await getUsedKeywords(
     selected.map((e: any) => e.keyword)
