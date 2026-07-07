@@ -1,10 +1,10 @@
-import { WebsiteFormValue } from '@/components/woo/UpdateWebsiteListModal';
 import { connectToDatabase } from '@/lib/mongodb';
+import { WebsiteConfig } from '@/types/woo';
 import { ObjectId } from 'mongodb';
 
-const WEBSITES_COLLECTION = 'watermark-websites';
+const WEBSITES_COLLECTION = 'websites';
 
-export interface WooWebsitePayload extends WebsiteFormValue {
+export interface WooWebsitePayload extends WebsiteConfig {
   _id?: string;
 }
 

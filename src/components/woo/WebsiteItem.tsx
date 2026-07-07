@@ -1,66 +1,29 @@
-import { WooWebsitePayload } from '@/app/api/woo/website-config/route';
-import { endpoint } from '@/constant/endpoint';
-import { handleErrorMongoDB } from '@/helper/common';
+import { WooWebsitePayload } from "@/app/api/woo/website-config/route";
+import { endpoint } from "@/constant/endpoint";
+import { handleErrorMongoDB } from "@/helper/common";
 import {
   Alert,
   Button,
   Card,
   Col,
-  Descriptions,
-  DescriptionsProps,
   Flex,
   Popconfirm,
+  Typography,
   message,
-} from 'antd';
-import axios from 'axios';
-import { useState } from 'react';
-import UpdateWebsiteListModal from './UpdateWebsiteListModal';
+} from "antd";
+import axios from "axios";
+import { useState } from "react";
+import UpdateWebsiteListModal from "./UpdateWebsiteListModal";
 
+const { Text } = Typography;
 interface WebsiteWebsiteItem {
   website: WooWebsitePayload;
   refresh: any;
 }
 
 const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
-  const items: DescriptionsProps['items'] = [
-    {
-      key: '1',
-      label: 'Logo url',
-      children: website.logoUrl,
-    },
-    {
-      key: '2',
-      label: 'Shop name',
-      children: website.shopName,
-    },
-    {
-      key: '3',
-      label: 'Quantity',
-      children: website.quality,
-    },
-    {
-      key: '4',
-      label: 'Logo Width',
-      children: website.logoWidth,
-    },
-    {
-      key: '5',
-      label: 'Logo Height',
-      children: website.logoHeight,
-    },
-    {
-      key: '6',
-      label: 'Image Width',
-      children: website.imageWidth,
-    },
-    {
-      key: '7',
-      label: 'Image Height',
-      children: website.imageHeight,
-    },
-  ];
   const [messageApi, contextHolder] = message.useMessage();
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleDeleteWebsite = async (_id: string) => {
@@ -68,8 +31,8 @@ const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
     try {
       await axios.delete(endpoint.websiteConfigList, { params: { _id } });
       messageApi.open({
-        type: 'success',
-        content: 'Delete website successfully!',
+        type: "success",
+        content: "Delete website successfully!",
       });
       await refresh();
     } catch (error) {
@@ -82,13 +45,13 @@ const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
     <Col span={24} lg={{ span: 12 }} key={website._id}>
       {contextHolder}
       <Card>
-        <Descriptions title={website.shopName} items={items} column={1} />
-        <Flex justify='end' gap={20}>
+        <Flex justify="space-between" gap={20}>
+          <Text strong>{website.shopName}</Text>
           <Popconfirm
-            title='Delete the category?'
-            onConfirm={() => handleDeleteWebsite(website._id || '')}
-            okText='Yes'
-            cancelText='No'
+            title="Delete this website?"
+            onConfirm={() => handleDeleteWebsite(website._id || "")}
+            okText="Yes"
+            cancelText="No"
           >
             <Button danger loading={loading}>
               Delete
@@ -100,7 +63,7 @@ const WebsiteItem = ({ website, refresh }: WebsiteWebsiteItem) => {
             refresh={refresh}
           />
         </Flex>
-        {error ? <Alert message={error} type='error' /> : null}
+        {error ? <Alert message={error} type="error" /> : null}
       </Card>
     </Col>
   );

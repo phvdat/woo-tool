@@ -40,3 +40,35 @@ export interface WooCommerce {
   Position: string;
   [key: string]: string;
 }
+
+
+export interface AutoBlogConfig {
+  enabled: boolean;
+  wpUsername: string;
+  wpAppPassword: string;
+  keywords: string[];
+  status: "draft" | "publish";
+  prompt: string;
+  postsPerRun: number
+}
+
+export enum CanvasPosition {
+  northwest = "northwest",
+  northeast = "northeast",
+  southeast = "southeast",
+  southwest = "southwest",
+}
+
+export interface WebsiteConfig {
+  url: string;
+  logoUrl: string;
+  logoWidth: number;
+  logoHeight: number;
+  logoPosition: CanvasPosition;
+  imageWidth: number;
+  imageHeight: number;
+  shopName: string;
+  quality: number;
+  members?: string[];
+  autoBlog: AutoBlogConfig;
+}
