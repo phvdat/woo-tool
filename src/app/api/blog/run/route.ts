@@ -8,7 +8,6 @@ const WEBSITE_COLLECTION = "websites";
 
 export async function POST() {
     const { db } = await connectToDatabase();
-
     const websites: WebsiteConfig[] = await db
         .collection(WEBSITE_COLLECTION)
         .find({

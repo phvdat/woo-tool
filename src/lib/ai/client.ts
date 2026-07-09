@@ -10,7 +10,7 @@ export async function askAI(
   const start = Date.now();
 
   const res = await openai.responses.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o-mini",
     input: prompt,
   });
 

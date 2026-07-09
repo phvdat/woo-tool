@@ -1,12 +1,14 @@
-import { publishWordpress } from "./wordpress";
+import { publishWordpress, uploadImagesToWordpress } from "./wordpress";
 import { Trend } from "./types";
 import { WebsiteConfig } from "@/types/woo";
-import { writeBlog } from "./writer";
+import { insertImages, writeBlog } from "./writer";
 import {
   getUsedKeywords,
   saveKeyword,
 } from "./history";
 import { selectTrends } from "./selectTrends.ts";
+import { searchBingImages } from "./searchImages";
+import { formatImages } from "@/helper/format-image";
 
 function normalizeKeyword(keyword: string) {
   return keyword.trim().toLowerCase();
@@ -42,13 +44,33 @@ export async function runAutoBlog(
       continue;
     }
     try {
+
       const article = await writeBlog(
         trend,
         website
       );
+      // insert images
+      const images = await searchBingImages(
+        keyword,
+        4
+      );
+      const { images: formatImgs } = await formatImages({ websiteObject: website, name: article.title, images })
+
+      const medias = await uploadImagesToWordpress(
+        website,
+        formatImgs
+      );
+
+      article.content = insertImages(
+        article.content,
+        medias.map(item => item.source_url),
+        article.title
+      );
+
       await publishWordpress(
         website,
-        article
+        article,
+        medias[0]?.id
       );
       await saveKeyword(keyword);
       usedKeywords.add(keyword);

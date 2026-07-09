@@ -2,25 +2,25 @@ import { WebsiteConfig } from "@/types/woo";
 import { askAI } from "../ai/client";
 import { extractJson } from "../ai/extractJson";
 import type {
-    BlogArticle,
-    SelectedTrend
+  BlogArticle,
+  SelectedTrend
 } from "../blog/types";
 
 
 export async function writeBlog(
-    trend: SelectedTrend,
-    website: WebsiteConfig
+  trend: SelectedTrend,
+  website: WebsiteConfig
 ): Promise<BlogArticle> {
 
-    const prompt = template
-        .replaceAll("{{shopName}}", website.shopName)
-        .replaceAll("{{keyword}}", trend.keyword)
-        .replaceAll("{{reason}}", trend.reason)
-        .replaceAll("{{customPrompt}}", website.autoBlog.prompt || defaultPrompt);
+  const prompt = template
+    .replaceAll("{{shopName}}", website.shopName)
+    .replaceAll("{{keyword}}", trend.keyword)
+    .replaceAll("{{reason}}", trend.reason)
+    .replaceAll("{{customPrompt}}", website.autoBlog.prompt || defaultPrompt);
 
-    const content = await askAI(prompt);
+  const content = await askAI(prompt);
 
-    return extractJson<BlogArticle>(content);
+  return extractJson<BlogArticle>(content);
 }
 
 
@@ -79,3 +79,31 @@ Write an engaging meta description (120-155 characters).
 Generate 3-5 relevant SEO tags.
 Avoid duplicate wording throughout the article.
 `;
+
+export function insertImages(content: string, images: string[], name: string) {
+  if (!images.length) return content;
+  const paragraphs = Array.from(content.matchAll(/<\/p>/gi));
+  if (!paragraphs.length) return content;
+  const insertMap = new Map<number, string>();
+  images.forEach((image, index) => {
+    const pos = Math.floor(
+      ((index + 1) * paragraphs.length) / (images.length + 1)
+    );
+    insertMap.set(
+      pos,
+      `<img src="${image}" alt="${name}" loading="lazy" />`
+    );
+  });
+  let result = "";
+  let last = 0;
+  paragraphs.forEach((match, i) => {
+    const end = match.index! + match[0].length;
+    result += content.slice(last, end);
+    if (insertMap.has(i)) {
+      result += insertMap.get(i);
+    }
+    last = end;
+  });
+  result += content.slice(last);
+  return result;
+}
