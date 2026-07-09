@@ -1,17 +1,63 @@
-import { publishWordpress, uploadImagesToWordpress } from "./wordpress";
-import { Trend } from "./types";
+import { formatImages } from "@/helper/format-image";
 import { WebsiteConfig } from "@/types/woo";
-import { insertImages, writeBlog } from "./writer";
+import { filterTrends } from "./filterTrends";
+import { getGoogleTrends } from "./getTrends";
 import {
   getUsedKeywords,
   saveKeyword,
 } from "./history";
-import { selectTrends } from "./selectTrends.ts";
 import { searchBingImages } from "./searchImages";
-import { formatImages } from "@/helper/format-image";
+import { selectTrends } from "./selectTrends.ts";
+import { Trend } from "./types";
+import { publishWordpress, uploadImagesToWordpress } from "./wordpress";
+import { insertImages, writeBlog } from "./writer";
+import { connectToDatabase } from "@/lib/mongodb";
+import { WEBSITES_COLLECTION } from "@/constant/collections";
 
 function normalizeKeyword(keyword: string) {
   return keyword.trim().toLowerCase();
+}
+let running = false;
+
+
+export async function runAllWebBlogs() {
+  if (running) {
+    console.log("[AUTO BLOG] Already running");
+    return;
+  }
+  running = true;
+  try {
+    const { db } = await connectToDatabase();
+    const websites: WebsiteConfig[] = await db
+      .collection(WEBSITES_COLLECTION)
+      .find({
+        "autoBlog.enabled": true,
+      })
+      .toArray();
+
+    if (!websites.length) {
+      return Response.json(
+        {
+          success: true,
+          message: "No website enabled auto blog",
+        },
+        { status: 200 }
+      );
+    }
+
+    const trends = filterTrends(await getGoogleTrends());
+    const usedKeywords = new Set<string>();
+
+    for (const website of websites) {
+      await runAutoBlog(
+        website,
+        trends,
+        usedKeywords
+      );
+    }
+  } finally {
+    running = false;
+  }
 }
 
 export async function runAutoBlog(
@@ -51,7 +97,7 @@ export async function runAutoBlog(
       );
       // insert images
       const images = await searchBingImages(
-        keyword,
+        article.title,
         4
       );
       const { images: formatImgs } = await formatImages({ websiteObject: website, name: article.title, images })

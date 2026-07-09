@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.mjs",
+    "dev": "tsx watch server.ts",
     "build": "next build",
-    "start": "NODE_ENV=production node server.mjs",
+    "start": "NODE_ENV=production tsx server.ts",
     "lint": "next lint"
   },
   "dependencies": {
@@ -30,6 +30,7 @@
     "mongodb": "^6.6.1",
     "next": "14.2.3",
     "next-auth": "^4.24.7",
+    "node-cron": "^4.6.0",
     "node-telegram-bot-api": "^0.67.0",
     "openai": "^6.45.0",
     "puppeteer": "^23.4.0",
@@ -63,6 +64,7 @@
     "eslint-config-next": "14.2.3",
     "nodemon": "^3.1.7",
     "ts-node": "^10.9.2",
+    "tsx": "^4.23.0",
     "typescript": "^5.9.3"
   }
 }

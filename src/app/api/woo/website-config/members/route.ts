@@ -1,8 +1,8 @@
+import { WEBSITES_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { WebsiteConfig } from '@/types/woo';
 import { ObjectId } from 'mongodb';
 
-const WEBSITES_COLLECTION = 'watermark-websites';
 
 export interface WooWebsitePayload extends WebsiteConfig {
   _id?: string;
