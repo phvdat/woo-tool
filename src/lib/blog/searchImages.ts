@@ -3,7 +3,7 @@ import puppeteer from "puppeteer";
 
 export async function searchBingImages(
   keyword: string,
-  limit = 4
+  limit = 10
 ): Promise<string[]> {
   const browser = await puppeteer.launch({
     headless: true,
@@ -44,7 +44,7 @@ export async function searchBingImages(
           try {
             const json = JSON.parse(m);
 
-            // ảnh gốc
+            // ảnh gốc 
             if (json.murl) images.push(json.murl);
 
           } catch { }

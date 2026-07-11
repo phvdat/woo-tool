@@ -13,6 +13,7 @@ import { publishWordpress, uploadImagesToWordpress } from "./wordpress";
 import { insertImages, writeBlog } from "./writer";
 import { connectToDatabase } from "@/lib/mongodb";
 import { WEBSITES_COLLECTION } from "@/constant/collections";
+import { getNewsContext } from "./getNewsContext";
 
 function normalizeKeyword(keyword: string) {
   return keyword.trim().toLowerCase();
@@ -90,16 +91,15 @@ export async function runAutoBlog(
       continue;
     }
     try {
+      const news = await getNewsContext(trend.keyword);
 
       const article = await writeBlog(
         trend,
+        news,
         website
       );
       // insert images
-      const images = await searchBingImages(
-        article.title,
-        4
-      );
+      const images = await searchBingImages(article.title);
       const { images: formatImgs } = await formatImages({ websiteObject: website, name: article.title, images })
 
       const medias = await uploadImagesToWordpress(

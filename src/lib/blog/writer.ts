@@ -1,61 +1,85 @@
 import { WebsiteConfig } from "@/types/woo";
 import { askAI } from "../ai/client";
 import { extractJson } from "../ai/extractJson";
-import type {
-  BlogArticle,
-  SelectedTrend
-} from "../blog/types";
-
+import type { BlogArticle, SelectedTrend } from "../blog/types";
+import { NewsContext } from "./getNewsContext";
 
 export async function writeBlog(
   trend: SelectedTrend,
+  news: NewsContext[],
   website: WebsiteConfig
 ): Promise<BlogArticle> {
+  const newsText =
+    news.length > 0
+      ? news
+        .map(
+          (item, index) => `
+${index + 1}.
+Title: ${item.title}
+Published: ${item.pubDate}
+Summary: ${item.description}
+Link: ${item.link}
+`
+        )
+        .join("\n")
+      : "No recent news available.";
 
   const prompt = template
     .replaceAll("{{shopName}}", website.shopName)
     .replaceAll("{{keyword}}", trend.keyword)
     .replaceAll("{{reason}}", trend.reason)
-    .replaceAll("{{customPrompt}}", website.autoBlog.prompt || defaultPrompt);
+    .replaceAll("{{news}}", newsText)
+    .replaceAll(
+      "{{customPrompt}}",
+      website.autoBlog.prompt || defaultPrompt
+    );
 
   const content = await askAI(prompt);
 
   return extractJson<BlogArticle>(content);
 }
 
-
 const template = `
-You are a professional SEO content writer for a US audience.
-Write one original blog article about the topic below.
+You are a professional SEO content writer writing for readers in the United States.
 Website:
 {{shopName}}
 Target keyword:
 {{keyword}}
 Why this topic is trending:
 {{reason}}
+Recent news context:
+{{news}}
 Additional instructions:
 {{customPrompt}}
 Requirements:
-- Write 800-1000 words.
+- Write one original article of 800-1000 words.
+- Base the article primarily on the recent news context above when available.
+- Summarize and explain the news in your own words. Never copy wording from the news.
+- If the news is incomplete or uncertain, clearly keep the explanation general instead of inventing details.
+- If no recent news is available, write an evergreen article about the keyword.
+- Explain why the topic is currently receiving attention.
+- Add useful background so readers unfamiliar with the topic can understand it.
+- Keep the article valuable even after the news cycle ends.
+Formatting:
 - Return HTML only inside the content field.
-- Use only these HTML tags:
+- Allowed tags:
   <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>
 - Write a compelling introduction.
 - Include exactly 4-6 H2 sections.
-- Use H3 only when necessary (maximum 2).
-- Include at most ONE unordered list.
-- Do NOT generate tables.
+- Use at most 2 H3 sections.
+- Include at most one unordered list.
+- Do not generate tables.
 - Include exactly 3 FAQ questions.
-- Write a short conclusion (under 80 words).
-- Keep paragraphs short (2-4 sentences).
+- Finish with a conclusion under 80 words.
+Writing style:
+- Keep paragraphs 2-4 sentences.
 - Avoid repeating ideas.
-- Every section must provide new information.
-- Optimize naturally for SEO.
 - Mention the target keyword naturally.
+- Write naturally for humans first, SEO second.
+- Do not use clickbait.
 - Do not use Markdown.
 - Do not mention AI.
-- Do not fabricate quotes, statistics or facts.
-- If information is uncertain, write in a general way instead of making up details.
+- Do not fabricate facts, scores, statistics, quotes, dates or events.
 Return ONLY valid JSON.
 {
   "title":"",
@@ -66,17 +90,14 @@ Return ONLY valid JSON.
 `;
 
 const defaultPrompt = `
-Write for readers in the United States.
-Use a friendly, informative tone.
-Focus on evergreen information whenever possible.
-Do not add filler sections just to increase length.
-Avoid generic introductions and conclusions.
-Write concise paragraphs.
-Naturally include collectible apparel, jerseys, hoodies, T-shirts or fan merchandise only when they genuinely fit the topic.
-Do not aggressively promote products.
+Write in a clear, friendly and informative style.
 Create a click-worthy SEO title.
-Write an engaging meta description (120-155 characters).
-Generate 3-5 relevant SEO tags.
+Write a meta description between 120 and 155 characters.
+Generate 3-5 SEO tags.
+Focus on useful information instead of filler.
+Avoid generic introductions and conclusions.
+When appropriate, naturally mention fan merchandise, jerseys, hoodies, T-shirts or collectible apparel.
+Never force product promotion.
 Avoid duplicate wording throughout the article.
 `;
 

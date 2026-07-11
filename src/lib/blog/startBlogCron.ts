@@ -5,7 +5,7 @@ export function startBlogCron() {
     console.log("[CRON] Started");
 
     cron.schedule(
-        "0 2,18 * * *",
+        "0 19,21,23,1,3,5 * * *",
         async () => {
             console.log("[CRON] Auto Blog started");
             try {
