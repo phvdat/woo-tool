@@ -1,22 +1,29 @@
 "use client";
 import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
-import UpdateWebsiteListModal from "@/components/woo/UpdateWebsiteListModal";
-import WebsiteItem from "@/components/woo/WebsiteItem";
+import UpdateWebsiteListModal from "@/components/settings/UpdateWebsiteListModal";
+import WebsiteItem from "@/components/settings/WebsiteItem";
+import { endpoint } from "@/constant/endpoint";
 import { Button, Flex, Row, Spin, Typography } from "antd";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 const { Title } = Typography;
 
 const ConfigWebsite = () => {
   const { data } = useSession();
+  const [loading, setLoading] = useState(false)
   const { mutate, websiteConfigList, isLoading } = useConfigWebsite(
     data?.user?.email || "",
   );
   const blogRun = async () => {
     try {
-      fetch("/api/blog/run", {
-        method: 'post'
+      setLoading(true)
+      fetch(endpoint.autoBlogs, {
+        method: "post",
       });
     } catch (error) {}
+    finally{
+      setLoading(false)
+    }
   };
   return (
     <div>
@@ -26,7 +33,9 @@ const ConfigWebsite = () => {
           <Spin />
         </Flex>
       ) : null}
-      <Button type="primary" onClick={blogRun}>Create Post Manual</Button>
+      <Button type="primary" onClick={blogRun} loading={loading}>
+        Create Post Manual
+      </Button>
       <Row gutter={[20, 20]} style={{ margin: "20px 0" }}>
         {websiteConfigList
           ? websiteConfigList.map((item) => (

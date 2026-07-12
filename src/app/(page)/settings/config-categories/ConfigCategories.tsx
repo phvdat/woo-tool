@@ -1,15 +1,15 @@
 "use client";
 import { useCategories } from "@/app/hooks/useCategories";
 import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
-import CategoryItem from "@/components/woo/CategoryItem";
+import CategoryItem from "@/components/settings/CategoryItem";
 import UpdateCategory, {
   TypeUpdateCategory,
-} from "@/components/woo/UpdateCategoryModal";
+} from "@/components/settings/UpdateCategoryModal";
 import { Flex, List, Radio, Spin, Typography } from "antd";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import _toString from "lodash/toString";
-import DuplicateAllCate from "@/components/woo/DuplicateAllCate";
+import DuplicateAllCate from "@/components/settings/DuplicateAllCate";
 const { Title } = Typography;
 
 const ConfigCategories = () => {

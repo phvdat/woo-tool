@@ -3,7 +3,7 @@ import path from 'path';
 import archiver from 'archiver';
 import axios from 'axios';
 import { addWatermark } from './website';
-import { WooWebsitePayload } from '@/app/api/woo/website-config/route';
+import { WooWebsitePayload } from "@/types/woo";
 
 export async function formatImages({
   websiteObject,

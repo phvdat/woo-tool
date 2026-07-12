@@ -7,7 +7,7 @@ export async function uploadImagesToWordpress(
   imageUrls: string[]
 ) {
   const token = Buffer.from(
-    `${website.autoBlog.wpUsername}:${website.autoBlog.wpAppPassword}`
+    `${website.wpUsername}:${website.wpAppPassword}`
   ).toString("base64");
   const medias = await Promise.all(
     imageUrls.map(async (imageUrl) => {

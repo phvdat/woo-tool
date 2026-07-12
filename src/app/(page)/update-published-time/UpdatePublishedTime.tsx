@@ -57,7 +57,7 @@ const UpdatePublishedTime = () => {
     if (mixed) {
       dataMixed = shuffle(data);
     }
-    const result = publishedTimeHelper(dataMixed, after, gapFrom, gapTo);
+    const result = publishedTimeHelper({products: dataMixed, publicTime: after, gapFrom, gapTo});
     setDataFile(result);
     message.success("File processed successfully!");
   };

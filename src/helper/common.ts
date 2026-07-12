@@ -3,6 +3,7 @@ import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import _get from 'lodash/get';
+import { WooCommerce } from '@/types/woo';
 
 export function handleErrorMongoDB(error: unknown) {
   const errorMessage = _get(
@@ -21,23 +22,24 @@ export function normFile(event: unknown) {
 }
 
 dayjs.extend(utc);
+interface ScheduleProductsParams {
+  products: WooCommerce[];
+  publicTime: number;
+  gapFrom: number;
+  gapTo: number;
+}
 
-export function publishedTimeHelper(
-  data: any[],
-  after: number,
-  gapFrom: number,
-  gapTo: number
-) {
-  if (after == 0 && gapFrom == 0 && gapTo == 0) {
-    return data.map((row) => {
+export function publishedTimeHelper({ products, publicTime, gapFrom, gapTo }: ScheduleProductsParams): WooCommerce[] {
+  if (publicTime == 0 && gapFrom == 0 && gapTo == 0) {
+    return products.map((row) => {
       delete row['Published Date'];
       return row;
     });
   }
 
-  let publishedDate = dayjs.utc().utcOffset(7).add(after, 'minute');
+  let publishedDate = dayjs.utc().utcOffset(7).add(publicTime, 'minute');
 
-  const result = data.map((row, index) => {
+  const result = products.map((row, index) => {
     const gapSeconds = gapFrom * 60 + Math.random() * (gapTo - gapFrom) * 60;
     if (index != 0) {
       publishedDate = publishedDate.add(gapSeconds, 'second');

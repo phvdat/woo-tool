@@ -1,7 +1,7 @@
 import { endpoint } from '@/constant/endpoint';
 import axios from 'axios';
 import useSWR from 'swr';
-import { WooWebsitePayload } from '../api/woo/website-config/route';
+import { WooWebsitePayload } from "@/types/woo";
 
 const fetcher = async (url: string, userEmail?: string) => {
   const { data } = await axios.get<WooWebsitePayload[]>(url, { params:{ userEmail }});

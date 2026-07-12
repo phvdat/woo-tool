@@ -14,7 +14,6 @@ import {
 } from 'antd';
 import axios from 'axios';
 import { useState } from 'react';
-import { mutate } from 'swr';
 import UpdateCategory, { TypeUpdateCategory } from './UpdateCategoryModal';
 const { Text } = Typography;
 

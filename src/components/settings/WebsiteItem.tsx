@@ -1,4 +1,4 @@
-import { WooWebsitePayload } from "@/app/api/woo/website-config/route";
+
 import { endpoint } from "@/constant/endpoint";
 import { handleErrorMongoDB } from "@/helper/common";
 import {
@@ -14,6 +14,7 @@ import {
 import axios from "axios";
 import { useState } from "react";
 import UpdateWebsiteListModal from "./UpdateWebsiteListModal";
+import { WooWebsitePayload } from "@/types/woo";
 
 const { Text } = Typography;
 interface WebsiteWebsiteItem {

@@ -18,4 +18,7 @@ export const endpoint = {
 
   globalConfigCateKeyword: '/api/global-config/cate-keyword',
   globalConfigSizeChartLinks: '/api/global-config/size-chart-links',
+
+  autoBlogs: "/api/blog/run",
+  productPipeline: '/api/product-pipeline'
 };

@@ -5,7 +5,7 @@ import {
   MenuOutlined,
   SettingFilled,
   ShoppingOutlined,
-  TeamOutlined
+  TeamOutlined,
 } from "@ant-design/icons";
 import {
   Avatar,
@@ -52,12 +52,8 @@ const Header = () => {
       key: navigation.convertFile,
     },
     {
-      label: <Link href={navigation.woo}>Woo tool</Link>,
-      key: navigation.woo,
-    },
-    {
-      label: <Link href={navigation.openaiContent}>Openai Content</Link>,
-      key: navigation.openaiContent,
+      label: <Link href={navigation.productPipeline}>Product Pipeline</Link>,
+      key: navigation.productPipeline,
     },
     {
       label: (
@@ -81,20 +77,40 @@ const Header = () => {
 
   const dropdownItems: MenuProps["items"] = [
     {
-      key: navigation.setting,
+      key: navigation.settings,
       label: (
-        <Link href={navigation.setting}>
+        <Link href={navigation.settings}>
           <SettingFilled /> Setting
         </Link>
       ),
+      children: [
+        {
+          key: navigation.configCategories,
+          label: (
+            <Link href={navigation.configCategories}>Config Categories</Link>
+          ),
+        },
+        {
+          key: navigation.configWebsite,
+          label: <Link href={navigation.configWebsite}>Config Website</Link>,
+        },
+      ],
     },
 
     {
-      label: <Link href={navigation.configCategories}><ShoppingOutlined /> Config Categories</Link>,
+      label: (
+        <Link href={navigation.configCategories}>
+          <ShoppingOutlined /> Config Categories
+        </Link>
+      ),
       key: navigation.configCategories,
     },
     {
-      label: <Link href={navigation.configWebsite}><GlobalOutlined /> Config Website</Link>,
+      label: (
+        <Link href={navigation.configWebsite}>
+          <GlobalOutlined /> Config Website
+        </Link>
+      ),
       key: navigation.configWebsite,
     },
     ...(isAdmin

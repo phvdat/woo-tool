@@ -1,5 +1,4 @@
 'use client';
-import { useCategories } from '@/app/hooks/useCategories';
 import { useConfigWebsite } from '@/app/hooks/useConfigWebsite';
 import { endpoint } from '@/constant/endpoint';
 import { handleErrorMongoDB } from '@/helper/common';

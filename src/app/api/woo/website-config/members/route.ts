@@ -1,12 +1,6 @@
 import { WEBSITES_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
-import { WebsiteConfig } from '@/types/woo';
 import { ObjectId } from 'mongodb';
-
-
-export interface WooWebsitePayload extends WebsiteConfig {
-  _id?: string;
-}
 
 export async function GET(request: Request) {
 }

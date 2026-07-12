@@ -4,7 +4,7 @@ export interface WooCommerce {
   SKU: string;
   Name: string;
   Published: string;
-  'Published Date': string;
+  'Published Date'?: string;
   'Is featured?': string;
   'Visibility in catalog': string;
   'Short description': string;
@@ -38,14 +38,14 @@ export interface WooCommerce {
   'External URL': string;
   'Button text': string;
   Position: string;
-  [key: string]: string;
+  Tags?: string;
+  'Meta: rank_math_focus_keyword'?: string;
 }
+
 
 
 export interface AutoBlogConfig {
   enabled: boolean;
-  wpUsername: string;
-  wpAppPassword: string;
   keywords: string[];
   status: "draft" | "publish";
   prompt: string;
@@ -70,5 +70,11 @@ export interface WebsiteConfig {
   shopName: string;
   quality: number;
   members?: string[];
+  wpUsername: string;
+  wpAppPassword: string;
   autoBlog: AutoBlogConfig;
+}
+
+export interface WooWebsitePayload extends WebsiteConfig {
+  _id?: string;
 }

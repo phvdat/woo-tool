@@ -39,10 +39,10 @@ const defaultFormValue: WebsiteFormValue = {
   shopName: "",
   quality: 80,
   members: [],
+  wpUsername: "",
+  wpAppPassword: "",
   autoBlog: {
     enabled: false,
-    wpUsername: "",
-    wpAppPassword: "",
     keywords: [],
     status: "draft",
     prompt: "",
@@ -76,7 +76,7 @@ const UpdateWebsiteListModal = ({
         type: "success",
         content: "Create category successfully!",
       });
-      refresh && (await refresh());
+      refresh && refresh();
       setIsModalOpen(false);
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
@@ -264,6 +264,18 @@ const UpdateWebsiteListModal = ({
                 >
                   <Input type="text" placeholder="URL" />
                 </Form.Item>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="wpUsername" label="WP Username">
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="wpAppPassword" label="WP App Password">
+                      <Input.Password />
+                    </Form.Item>
+                  </Col>
+                </Row>
               </Card>
             </Col>
 
@@ -309,24 +321,6 @@ const UpdateWebsiteListModal = ({
                       label="Posts Per Run"
                     >
                       <Input type="number" placeholder="Posts Per Run" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name={["autoBlog", "wpUsername"]}
-                      label="WP Username"
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name={["autoBlog", "wpAppPassword"]}
-                      label="WP App Password"
-                    >
-                      <Input.Password />
                     </Form.Item>
                   </Col>
                 </Row>

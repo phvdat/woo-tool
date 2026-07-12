@@ -5,7 +5,7 @@ import fs, { mkdirSync } from 'fs';
 import _toString from 'lodash/toString';
 import { NextResponse } from 'next/server';
 import path from 'path';
-import { WooWebsitePayload } from '../woo/website-config/route';
+import { WooWebsitePayload } from '@/types/woo';
 import { formatImages } from '@/helper/format-image';
 
 const TelegramBot = require('node-telegram-bot-api');

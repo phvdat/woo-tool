@@ -1,4 +1,4 @@
-import { CategoryFormValue } from '@/components/woo/UpdateCategoryModal';
+import { CategoryFormValue } from '@/components/settings/UpdateCategoryModal';
 import { connectToDatabase } from '@/lib/mongodb';
 
 const CATEGORIES_COLLECTION = 'categories';
