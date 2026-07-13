@@ -1,30 +1,28 @@
+import { publishedTimeHelper } from '@/helper/common';
 import { connectToDatabase } from '@/lib/mongodb';
-import { ProductPipelineContext } from "./types"
 import { ObjectId } from 'mongodb';
+import { sendTelegram } from '../sendTelegram';
 import { buildProducts } from './buildProducts';
 import { enrichProducts } from './enrichProducts';
 import { exportExcel } from './exportExcel';
-import { emitPipelineProgress, PipelineStep } from './socket';
-import { sendTelegram } from '../sendTelegram';
-import { publishedTimeHelper } from '@/helper/common';
+import { ProductPipelineContext } from "./types";
 import { uploadProducts } from './uploadProducts';
+import { CATEGORIES_COLLECTION, USERS_COLLECTION, WEBSITES_COLLECTION } from '@/constant/collections';
 
 export async function runProductPipeline(context: ProductPipelineContext) {
     const { db } = await connectToDatabase();
 
-    const user = await db.collection("users").findOne({
+    const user = await db.collection(USERS_COLLECTION).findOne({
         email: context.userEmail,
     });
 
-    const website = await db.collection("websites").findOne({
+    const website = await db.collection(WEBSITES_COLLECTION).findOne({
         _id: new ObjectId(context.websiteId),
     });
 
     const categories = await db
-        .collection("categories")
-        .find({
-            shopID: { $regex: website._id, $options: "i" },
-        })
+        .collection(CATEGORIES_COLLECTION)
+        .find({ shopID: website._id.toString() })
         .toArray();
 
     const products = await buildProducts({

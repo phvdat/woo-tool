@@ -1,7 +1,6 @@
 import { Product } from '@/app/(page)/convert-file/ConvertFile';
+import { PRODUCT_DATA_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
-
-const PRODUCT_DATA_COLLECTION = 'product-data';
 
 export interface ProductDataPayload extends Product { }
 

@@ -22,10 +22,7 @@ app.prepare().then(async () => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
-    socket.on("woo-progress", (payload) => io.emit("woo-progress", payload));
-    socket.on("woo-error", (payload) => io.emit("woo-error", payload));
-    socket.on("openai-progress", (payload) => io.emit("openai-progress", payload));
-    socket.on("image-get-failed", (payload) => io.emit("image-get-failed", payload));
+    socket.on("pipeline-progress", (payload) => io.emit("pipeline-progress", payload));
     socket.on("crawl-progress", (payload) => io.emit("crawl-progress", payload));
   });
 

@@ -1,9 +1,8 @@
-import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { SelectorFormValues } from '@/components/crawl-tool/SelectorSetup';
+import { SELECTOR_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-const SELECTOR_COLLECTION = 'selector-webs';
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;

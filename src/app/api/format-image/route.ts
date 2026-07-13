@@ -1,12 +1,7 @@
-import { addWatermark } from '@/helper/website';
-import archiver from 'archiver';
-import axios from 'axios';
-import fs, { mkdirSync } from 'fs';
+import { formatImages } from '@/helper/format-image';
+import { WooWebsitePayload } from '@/types/woo';
 import _toString from 'lodash/toString';
 import { NextResponse } from 'next/server';
-import path from 'path';
-import { WooWebsitePayload } from '@/types/woo';
-import { formatImages } from '@/helper/format-image';
 
 const TelegramBot = require('node-telegram-bot-api');
 

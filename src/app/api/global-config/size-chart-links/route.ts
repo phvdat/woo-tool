@@ -1,6 +1,6 @@
+import { SIZE_CHART_LINKS_CONFIG_COLLECTION } from "@/constant/collections"
 import { connectToDatabase } from "@/lib/mongodb"
 
-const SIZE_CHART_LINKS_CONFIG_COLLECTION = 'size_chart_links'
 
 export async function GET() {
   const { db } = await connectToDatabase()

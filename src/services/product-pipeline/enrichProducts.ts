@@ -1,8 +1,8 @@
 import { DEFAULT_PROMPT_DESCRIPTION, DEFAULT_PROMPT_TAGS } from "@/constant/commons";
-import { emitPipelineProgress, PIPELINE_PROGRESS, PipelineStep } from "./socket";
-import { WooCommerce } from "@/types/woo";
 import chatgpt from "@/services/chatgpt";
+import { WooCommerce } from "@/types/woo";
 import { shuffle } from "lodash";
+import { emitPipelineProgress, PipelineStep } from "./socket";
 
 interface EnrichProductsParams {
   products: WooCommerce[];
@@ -24,9 +24,6 @@ export async function enrichProducts({
   promptTagsProduct = DEFAULT_PROMPT_TAGS,
 }: EnrichProductsParams): Promise<WooCommerce[]> {
   const result: WooCommerce[] = [];
-
-  const start = PIPELINE_PROGRESS.BUILD_PRODUCTS;
-  const end = PIPELINE_PROGRESS.AI;
 
   for (let index = 0; index < products.length; index++) {
     const product = products[index];
@@ -52,9 +49,7 @@ export async function enrichProducts({
     emitPipelineProgress({
       socketId,
       step: PipelineStep.AI,
-      percent:
-        start +
-        ((index + 1) / products.length) * (end - start),
+      percent: Math.floor(((index + 1) / products.length) * 100),
       currentRow: index + 1,
       totalRows: products.length,
     });

@@ -1,6 +1,6 @@
+import { CATE_KEYWORD_CONFIG_COLLECTION } from "@/constant/collections";
 import { connectToDatabase } from "@/lib/mongodb";
 
-const CATE_KEYWORD_CONFIG_COLLECTION = 'global_config';
 export async function GET() {
   const { db } = await connectToDatabase();
   const data = await db

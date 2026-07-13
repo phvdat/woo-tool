@@ -6,19 +6,9 @@ socket.connect();
 export enum PipelineStep {
   BUILD_PRODUCTS = "Building products",
   AI = "Generating AI content",
-  EXPORT = "Exporting Excel",
-  TELEGRAM = "Uploading to Telegram",
   UPLOAD_WOO = "Uploading to WooCommerce",
   COMPLETED = "Completed",
 }
-
-export const PIPELINE_PROGRESS = {
-  BUILD_PRODUCTS: 30,
-  AI: 60,
-  EXPORT_EXCEL: 70,
-  TELEGRAM: 80,
-  UPLOAD_WOO: 100,
-} as const;
 
 interface ProgressPayload {
   socketId: number;

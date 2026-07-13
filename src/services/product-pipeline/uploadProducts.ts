@@ -1,7 +1,8 @@
-import axios from "axios";
 import { WooCommerce, WooWebsitePayload } from "@/types/woo";
+import axios from "axios";
 import { createProduct } from "./createProduct";
-import { emitPipelineProgress, PIPELINE_PROGRESS, PipelineStep } from "./socket";
+import { emitPipelineProgress, PipelineStep } from "./socket";
+import { loadCategories } from "./loadCategories";
 
 interface UploadProductsParams {
   products: WooCommerce[];
@@ -22,21 +23,19 @@ export async function uploadProducts({
     },
     timeout: 60_000,
   });
-
-  const start = PIPELINE_PROGRESS.TELEGRAM;
-  const end = PIPELINE_PROGRESS.UPLOAD_WOO;
+  const categoryMap = await loadCategories(woo);
 
   for (let index = 0; index < products.length; index++) {
     await createProduct({
       woo,
       product: products[index],
+      categoryMap
     });
 
     emitPipelineProgress({
       socketId,
       step: PipelineStep.UPLOAD_WOO,
-      percent:
-        start + ((index + 1) / products.length) * (end - start),
+      percent: Math.floor(((index + 1) / products.length) * 100),
       currentRow: index + 1,
       totalRows: products.length,
     });

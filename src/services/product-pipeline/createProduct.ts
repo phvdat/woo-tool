@@ -7,9 +7,20 @@ interface CreateProductParams {
   product: WooCommerce;
 }
 
+export interface WooCategoryMap {
+  [path: string]: number;
+}
+
+interface CreateProductParams {
+  woo: AxiosInstance;
+  product: WooCommerce;
+  categoryMap: WooCategoryMap;
+}
+
 export async function createProduct({
   woo,
   product,
+  categoryMap
 }: CreateProductParams) {
   const payload = {
     name: product.Name,
@@ -22,16 +33,13 @@ export async function createProduct({
     sku: product.SKU,
     regular_price: product["Regular price"],
     sale_price: product["Sale price"] || undefined,
-    categories:
-      product.Categories?.split(">")
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .map((name) => ({ name })) ?? [],
-    tags:
-      product.Tags?.split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .map((name) => ({ name })) ?? [],
+    categories: categoryMap[product.Categories]
+      ? [{ id: categoryMap[product.Categories] }]
+      : [],
+    tags: product.Tags?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((name) => ({ name })) ?? [],
     images:
       product.Images?.split(",")
         .map((item) => item.trim())

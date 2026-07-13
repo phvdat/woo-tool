@@ -98,6 +98,10 @@ export default function ProductPipelineForm() {
         step: "Completed",
       });
     } catch (e: any) {
+      const status = e?.response?.status;
+      if ([502, 503, 504, 522, 524].includes(status)) {
+        return;
+      }
       setPipelineError(_get(e, "response.data.message", "Pipeline failed"));
     } finally {
       setProcessing(false);
@@ -143,7 +147,7 @@ export default function ProductPipelineForm() {
   }, [websiteOptions]);
 
   return (
-    <Spin spinning={processing || isLoading}>
+    <Spin spinning={isLoading}>
       <Form<ProductPipelineFormValue>
         form={form}
         layout="vertical"

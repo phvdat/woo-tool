@@ -2,7 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { connectToDatabase } from './mongodb';
 import _get from 'lodash/get';
-import { USERS_COLLECTION } from '@/constant/commons';
+import { USERS_COLLECTION } from '@/constant/collections';
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,

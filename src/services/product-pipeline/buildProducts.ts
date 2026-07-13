@@ -4,7 +4,7 @@ import { addWatermark } from "@/helper/website";
 import { createWooRecord, WooFixedOption } from "@/helper/woo";
 import { WooCommerce, WooWebsitePayload } from "@/types/woo";
 import { getSocket } from "@/config/socket";
-import { emitPipelineProgress, PIPELINE_PROGRESS, PipelineStep } from "./socket";
+import { emitPipelineProgress, PipelineStep } from "./socket";
 
 interface SheetData {
   Name: string;
@@ -78,13 +78,6 @@ export async function buildProducts({
     });
 
     if (!watermarkImages) {
-      emitPipelineProgress({
-        socketId,
-        percent: Math.floor((products.length / rows.length) * 30),
-        step: PipelineStep.BUILD_PRODUCTS,
-        currentRow: index + 1,
-        totalRows: rows.length,
-      });
       continue;
     }
 
@@ -100,10 +93,7 @@ export async function buildProducts({
     emitPipelineProgress({
       socketId,
       step: PipelineStep.BUILD_PRODUCTS,
-      percent: Math.floor(
-        (products.length / rows.length) *
-        PIPELINE_PROGRESS.BUILD_PRODUCTS,
-      ),
+      percent: Math.floor((products.length / rows.length) * 100),
       currentRow: index + 1,
       totalRows: rows.length,
     });

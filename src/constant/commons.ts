@@ -1,6 +1,3 @@
-export const USERS_COLLECTION = 'users';
-
-
 export const DEFAULT_PROMPT_DESCRIPTION = `
 You are a professional eCommerce copywriter specializing in SEO-optimized product descriptions for Google.
 

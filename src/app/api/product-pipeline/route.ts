@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
         return Response.json(products);
     } catch (error) {
+        console.log("error", error);
         emitPipelineError(socketId, error);
 
         return Response.json(
