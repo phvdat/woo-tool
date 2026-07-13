@@ -51,7 +51,7 @@ export async function addWatermark({
   category,
   uploadFolder
 }: CreateWebsiteParam) {
-  const tempFolder = `/tmp/media-temp`;
+  const tempFolder = `/tmp/media-temp/${shopName}/${Date.now()}`;
 
   mkdirSync(tempFolder, { recursive: true });
   mkdirSync(uploadFolder, { recursive: true });
@@ -109,7 +109,7 @@ export async function addWatermark({
           .jpeg({ quality })
           .toBuffer();
 
-        const tempPath = `${tempFolder}/${imageName}`;
+        const tempPath = path.join(tempFolder, imageName);
         writeFileSync(tempPath, buffer);
 
         // Add metadata
@@ -129,12 +129,11 @@ export async function addWatermark({
         throw error;
       }
     }
-
-    deleteFolderRecursive(tempFolder);
-
     return list;
   } catch (error) {
     console.log('create website', error);
     return images;
+  } finally {
+    deleteFolderRecursive(tempFolder);
   }
 }
