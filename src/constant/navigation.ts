@@ -12,5 +12,6 @@ const navigation = {
   excelSplitter: '/excel-splitter',
   originalProduct: '/original-product',
   formatImage: '/format-image',
+  revenue: '/revenue'
 };
 export { navigation };

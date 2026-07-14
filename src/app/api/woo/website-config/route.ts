@@ -9,15 +9,15 @@ export async function GET(request: Request) {
   const userEmail = searchParams.get('userEmail');
   let { db } = await connectToDatabase();
   let query: any = {};
-  // chỉ filter khi có email
-  if (userEmail) {
-    query = {
-      $or: [
-        { owner: userEmail.toLowerCase() },
-        { members: userEmail.toLowerCase() }
-      ]
-    };
+  if (!userEmail) {
+    return Response.json([], { status: 200 });
   }
+  query = {
+    $or: [
+      { owner: userEmail.toLowerCase() },
+      { members: userEmail.toLowerCase() }
+    ]
+  };
   const response = await db
     .collection(WEBSITES_COLLECTION)
     .find(query)
