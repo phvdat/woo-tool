@@ -195,9 +195,9 @@ export default function ProductPipelineForm() {
                 <Upload
                   maxCount={1}
                   beforeUpload={() => false}
-                  onChange={(info) =>
-                    guessWebsite(_get(info, "file.originFileObj.name", ""))
-                  }
+                  onChange={(info) => {
+                    guessWebsite(_get(info, "file.name", ""));
+                  }}
                 >
                   <Button block>Upload Excel</Button>
                 </Upload>

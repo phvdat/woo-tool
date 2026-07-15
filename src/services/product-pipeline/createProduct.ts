@@ -26,7 +26,7 @@ export async function createProduct({
     name: product.Name,
     type: "simple",
     status: product["Published Date"] ? "future" : "publish",
-    date: product["Published Date"]
+    date_created: product["Published Date"]
       ? dayjs(product["Published Date"]).format("YYYY-MM-DDTHH:mm:ss")
       : undefined,
     description: product.Description,

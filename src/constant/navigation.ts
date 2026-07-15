@@ -7,7 +7,6 @@ const navigation = {
   crawlTool: '/crawl-tool',
   updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',
-  trackingChecker: '/tracking-checker',
   convertFile: '/convert-file',
   excelSplitter: '/excel-splitter',
   originalProduct: '/original-product',
