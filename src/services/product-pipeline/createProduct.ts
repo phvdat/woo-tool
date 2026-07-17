@@ -22,13 +22,13 @@ export async function createProduct({
   product,
   categoryMap
 }: CreateProductParams) {
+  const local = dayjs(product["Published Date"]).utcOffset(7, true);
   const payload = {
     name: product.Name,
     type: "simple",
-    status: product["Published Date"] ? "future" : "publish",
-    date_created: product["Published Date"]
-      ? dayjs(product["Published Date"]).format("YYYY-MM-DDTHH:mm:ss")
-      : undefined,
+    status: "future",
+    date_created: local.format("YYYY-MM-DDTHH:mm:ss"),
+    date_created_gmt: local.utc().format("YYYY-MM-DDTHH:mm:ss"),
     description: product.Description,
     sku: product.SKU,
     regular_price: product["Regular price"],

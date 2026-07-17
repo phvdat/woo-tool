@@ -42,8 +42,15 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         promptTagsProduct: user.promptTagsProduct,
     });
 
-    const excel = await exportExcel({
+    const scheduledProducts = publishedTimeHelper({
         products: aiProducts,
+        publicTime: user.publicTime,
+        gapFrom: user.gapFrom,
+        gapTo: user.gapTo,
+    });
+
+    const excel = await exportExcel({
+        products: scheduledProducts,
         website: website.shopName,
     });
 
@@ -52,12 +59,7 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         fileName: excel.fileName,
         filePath: excel.filePath,
     });
-    const scheduledProducts = publishedTimeHelper({
-        products: aiProducts,
-        publicTime: user.publicTime,
-        gapFrom: user.gapFrom,
-        gapTo: user.gapTo,
-    });
+    
     await uploadProducts({
         products: scheduledProducts,
         website,
