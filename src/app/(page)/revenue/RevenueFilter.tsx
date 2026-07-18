@@ -85,6 +85,7 @@ export default function RevenueFilter({
 
         <Form.Item name="range">
           <RangePicker
+            showNow
             showTime
             allowClear={false}
             onCalendarChange={() => {}}

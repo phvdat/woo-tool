@@ -34,8 +34,6 @@ export async function loadOrders({
     .collection(WEBSITES_COLLECTION)
     .find(filter)
     .toArray();
-  console.log(userEmail)
-  console.log(websites)
   const orders: any[] = [];
 
   for (const website of websites) {
@@ -72,9 +70,7 @@ export async function loadOrders({
           websiteUrl: website.url,
         }))
       );
-
       if (data.length < 100) break;
-
       page++;
     }
   }

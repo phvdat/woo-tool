@@ -7,10 +7,9 @@ export function buildLatestOrders(orders: any[]) {
     )
     .sort(
       (a, b) =>
-        new Date(b.date_created).getTime() -
-        new Date(a.date_created).getTime()
+        new Date(a.date_created).getTime() -
+        new Date(b.date_created).getTime() 
     )
-    .slice(0, 10)
     .map((order) => ({
       id: order.id,
       website: order.websiteName,
