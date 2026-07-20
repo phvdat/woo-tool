@@ -78,7 +78,6 @@ export async function runAutoBlog(
     selected.map((e: any) => e.keyword)
   );
   let published = 0;
-  console.log(website.autoBlog.postsPerRun)
   for (const trend of selected) {
     if (published >= website.autoBlog.postsPerRun) {
       break;
