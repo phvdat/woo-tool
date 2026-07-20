@@ -2,7 +2,7 @@ import { loadOrders } from "./loadOrders";
 import { calculateSummary } from "./calculateSummary";
 import { groupRevenue, RevenueGroupBy } from "./groupRevenue";
 import { groupWebsiteRevenue } from "./groupWebsiteRevenue";
-import { buildLatestOrders } from "./buildLatestOrders";
+import { buildOrders } from "./buildOrders";
 
 interface LoadRevenueParams {
   websiteId?: string;
@@ -25,11 +25,11 @@ export async function loadRevenue({
     from,
     to,
   });
-
+  const formatOrder = buildOrders(orders)
   return {
-    summary: calculateSummary(orders),
+    summary: calculateSummary(formatOrder),
     chart: groupRevenue(orders, groupBy),
     websiteStats: groupWebsiteRevenue(orders),
-    latestOrders: buildLatestOrders(orders),
+    latestOrders: formatOrder,
   };
 }

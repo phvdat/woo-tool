@@ -9,9 +9,18 @@ export function calculateSummary(orders: any[]) {
     (sum, item) => sum + Number(item.total || 0),
     0
   );
-
+  const totalFees = validOrders.reduce(
+    (sum, item) => sum + Number(item.pp_fee || 0),
+    0
+  );
+  const totalNet = validOrders.reduce(
+    (sum, item) => sum + Number(item.net || 0),
+    0
+  );
   return {
     totalRevenue: revenue,
+    totalFees: totalFees,
+    totalNet: totalNet,
     totalOrders: validOrders.length,
     averageOrderValue: validOrders.length
       ? revenue / validOrders.length

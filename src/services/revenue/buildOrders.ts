@@ -1,4 +1,8 @@
-export function buildLatestOrders(orders: any[]) {
+function getMetaValue(order: any, key: string) {
+  return order.meta_data?.find((m: any) => m.key === key)?.value;
+}
+
+export function buildOrders(orders: any[]) {
   return orders
     .filter(
       (order) =>
@@ -15,6 +19,8 @@ export function buildLatestOrders(orders: any[]) {
       website: order.websiteName,
       customer: `${order.billing.first_name} ${order.billing.last_name}`.trim(),
       total: Number(order.total),
+      pp_fee: Number(getMetaValue(order, "_cs_paypal_fee") ?? 0),
+      net: Number(getMetaValue(order, "_cs_paypal_payout")),
       status: order.status,
       date: order.date_created,
     }));
