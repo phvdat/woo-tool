@@ -98,3 +98,42 @@ export function fixEncoding(text = "") {
     .replace(/Ã¢ÂÂ/g, "-")
     .replace(/Ã¢ÂÂ¦/g, "...");
 }
+
+
+const PRESERVE = new Set([
+  "USA",
+  "UK",
+  "EU",
+
+  "NFL",
+  "NBA",
+  "NHL",
+  "MLB",
+  "MLS",
+  "NCAA",
+  "FIFA",
+  "NASCAR",
+  "UFC",
+  "WWE",
+
+  "AF1",
+  "AJ1",
+  "AJ4",
+  "AJ11",
+  "AJ13",
+
+  "3D",
+  "4K",
+]);
+
+export function toCapitalizedCase(text: string): string {
+  return text.replace(/\S+/g, (word) => {
+    const upper = word.toUpperCase();
+
+    if (PRESERVE.has(upper)) {
+      return upper;
+    }
+
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+}
