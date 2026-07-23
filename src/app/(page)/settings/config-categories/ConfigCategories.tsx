@@ -2,23 +2,19 @@
 import { useCategories } from "@/app/hooks/useCategories";
 import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import CategoryItem from "@/components/settings/CategoryItem";
+import DuplicateAllCate from "@/components/settings/DuplicateAllCate";
 import UpdateCategory, {
   TypeUpdateCategory,
 } from "@/components/settings/UpdateCategoryModal";
 import { Flex, List, Radio, Spin, Typography } from "antd";
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
 import _toString from "lodash/toString";
-import DuplicateAllCate from "@/components/settings/DuplicateAllCate";
+import { useEffect, useState } from "react";
 const { Title } = Typography;
 
 const ConfigCategories = () => {
-  const { data } = useSession();
   const [webSite, setWebSite] = useState("");
   const { categories, isLoading: cateLoading, mutate } = useCategories(webSite);
-  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
-    data?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const options =
     websiteConfigList?.map((item) => ({
       label: item.shopName,

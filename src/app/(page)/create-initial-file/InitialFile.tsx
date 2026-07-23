@@ -22,11 +22,9 @@ import {
   message,
   Row,
   Select,
-  Spin,
-  Table,
+  Spin
 } from "antd";
 import _capitalize from "lodash/capitalize";
-import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -40,11 +38,8 @@ export interface InitialFileValues {
 }
 
 const InitialFile = () => {
-  const { data } = useSession();
   const [form] = Form.useForm();
-  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
-    data?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const { categories, isLoading: categoriesLoading } = useCategories();
   const [dataFile, setDataFile] = useState<
     Omit<InitialFileValues, "website">[]

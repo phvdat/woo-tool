@@ -31,22 +31,54 @@ interface AddNewCategoryProps {
 const defaultFormValue: WebsiteFormValue = {
   url: "",
   logoUrl: "",
-  logoWidth: 1000,
-  logoHeight: 1000,
-  imageWidth: 1000,
-  imageHeight: 1000,
+  logoWidth: 2000,
+  logoHeight: 2000,
+  imageWidth: 2000,
+  imageHeight: 2000,
   logoPosition: CanvasPosition.northwest,
   shopName: "",
-  quality: 80,
+  quality: 100,
   members: [],
   wpUsername: "",
   wpAppPassword: "",
   autoBlog: {
     enabled: false,
-    keywords: [],
-    status: "draft",
+    keywords: [
+      "Sports",
+      "Music",
+      "Tours",
+      "TV Shows",
+      "Streaming",
+      "Netflix",
+      "Disney",
+      "Anime",
+      "Manga",
+      "Video Games",
+      "Esports",
+      "Comics",
+      "Superheroes",
+      "Celebrities",
+      "Bands",
+      "Singers",
+      "Actors",
+      "Entertainment",
+      "Pop Culture",
+      "Festivals",
+      "Holidays",
+      "Theme Parks",
+      "Awards",
+      "Fashion",
+      "Luxury Brands",
+      "Books",
+      "Podcasts",
+      "Internet Culture",
+      "Theme Nights",
+      "Limited Editions",
+      "Collaborations"
+    ],
+    status: "publish",
     prompt: "",
-    postsPerRun: 2,
+    postsPerRun: 1,
   },
 };
 
@@ -166,7 +198,7 @@ const UpdateWebsiteListModal = ({
                   <Col span={12}>
                     <Form.Item<WebsiteFormValue>
                       name="logoUrl"
-                      label="Logo URL"
+                      label="Watermark URL"
                       rules={[
                         { required: true, message: "Please input Logo URL!" },
                       ]}

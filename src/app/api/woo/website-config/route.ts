@@ -1,12 +1,17 @@
 import { WEBSITES_COLLECTION } from '@/constant/collections';
+import { authOptions } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import { WooWebsitePayload } from '@/types/woo';
 import { ObjectId } from 'mongodb';
+import { getServerSession } from 'next-auth';
 
 
 export async function GET(request: Request) {
-  const searchParams = new URL(request.url).searchParams;
-  const userEmail = searchParams.get('userEmail');
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return Response.json({}, { status: 401 });
+  }
+  const userEmail = session.user.email;
   let { db } = await connectToDatabase();
   let query: any = {};
   if (!userEmail) {

@@ -6,7 +6,7 @@ Automation system for WooCommerce, Google Trends, AI Blog, and Puppeteer crawlin
 
 ## Requirements
 
-* Node.js 22+
+* Node.js 20+
 * Python 3.12+
 * Google Chrome / Chromium
 * Xvfb
@@ -21,12 +21,48 @@ Automation system for WooCommerce, Google Trends, AI Blog, and Puppeteer crawlin
 ```bash
 sudo apt update
 
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+nvm install 20
+
+nvm alias default 20
+nvm use 20
+
+npm install -g pm2
+pm2 startup
+pm2 save
+
 sudo apt install -y \
 python3 \
 python3-venv \
 python3-pip \
 xvfb \
-chromium-browser
+chromium-browser \
+libnss3 \
+libatk-bridge2.0-0 \
+libatk1.0-0 \
+libcups2 \
+libdrm2 \
+libxkbcommon0 \
+libxcomposite1 \
+libxdamage1 \
+libxrandr2 \
+libgbm1 \
+libxss1 \
+libasound2t64 \
+libgtk-3-0 \
+libxshmfence1 \
+fonts-liberation \
+xdg-utils
+
+sudo mkdir -p /var/www/html/uploads
+
+sudo chown -R ubuntu:ubuntu /var/www/html/uploads
+
+sudo chmod -R 755 /var/www/html/uploads
 ```
 
 > If `chromium-browser` is unavailable:
@@ -82,7 +118,7 @@ deactivate
 Create
 
 ```text
-.env.local
+.env
 ```
 
 Fill your environment variables.
@@ -193,6 +229,40 @@ Xvfb :99 -screen 0 1280x1024x24 &
 ```
 
 ---
+## Nginx Config
+
+```code
+server {
+    listen 80;
+    server_name woo.deveric.io.vn;
+
+    client_max_body_size 100M;
+
+    location /uploads/ {
+        alias /var/www/html/uploads/;
+        autoindex off;
+
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+
+        access_log off;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
 
 ## Project Structure
 

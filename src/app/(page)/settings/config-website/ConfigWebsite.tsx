@@ -4,16 +4,12 @@ import UpdateWebsiteListModal from "@/components/settings/UpdateWebsiteListModal
 import WebsiteItem from "@/components/settings/WebsiteItem";
 import { endpoint } from "@/constant/endpoint";
 import { Button, Flex, Row, Spin, Typography } from "antd";
-import { useSession } from "next-auth/react";
 import { useState } from "react";
 const { Title } = Typography;
 
 const ConfigWebsite = () => {
-  const { data } = useSession();
   const [loading, setLoading] = useState(false)
-  const { mutate, websiteConfigList, isLoading } = useConfigWebsite(
-    data?.user?.email || "",
-  );
+  const { mutate, websiteConfigList, isLoading } = useConfigWebsite();
   const blogRun = async () => {
     try {
       setLoading(true)

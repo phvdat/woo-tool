@@ -13,9 +13,7 @@ import {
   Select,
 } from 'antd';
 import axios from 'axios';
-import { useSession } from 'next-auth/react';
 import { useMemo, useState } from 'react';
-import { mutate } from 'swr';
 interface FromValue {
   SKUPrefix: string;
   fromShopID: string;
@@ -23,7 +21,6 @@ interface FromValue {
 }
 
 const DuplicateAllCate = () => {
-  const { data } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fromWeb, setFromWeb] = useState('');
   const [form] = Form.useForm();
@@ -58,9 +55,7 @@ const DuplicateAllCate = () => {
   };
   const { websiteConfigList } = useConfigWebsite();
 
-  const { websiteConfigList: myWebsite } = useConfigWebsite(
-    data?.user?.email || ''
-  );
+  const { websiteConfigList: myWebsite } = useConfigWebsite();
 
   const websiteOptions = useMemo(() => {
     if (!websiteConfigList) return [];

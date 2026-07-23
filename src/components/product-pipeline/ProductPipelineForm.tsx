@@ -40,12 +40,7 @@ interface PipelineProgress {
 
 export default function ProductPipelineForm() {
   const [form] = Form.useForm<ProductPipelineFormValue>();
-
-  const { data: session } = useSession();
-
-  const { websiteConfigList, isLoading } = useConfigWebsite(
-    session?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading } = useConfigWebsite();
 
   const socket = useMemo(() => getSocket().connect(), []);
   const [processing, setProcessing] = useState(false);
@@ -90,7 +85,6 @@ export default function ProductPipelineForm() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("websiteId", values.websiteId);
-      formData.append("userEmail", session?.user?.email || "");
       formData.append("socketId", socketId.toString());
       await axios.post(endpoint.productPipeline, formData);
       setProgress({

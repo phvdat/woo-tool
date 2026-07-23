@@ -5,8 +5,6 @@ import { endpoint } from "@/constant/endpoint";
 import { Card, Flex, Spin, Typography } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
-import _get from "lodash/get";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import RevenueChart from "./RevenueChart";
 import RevenueFilter, { RevenueFilterValue } from "./RevenueFilter";
@@ -16,10 +14,7 @@ import RevenueWebsiteTable from "./RevenueWebsiteTable";
 
 export default function RevenuePage() {
   const [loading, setLoading] = useState(false);
-  const { data: session } = useSession();
-  const { websiteConfigList, isLoading } = useConfigWebsite(
-    session?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading } = useConfigWebsite();
 
   const [data, setData] = useState({
     summary: {

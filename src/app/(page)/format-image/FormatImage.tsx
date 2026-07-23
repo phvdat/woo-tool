@@ -18,9 +18,7 @@ export interface FormatImageValues {
 const FormatImage = () => {
   const { data } = useSession();
   const [form] = Form.useForm();
-  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
-    data?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const { user } = useUser(data?.user?.email || "");
   const [linkDownload, setLinkDownload] = useState<string>("");
 

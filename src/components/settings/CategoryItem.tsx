@@ -48,6 +48,8 @@ const CategoryItem = ({ category, accessAble, refresh }: CategoryItem) => {
     }
     setLoading(false);
   };
+  console.log("shop", websiteConfigList);
+  
   return (
     <>
       {contextHolder}

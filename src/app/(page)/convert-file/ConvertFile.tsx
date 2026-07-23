@@ -59,9 +59,7 @@ function ConvertFile() {
 
   const { cateKeyword, isLoading: cateKeywordLoading } =
     useGlobalCateKeywordConfig();
-  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
-    session?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const watchShopId = Form.useWatch("website", form);
   const { categories, isLoading: categoriesLoading } =
     useCategories(watchShopId);
