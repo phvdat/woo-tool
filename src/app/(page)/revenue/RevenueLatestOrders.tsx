@@ -7,7 +7,7 @@ interface RevenueLatestOrder {
   id: number;
   website: string;
   customer: string;
-  gross: number;
+  total: number;
   pp_fee: number;
   net: number;
   status: string;
@@ -48,19 +48,19 @@ export default function RevenueLatestOrders({
           title: "Total",
           dataIndex: "total",
           align: "right",
-          render: (value: number) => `$${value.toFixed(2)}`,
+          render: (value: number) => `$${Number(value).toFixed(2)}`,
         },
         {
           title: "PP Fee",
           dataIndex: "pp_fee",
           align: "right",
-          render: (value: number) => `$${value.toFixed(2)}`,
+          render: (value: number) => `$${Number(value).toFixed(2)}`,
         },
         {
           title: "Net",
           dataIndex: "net",
           align: "right",
-          render: (value: number) => `$${value.toFixed(2)}`,
+          render: (value: number) => `$${Number(value).toFixed(2)}`,
         },
         {
           title: "Status",
