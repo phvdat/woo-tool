@@ -44,11 +44,11 @@ export default function ProductPipelineForm() {
 
   const socket = useMemo(() => getSocket().connect(), []);
   const [processing, setProcessing] = useState(false);
-  const [socketId, setSocketId] = useState<number>();
   const [progress, setProgress] = useState<PipelineProgress>({
     percent: 0,
     step: "",
   });
+  const websiteId = Form.useWatch("websiteId", form);
 
   const [pipelineError, setPipelineError] = useState("");
   const websiteOptions = useMemo(() => {
@@ -71,8 +71,6 @@ export default function ProductPipelineForm() {
   const handleRunPipeline = async (values: ProductPipelineFormValue) => {
     const file = _get(values.file[0], "originFileObj");
     if (!file) return;
-    const socketId = dayjs().valueOf();
-    setSocketId(socketId);
     setProcessing(true);
     setPipelineError("");
 
@@ -85,7 +83,7 @@ export default function ProductPipelineForm() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("websiteId", values.websiteId);
-      formData.append("socketId", socketId.toString());
+      formData.append("socketId", values.websiteId);
       await axios.post(endpoint.productPipeline, formData);
       setProgress({
         percent: 100,
@@ -104,18 +102,18 @@ export default function ProductPipelineForm() {
 
   useEffect(() => {
     const onProgress = (payload: any) => {
-      if (payload.socketId !== socketId) return;
+      if (payload.socketId !== websiteId) return;
       setProgress(payload.progress);
     };
 
     const onError = (payload: any) => {
-      if (payload.socketId !== socketId) return;
+      if (payload.socketId !== websiteId) return;
       setPipelineError(payload.message || "Unknown error");
       setProcessing(false);
     };
 
     const onFinished = (payload: any) => {
-      if (payload.socketId !== socketId) return;
+      if (payload.socketId !== websiteId) return;
       setProcessing(false);
       setProgress({
         percent: 100,
@@ -132,7 +130,7 @@ export default function ProductPipelineForm() {
       socket.off("pipeline-error", onError);
       socket.off("pipeline-finished", onFinished);
     };
-  }, [socketId, socket]);
+  }, [websiteId, socket]);
 
   useEffect(() => {
     if (websiteOptions.length) {

@@ -69,8 +69,10 @@ export async function POST(request: Request) {
     for (const url of urlList) {
       try {
         const domain = getDomain(url);
+        console.log(domain);
+        
         const selector: SelectorFormValues | undefined = selectors.find(
-          (s: SelectorFormValues) => s.domain === domain
+          (s: SelectorFormValues) => s.domain.includes(domain)
         );
 
         if (!selector) {
