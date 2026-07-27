@@ -8,7 +8,7 @@ interface RevenueLatestOrder {
   website: string;
   customer: string;
   total: number;
-  pp_fee: number;
+  fee: number;
   net: number;
   status: string;
   date: string;
@@ -51,8 +51,8 @@ export default function RevenueLatestOrders({
           render: (value: number) => `$${Number(value).toFixed(2)}`,
         },
         {
-          title: "PP Fee",
-          dataIndex: "pp_fee",
+          title: "Fee",
+          dataIndex: "fee",
           align: "right",
           render: (value: number) => `$${Number(value).toFixed(2)}`,
         },

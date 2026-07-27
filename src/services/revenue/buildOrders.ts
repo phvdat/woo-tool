@@ -12,15 +12,23 @@ export function buildOrders(orders: any[]) {
     .sort(
       (a, b) =>
         new Date(a.date_created).getTime() -
-        new Date(b.date_created).getTime() 
+        new Date(b.date_created).getTime()
     )
     .map((order) => ({
       id: order.id,
       website: order.websiteName,
       customer: `${order.billing.first_name} ${order.billing.last_name}`.trim(),
       total: Number(order.total),
-      pp_fee: Number(getMetaValue(order, "_cs_paypal_fee") ?? 0),
-      net: Number(getMetaValue(order, "_cs_paypal_payout")),
+      fee: Number(
+        getMetaValue(order, "_cs_stripe_fee") ??
+        getMetaValue(order, "_cs_paypal_fee") ??
+        0
+      ),
+      net: Number(
+        getMetaValue(order, "_cs_stripe_payout") ??
+        getMetaValue(order, "_cs_paypal_payout") ??
+        0
+      ),
       status: order.status,
       date: order.date_created,
     }));

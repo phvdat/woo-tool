@@ -10,7 +10,7 @@ export function calculateSummary(orders: any[]) {
     0
   );
   const totalFees = validOrders.reduce(
-    (sum, item) => sum + Number(item.pp_fee || 0),
+    (sum, item) => sum + Number(item.fee || 0),
     0
   );
   const totalNet = validOrders.reduce(
