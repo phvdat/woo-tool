@@ -7,7 +7,7 @@ import { loadCategories } from "./loadCategories";
 interface UploadProductsParams {
   products: WooCommerce[];
   website: WooWebsitePayload;
-  socketId: number;
+  socketId: string;
 }
 
 export async function uploadProducts({

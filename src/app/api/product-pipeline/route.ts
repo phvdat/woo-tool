@@ -8,13 +8,12 @@ import { getServerSession } from "next-auth";
 
 export async function POST(request: Request) {
     const formData = await request.formData();
-    const socketId = Number(formData.get("socketId"));
+    const socketId = String(formData.get("websiteId"));
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
         return Response.json({}, { status: 401 });
     }
     const userEmail = session.user.email;
-
     try {
         const products = await runProductPipeline({
             file: formData.get("file") as File,

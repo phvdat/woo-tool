@@ -8,7 +8,7 @@ interface EnrichProductsParams {
   products: WooCommerce[];
   website: string;
   apiKey: string;
-  socketId: number;
+  socketId: string;
   mixed: boolean;
   promptDescriptionProduct?: string;
   promptTagsProduct?: string;

@@ -100,7 +100,12 @@ export async function runAutoBlog(
       // insert images
       const images = await searchBingImages(article.title);
       const { images: formatImgs } = await formatImages({ websiteObject: website, name: article.title, images })
-
+      if (!formatImgs?.length) {
+        console.log(
+          `[AUTO BLOG] Skip "${trend.keyword}" because no valid images were found`
+        );
+        continue;
+      }
       const medias = await uploadImagesToWordpress(
         website,
         formatImgs

@@ -11,7 +11,7 @@ export enum PipelineStep {
 }
 
 interface ProgressPayload {
-  socketId: number;
+  socketId: string;
   percent: number;
   step: PipelineStep | string;
   currentRow?: number;
@@ -37,7 +37,7 @@ export function emitPipelineProgress({
 }
 
 export function emitPipelineImageFailed(
-  socketId: number,
+  socketId: string,
   row: number,
 ) {
   socket.emit("pipeline-image-failed", {
@@ -47,7 +47,7 @@ export function emitPipelineImageFailed(
 }
 
 export function emitPipelineError(
-  socketId: number,
+  socketId: string,
   error: unknown,
 ) {
   let message = "Unknown error";
@@ -64,7 +64,7 @@ export function emitPipelineError(
   });
 }
 
-export function emitPipelineFinished(socketId: number) {
+export function emitPipelineFinished(socketId: string) {
   socket.emit("pipeline-finished", {
     socketId,
   });

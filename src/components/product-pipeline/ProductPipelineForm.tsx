@@ -83,7 +83,6 @@ export default function ProductPipelineForm() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("websiteId", values.websiteId);
-      formData.append("socketId", values.websiteId);
       await axios.post(endpoint.productPipeline, formData);
       setProgress({
         percent: 100,

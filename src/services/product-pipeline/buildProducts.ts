@@ -16,7 +16,7 @@ interface BuildProductsParams {
   file: File;
   website: WooWebsitePayload;
   categories: WooFixedOption[];
-  socketId: number;
+  socketId: string;
 }
 
 const socket = getSocket();
