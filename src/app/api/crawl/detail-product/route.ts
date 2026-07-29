@@ -35,8 +35,6 @@ export async function POST(request: Request) {
       const imgLinks = await page.$$eval(selectorImageLinks, (imgs) =>
         imgs.map((img: Element) => (img as HTMLImageElement).src)
       );
-      console.log('name', name);
-      console.log('imgLinks', imgLinks);
 
       if (selectImagesIndex) {
         const imagesIndex = selectImagesIndex.split(',');

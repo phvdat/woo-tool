@@ -38,12 +38,6 @@ const Header = () => {
 
   const headerItems: MenuProps["items"] = [
     {
-      label: (
-        <Link href={navigation.createInitialFile}>Create Initial File</Link>
-      ),
-      key: navigation.createInitialFile,
-    },
-    {
       label: <Link href={navigation.crawlTool}>Crawl</Link>,
       key: navigation.crawlTool,
     },
@@ -56,12 +50,6 @@ const Header = () => {
       key: navigation.productPipeline,
     },
     {
-      label: (
-        <Link href={navigation.updatePublishedTime}>Update Published Time</Link>
-      ),
-      key: navigation.updatePublishedTime,
-    },
-    {
       label: <Link href={navigation.excelSplitter}>Excel Splitter</Link>,
       key: navigation.excelSplitter,
     },
@@ -69,10 +57,10 @@ const Header = () => {
       label: <Link href={navigation.originalProduct}>Original Product</Link>,
       key: navigation.originalProduct,
     },
-    {
-      label: <Link href={navigation.formatImage}>Format Image</Link>,
-      key: navigation.formatImage,
-    },
+    // {
+    //   label: <Link href={navigation.formatImage}>Format Image</Link>,
+    //   key: navigation.formatImage,
+    // },
     {
       label: <Link href={navigation.revenue}>Revenue</Link>,
       key: navigation.revenue,
@@ -100,23 +88,7 @@ const Header = () => {
         },
       ],
     },
-
-    {
-      label: (
-        <Link href={navigation.configCategories}>
-          <ShoppingOutlined /> Config Categories
-        </Link>
-      ),
-      key: navigation.configCategories,
-    },
-    {
-      label: (
-        <Link href={navigation.configWebsite}>
-          <GlobalOutlined /> Config Website
-        </Link>
-      ),
-      key: navigation.configWebsite,
-    },
+  
     ...(isAdmin
       ? [
           {

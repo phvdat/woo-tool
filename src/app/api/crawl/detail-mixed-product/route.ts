@@ -69,8 +69,6 @@ export async function POST(request: Request) {
     for (const url of urlList) {
       try {
         const domain = getDomain(url);
-        console.log(domain);
-        
         const selector: SelectorFormValues | undefined = selectors.find(
           (s: SelectorFormValues) => s.domain.includes(domain)
         );
@@ -94,14 +92,9 @@ export async function POST(request: Request) {
           imgs
             .map((img) => {
               const el = img as HTMLImageElement;
-
-              // property trước (auto resolve URL)
               if ((el as HTMLImageElement).src && !el.src.startsWith("data:image"))
                 return el.src;
-
               if ((el as unknown as HTMLAnchorElement).href) return (el as unknown as HTMLAnchorElement).href;
-
-              // fallback attribute
               const attrs = [
                 "data-large_image",
                 "data-src",

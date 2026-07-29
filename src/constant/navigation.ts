@@ -5,7 +5,6 @@ const navigation = {
   configCategories: '/settings/config-categories',
   configWebsite: '/settings/config-website',
   crawlTool: '/crawl-tool',
-  updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',
   convertFile: '/convert-file',
   excelSplitter: '/excel-splitter',

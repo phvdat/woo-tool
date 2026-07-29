@@ -14,7 +14,7 @@ import { endpoint } from "@/constant/endpoint";
 import { fixEncoding, normFile, toCapitalizedCase, upscaleImage } from "@/helper/common";
 import detectCategory from "@/helper/detect-category";
 import { handleDownloadFile } from "@/helper/woo";
-import { DownloadOutlined } from "@ant-design/icons";
+import { DeleteOutlined, DownloadOutlined, FileSearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -398,10 +398,10 @@ function ConvertFile() {
       </Container>
       {products.length > 0 && (
         <>
-          <Flex justify="space-between" style={{ marginBottom: 16 }}>
+          <Flex gap={12} justify="right" style={{ marginBottom: 16 }}>
             <ExistChecker products={products} handleDelete={handleDelete} />
-            <Button type="primary" onClick={handleCheckDuplicate}>
-              Check duplicate
+            <Button onClick={handleCheckDuplicate}>
+              <FileSearchOutlined />
             </Button>
             <ExcludeSizeChartLink
               products={products}
@@ -412,7 +412,7 @@ function ConvertFile() {
               onClick={() => setProducts([])}
               style={{ marginLeft: 16 }}
             >
-              Clear All {products.length} items
+              <DeleteOutlined />{products.length} items
             </Button>
           </Flex>
           <List

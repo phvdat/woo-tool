@@ -31,7 +31,6 @@ const DuplicateAllCate = () => {
 
   const onSubmit = async (values: FromValue) => {
     if (isLoading) return;
-    console.log(categories);
     const categoriesDuplicate = categories.map((cate) => ({
       ...cate,
       _id: undefined,

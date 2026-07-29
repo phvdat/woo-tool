@@ -29,6 +29,6 @@ const layoutStyle: React.CSSProperties = {
   minHeight: '100vh',
 };
 const contentStyle: React.CSSProperties = {
-  padding: '0 24px',
+  padding: '0 8px',
   background: '#fff',
 };

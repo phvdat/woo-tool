@@ -12,7 +12,6 @@ const ManagementStorage = () => {
   const handleDeleteFiles = async () => {
     setLoading(true);
     const folderRef = ref(storage);
-    console.log(cutoffDate);
 
     if (!cutoffDate) {
       notification.error({

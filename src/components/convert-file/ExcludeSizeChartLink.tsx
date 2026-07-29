@@ -1,5 +1,5 @@
 import { Product } from "@/app/(page)/convert-file/ConvertFile"
-import { ApiOutlined } from "@ant-design/icons"
+import { ApiOutlined, ClearOutlined } from "@ant-design/icons"
 import { Button, Flex, Popover } from "antd"
 import TextArea from "antd/es/input/TextArea"
 import { useGlobalSizeChartLinks } from "@/app/hooks/useGlobalSizeChartLinks"
@@ -60,7 +60,7 @@ const ExcludeSizeChartLink = ({
       </Popover>
 
       <Button onClick={handleRemoveSizeChartLink}>
-        Remove Size Link
+        <ClearOutlined />
       </Button>
 
     </Flex>

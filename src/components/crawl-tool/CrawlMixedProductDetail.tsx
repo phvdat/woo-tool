@@ -1,7 +1,16 @@
 "use client";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { Form, Input, Button, Alert, Flex, message, Progress } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Alert,
+  Flex,
+  message,
+  Progress,
+  Spin,
+} from "antd";
 import * as XLSX from "xlsx";
 import { isEmpty } from "lodash";
 import dayjs from "dayjs";
@@ -42,7 +51,6 @@ function CrawlMixedProductDetail() {
   }, []);
 
   const getAllSelectors = async () => {
-    setLoading(true);
     try {
       const { status, data } = await axios.get(endpoint.addSelector);
       if (status === 200) {
@@ -51,9 +59,7 @@ function CrawlMixedProductDetail() {
       return data;
     } catch (error) {
       console.log("getAllSelectors:", error);
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   const handleSubmit = async (value: FormValues) => {
@@ -97,6 +103,7 @@ function CrawlMixedProductDetail() {
   };
 
   const checkMissingDomain = async () => {
+    setLoading(true);
     const selectors: SelectorFormValues[] = await getAllSelectors();
     const urls = form.getFieldValue("urls");
     if (!urls) {
@@ -122,6 +129,7 @@ function CrawlMixedProductDetail() {
       } catch {
         // ignore invalid URL
       }
+      setLoading(false);
     }
 
     const missingDomains: string[] = [];
@@ -138,7 +146,6 @@ function CrawlMixedProductDetail() {
         )}`,
       );
     } else {
-      messageApi.info("All domains are present in the selectors.");
       setErrorMessage("");
     }
   };
@@ -175,7 +182,7 @@ function CrawlMixedProductDetail() {
   }, [socketId]);
 
   return (
-    <div>
+    <Spin spinning={loading}>
       {contextHolder}
       <Form
         onFinish={handleSubmit}
@@ -224,7 +231,7 @@ function CrawlMixedProductDetail() {
           />
         )}
       </Form>
-    </div>
+    </Spin>
   );
 }
 
