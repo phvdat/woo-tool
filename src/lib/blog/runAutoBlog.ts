@@ -1,6 +1,9 @@
+import { WEBSITES_COLLECTION } from "@/constant/collections";
 import { formatImages } from "@/helper/format-image";
+import { connectToDatabase } from "@/lib/mongodb";
 import { WebsiteConfig } from "@/types/woo";
 import { filterTrends } from "./filterTrends";
+import { getNewsContext } from "./getNewsContext";
 import { getGoogleTrends } from "./getTrends";
 import {
   getUsedKeywords,
@@ -8,12 +11,9 @@ import {
 } from "./history";
 import { searchBingImages } from "./searchImages";
 import { selectTrends } from "./selectTrends.ts";
-import { Trend } from "./types";
+import { SelectedTrend } from "./types";
 import { publishWordpress, uploadImagesToWordpress } from "./wordpress";
 import { insertImages, writeBlog } from "./writer";
-import { connectToDatabase } from "@/lib/mongodb";
-import { WEBSITES_COLLECTION } from "@/constant/collections";
-import { getNewsContext } from "./getNewsContext";
 
 function normalizeKeyword(keyword: string) {
   return keyword.trim().toLowerCase();
@@ -47,12 +47,17 @@ export async function runAllWebBlogs() {
     }
 
     const trends = filterTrends(await getGoogleTrends());
+    const selected = await selectTrends(
+      trends,
+      websites[0].autoBlog.keywords,
+      10
+    );
     const usedKeywords = new Set<string>();
 
     for (const website of websites) {
       await runAutoBlog(
         website,
-        trends,
+        selected,
         usedKeywords
       );
     }
@@ -63,17 +68,12 @@ export async function runAllWebBlogs() {
 
 export async function runAutoBlog(
   website: WebsiteConfig,
-  trends: Trend[],
+  selected: SelectedTrend[],
   usedKeywords: Set<string>
 ) {
   if (!website.autoBlog.enabled) {
     return;
   }
-  const selected = await selectTrends(
-    trends,
-    website.autoBlog.keywords,
-    10
-  );
   const historyKeywords = await getUsedKeywords(
     selected.map((e: any) => e.keyword)
   );
@@ -111,6 +111,12 @@ export async function runAutoBlog(
         formatImgs
       );
 
+      if (!medias?.length) {
+        console.log(
+          `[AUTO BLOG] Skip "${trend.keyword}" because image upload failed`
+        );
+        continue;
+      }
       article.content = insertImages(
         article.content,
         medias.map(item => item.source_url),
