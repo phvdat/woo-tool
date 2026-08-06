@@ -47,8 +47,7 @@ export default function RevenueWebsiteTable({
           dataIndex: "averageOrderValue",
           align: "right",
           render: (value: number) => `$${value.toFixed(2)}`,
-          sorter: (a, b) =>
-            a.averageOrderValue - b.averageOrderValue,
+          sorter: (a, b) => a.averageOrderValue - b.averageOrderValue,
         },
       ]}
     />

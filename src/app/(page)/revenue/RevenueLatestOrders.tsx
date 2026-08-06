@@ -3,6 +3,8 @@
 import { Table, Tag } from "antd";
 import dayjs from "dayjs";
 
+type PaymentMethod = "stripe" | "paypal";
+
 interface RevenueLatestOrder {
   id: number;
   website: string;
@@ -12,6 +14,7 @@ interface RevenueLatestOrder {
   net: number;
   status: string;
   date: string;
+  paymentMethod: PaymentMethod;
 }
 
 interface RevenueLatestOrdersProps {
@@ -45,6 +48,22 @@ export default function RevenueLatestOrders({
           dataIndex: "customer",
         },
         {
+          title: "Gateway",
+          dataIndex: "paymentMethod",
+          filters: [
+            {
+              text: "Stripe",
+              value: "stripe",
+            },
+            {
+              text: "PayPal",
+              value: "paypal",
+            },
+          ],
+          onFilter: (value, record) => record.paymentMethod === value,
+          render: (value) => (value === "stripe" ? "Stripe" : "PayPal"),
+        },
+        {
           title: "Total",
           dataIndex: "total",
           align: "right",
@@ -65,15 +84,12 @@ export default function RevenueLatestOrders({
         {
           title: "Status",
           dataIndex: "status",
-          render: (status: string) => (
-            <Tag color="green">{status}</Tag>
-          ),
+          render: (status: string) => <Tag color="green">{status}</Tag>,
         },
         {
           title: "Created",
           dataIndex: "date",
-          render: (value: string) =>
-            dayjs(value).format("YYYY-MM-DD HH:mm"),
+          render: (value: string) => dayjs(value).format("YYYY-MM-DD HH:mm"),
         },
       ]}
     />

@@ -31,5 +31,6 @@ export function buildOrders(orders: any[]) {
       ),
       status: order.status,
       date: order.date_created,
+      paymentMethod: order.payment_method?.includes("stripe") ? "stripe" : "paypal"
     }));
 }
