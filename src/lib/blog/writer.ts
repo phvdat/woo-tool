@@ -25,7 +25,6 @@ Link: ${item.link}
       : "No recent news available.";
 
   const prompt = template
-    .replaceAll("{{shopName}}", website.shopName)
     .replaceAll("{{keyword}}", trend.keyword)
     .replaceAll("{{reason}}", trend.reason)
     .replaceAll("{{news}}", newsText)
@@ -41,29 +40,53 @@ Link: ${item.link}
 
 const template = `
 You are a professional SEO content writer writing for readers in the United States.
-Website:
-{{shopName}}
+
 Target keyword:
 {{keyword}}
+
 Why this topic is trending:
 {{reason}}
+
 Recent news context:
 {{news}}
+
 Additional instructions:
 {{customPrompt}}
+
 Requirements:
-- Write one original article of 800-1000 words.
+
+- Write one original informational article of 800-1000 words.
+- The primary goal is to attract organic search traffic by providing useful information about a currently trending topic.
+- The article must be informational, editorial, and useful to readers.
+- The article is NOT an advertisement for the website.
+- Do not promote the website, products, merchandise, clothing, apparel, or services.
+- Do not include sales language or calls to action.
+- Do not tell readers to shop, buy, check out, visit a store, or view products.
+- Do not mention merchandise, jerseys, hoodies, T-shirts, apparel, or products unless they are genuinely necessary to explain the topic itself.
+- Do not artificially connect the topic to fashion, clothing, or products.
+
 - Base the article primarily on the recent news context above when available.
-- Summarize and explain the news in your own words. Never copy wording from the news.
+- Summarize and explain the news in your own words.
+- Never copy wording from the news sources.
 - If the news is incomplete or uncertain, clearly keep the explanation general instead of inventing details.
-- If no recent news is available, write an evergreen article about the keyword.
+- If no recent news is available, write an evergreen informational article about the keyword.
 - Explain why the topic is currently receiving attention.
 - Add useful background so readers unfamiliar with the topic can understand it.
-- Keep the article valuable even after the news cycle ends.
+- Focus on facts, context, developments, and why people are interested in the topic.
+- Keep the article valuable even after the current news cycle ends.
+
 Formatting:
+
 - Return HTML only inside the content field.
 - Allowed tags:
-  <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>
+  <p>
+  <h2>
+  <h3>
+  <ul>
+  <li>
+  <strong>
+  <em>
+  <a>
 - Write a compelling introduction.
 - Include exactly 4-6 H2 sections.
 - Use at most 2 H3 sections.
@@ -71,7 +94,10 @@ Formatting:
 - Do not generate tables.
 - Include exactly 3 FAQ questions.
 - Finish with a conclusion under 80 words.
+
 Writing style:
+
+- Write naturally for a US audience.
 - Keep paragraphs 2-4 sentences.
 - Avoid repeating ideas.
 - Mention the target keyword naturally.
@@ -79,27 +105,35 @@ Writing style:
 - Do not use clickbait.
 - Do not use Markdown.
 - Do not mention AI.
-- Do not fabricate facts, scores, statistics, quotes, dates or events.
+- Do not fabricate facts, scores, statistics, quotes, dates, people, or events.
+- Do not present speculation as fact.
+- Do not exaggerate the importance of the topic.
+- Do not use promotional language.
+
 Return ONLY valid JSON.
+
 {
-  "title":"",
-  "metaDescription":"",
-  "tags":[],
-  "content":""
+  "title": "",
+  "metaDescription": "",
+  "tags": [],
+  "content": ""
 }
 `;
 
-const defaultPrompt = `
-Write in a clear, friendly and informative style.
-Create a click-worthy SEO title.
+const defaultPrompt = `Write in a clear, friendly and informative style.
+Create a compelling SEO title that accurately reflects the topic.
 Write a meta description between 120 and 155 characters.
-Generate 3-5 SEO tags.
-Focus on useful information instead of filler.
+Generate 3-5 relevant SEO tags.
+Focus on useful, factual information instead of filler.
 Avoid generic introductions and conclusions.
-When appropriate, naturally mention fan merchandise, jerseys, hoodies, T-shirts or collectible apparel.
-Never force product promotion.
-Avoid duplicate wording throughout the article.
-`;
+Explain why the topic is currently trending.
+Provide enough background for readers who are unfamiliar with the topic.
+Keep the article useful even after the current trend fades.
+Avoid repeating the same information or phrasing.
+Do not promote products, stores, brands, or services.
+Do not mention merchandise, jerseys, hoodies, T-shirts, apparel, shopping,
+or purchasing unless the topic itself specifically requires it.
+Do not include sales language, promotional language, or calls to action.`;
 
 export function insertImages(content: string, images: string[], name: string) {
   if (!images.length) return content;

@@ -1,11 +1,11 @@
-'use client';
-import axios from 'axios';
-import { useState } from 'react';
-import { Form, Input, Button, message, Typography, Alert } from 'antd';
-import { isEmpty, set, trim } from 'lodash';
-import { CopyFilled } from '@ant-design/icons';
-import { endpoint } from '@/constant/endpoint';
-import _get from 'lodash/get';
+"use client";
+import axios from "axios";
+import { useState } from "react";
+import { Form, Input, Button, message, Typography, Alert } from "antd";
+import { isEmpty, set, trim } from "lodash";
+import { CopyFilled } from "@ant-design/icons";
+import { endpoint } from "@/constant/endpoint";
+import _get from "lodash/get";
 
 interface FormValues {
   urls: string;
@@ -16,14 +16,14 @@ function CrawlListProductUrl() {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState<boolean>(false);
   const [productLinks, setProductLinks] = useState<string[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const handleSubmit = async (value: FormValues) => {
     setLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
     setProductLinks([]);
     const { urls, productLinksSelector } = value;
-    const urlsArray = urls.split('\n');
+    const urlsArray = urls.split("\n");
     const promises = urlsArray.map((url) => {
       return axios.get(endpoint.crawlList, {
         params: { url: trim(url), productLinksSelector },
@@ -32,22 +32,21 @@ function CrawlListProductUrl() {
     try {
       const response = await Promise.all(promises);
       const data = response.map((res) => res.data);
-      console.log(data);
 
       const productLinks = data.flat();
       setProductLinks(productLinks);
     } catch (error) {
-      setErrorMessage(_get(error, 'message', 'Something went wrong'));
-      console.error('Error fetching product data: ', error);
+      setErrorMessage(_get(error, "message", "Something went wrong"));
+      console.error("Error fetching product data: ", error);
     }
     setLoading(false);
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(productLinks.join('\n'));
+    navigator.clipboard.writeText(productLinks.join("\n"));
     messageApi.open({
-      type: 'success',
-      content: 'Copy successfully',
+      type: "success",
+      content: "Copy successfully",
     });
   };
 
@@ -57,21 +56,21 @@ function CrawlListProductUrl() {
       <Form
         onFinish={handleSubmit}
         labelCol={{ style: { minWidth: 180 } }}
-        labelAlign='left'
+        labelAlign="left"
       >
-        <Form.Item<FormValues> name='urls'>
-          <Input.TextArea placeholder='Enter Pages URL' rows={4} />
+        <Form.Item<FormValues> name="urls">
+          <Input.TextArea placeholder="Enter Pages URL" rows={4} />
         </Form.Item>
 
-        <Form.Item<FormValues> name='productLinksSelector'>
-          <Input placeholder='Enter image links selector' />
+        <Form.Item<FormValues> name="productLinksSelector">
+          <Input placeholder="Enter image links selector" />
         </Form.Item>
         <Form.Item>
-          <Button type='primary' htmlType='submit' loading={loading}>
+          <Button type="primary" htmlType="submit" loading={loading}>
             Get Products Link
           </Button>
         </Form.Item>
-        {errorMessage ? <Alert message={errorMessage} type='error' /> : null}
+        {errorMessage ? <Alert message={errorMessage} type="error" /> : null}
       </Form>
       {isEmpty(productLinks) ? null : (
         <div>

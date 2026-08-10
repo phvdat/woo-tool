@@ -92,7 +92,6 @@ const SearchProductDialog = ({
 };
 
 const SearchResult = ({ result }: { result: Product[] }) => {
-  console.log(result);
   return (
     <Row gutter={[16, 16]}>
       {result.map((product) => {

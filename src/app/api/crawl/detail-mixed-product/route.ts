@@ -114,10 +114,6 @@ export async function POST(request: Request) {
             })
             .filter(Boolean)
         );
-        console.log({
-          Name: formatName(name),
-          Images: formatImages(imgLinks).join(','),
-        });
         result.push({
           Name: formatName(name),
           ImagesOrigin: formatImages(imgLinks).join(','),
