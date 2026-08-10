@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Col, Row, Statistic } from "antd";
+import { Card, Col, Grid, Row, Statistic } from "antd";
 
 interface RevenueSummaryProps {
   totalRevenue: number;
@@ -17,44 +17,57 @@ export default function RevenueSummary({
   totalOrders,
   averageOrderValue,
 }: RevenueSummaryProps) {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+
+  const valueStyle = {
+    fontSize: isMobile ? 20 : 24,
+  };
+
   return (
-    <Row gutter={16}>
-      <Col span={6}>
+    <Row gutter={[16, 16]}>
+      <Col xs={12} md={6}>
         <Card>
           <Statistic
-            title="Total Revenue"
+            title="Revenue"
             value={totalRevenue}
             precision={2}
             prefix="$"
-          />
-        </Card>
-      </Col>
-      <Col span={6}>
-        <Card>
-          <Statistic
-            title="Total Fee"
-            value={totalFees}
-            precision={2}
-            prefix="$"
-          />
-        </Card>
-      </Col>
-      <Col span={6}>
-        <Card>
-          <Statistic
-            title="Total Net"
-            value={totalNet}
-            precision={2}
-            prefix="$"
+            valueStyle={valueStyle}
           />
         </Card>
       </Col>
 
-      <Col span={6}>
+      <Col xs={12} md={6}>
+        <Card>
+          <Statistic
+            title="Fees"
+            value={totalFees}
+            precision={2}
+            prefix="$"
+            valueStyle={valueStyle}
+          />
+        </Card>
+      </Col>
+
+      <Col xs={12} md={6}>
+        <Card>
+          <Statistic
+            title="Net Revenue"
+            value={totalNet}
+            precision={2}
+            prefix="$"
+            valueStyle={valueStyle}
+          />
+        </Card>
+      </Col>
+
+      <Col xs={12} md={6}>
         <Card>
           <Statistic
             title="Orders"
             value={totalOrders}
+            valueStyle={valueStyle}
           />
         </Card>
       </Col>

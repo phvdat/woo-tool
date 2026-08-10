@@ -67,11 +67,11 @@ export default function RevenuePage() {
           />
         </Card>
 
-        <RevenueSummary {...data.summary} />
-
         <Card>
           <RevenueChart data={data.chart} />
         </Card>
+
+        <RevenueSummary {...data.summary} />
 
         <Card>
           <RevenueWebsiteTable data={data.websiteStats} loading={loading} />

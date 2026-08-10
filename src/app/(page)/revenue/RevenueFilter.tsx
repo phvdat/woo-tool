@@ -42,6 +42,9 @@ export default function RevenueFilter({
       <Form
         form={form}
         layout="inline"
+        style={{
+          gap: "8px",
+        }}
         initialValues={{
           websiteId: "all",
           groupBy: "day",
@@ -52,7 +55,7 @@ export default function RevenueFilter({
         <Form.Item name="websiteId">
           <Select
             loading={loading}
-            style={{ width: 220 }}
+            style={{ width: 150 }}
             options={[
               {
                 label: "All",
@@ -69,7 +72,7 @@ export default function RevenueFilter({
         <Form.Item name="groupBy">
           <Select
             loading={loading}
-            style={{ width: 120 }}
+            style={{ width: 150 }}
             options={[
               {
                 label: "Hour",
@@ -86,7 +89,10 @@ export default function RevenueFilter({
         <Form.Item name="range">
           <RangePicker
             showNow
-            showTime
+            showTime={{
+              format: "HH:mm",
+            }}
+            format="DD-MM HH:mm"
             allowClear={false}
             onCalendarChange={() => {}}
           />

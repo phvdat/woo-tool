@@ -6,3 +6,12 @@ body {
 .ant-upload-select {
   width: 100% !important;
 }
+
+@media (max-width: 648px) {
+  .ant-picker-dropdown {
+    transform: translateX(58px);
+  }
+  .ant-picker-datetime-panel {
+    flex-direction: column;
+  }
+}
