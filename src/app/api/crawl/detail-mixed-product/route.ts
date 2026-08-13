@@ -81,13 +81,13 @@ export async function POST(request: Request) {
 
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-        await page.waitForSelector(selector.nameSelector, { timeout: 20000 });
+        await page.waitForSelector(selector.nameSelector, { timeout: 5000 });
         const name = await page.$eval(
           selector.nameSelector,
           (el) => el.innerHTML
         );
 
-        await page.waitForSelector(selector.imagesSelector, { timeout: 20000 });
+        await page.waitForSelector(selector.imagesSelector, { timeout: 5000 });
         const imgLinks = await page.$$eval(selector.imagesSelector, (imgs) =>
           imgs
             .map((img) => {
@@ -132,10 +132,16 @@ export async function POST(request: Request) {
           progress,
           socketId,
         });
-      } catch (err) {
-        console.error(`❌ Error while crawling ${url}:`, err);
+      } catch (error) {
+        console.error(`❌ Error while crawling ${url}:`, error);
         result.push({ error: url });
-        socket.emit('crawl-error', { err, socketId });
+        socket.emit('crawl-error', {
+          error: {
+            name: error instanceof Error ? error.name : 'UnknownError',
+            message: error instanceof Error ? error.message : String(error),
+            url: url,
+          }, socketId
+        });
         continue;
       }
     }

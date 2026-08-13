@@ -4,7 +4,6 @@ import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import { getSocket } from "@/config/socket";
 import { endpoint } from "@/constant/endpoint";
 import { normFile } from "@/helper/common";
-import { SettingOutlined } from "@ant-design/icons";
 import {
   Alert,
   Button,
@@ -19,9 +18,7 @@ import {
   Upload,
 } from "antd";
 import axios from "axios";
-import dayjs from "dayjs";
 import _get from "lodash/get";
-import { useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 
 const { Link } = Typography;
@@ -107,7 +104,9 @@ export default function ProductPipelineForm() {
 
     const onError = (payload: any) => {
       if (payload.socketId !== websiteId) return;
-      setPipelineError(payload.message || "Unknown error");
+      setPipelineError(
+        (prev) => `${prev}\n${_get(payload, "message", "Unknown error")}`,
+      );
       setProcessing(false);
     };
 
@@ -214,7 +213,7 @@ export default function ProductPipelineForm() {
 
           {pipelineError && (
             <Alert
-              style={{ marginTop: 16 }}
+              style={{ marginTop: 16, whiteSpace: "pre-line" }}
               type="error"
               message={pipelineError}
             />

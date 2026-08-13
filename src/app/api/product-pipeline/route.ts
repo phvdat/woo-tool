@@ -25,10 +25,13 @@ export async function POST(request: Request) {
         emitPipelineFinished(socketId);
 
         return Response.json(products);
-    } catch (error) {
+    } catch (error: any) {
         console.log("error", error);
-        emitPipelineError(socketId, error);
-
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            'Unknown error';
+        emitPipelineError(socketId, message);
         return Response.json(
             {
                 message: error instanceof Error ? error.message : "Internal Server Error",

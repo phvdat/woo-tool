@@ -23,7 +23,11 @@ app.prepare().then(async () => {
 
   io.on("connection", (socket) => {
     socket.on("pipeline-progress", (payload) => io.emit("pipeline-progress", payload));
+    socket.on("pipeline-error", (payload) => io.emit("pipeline-error", payload));
+    socket.on("pipeline-finished", (payload) => io.emit("pipeline-finished", payload));
+
     socket.on("crawl-progress", (payload) => io.emit("crawl-progress", payload));
+    socket.on("crawl-error", (payload) => io.emit("crawl-error", payload));
   });
 
   httpServer

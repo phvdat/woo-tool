@@ -1,7 +1,11 @@
 import { WooCommerce, WooWebsitePayload } from "@/types/woo";
 import axios from "axios";
 import { createProduct } from "./createProduct";
-import { emitPipelineProgress, PipelineStep } from "./socket";
+import {
+  emitPipelineError,
+  emitPipelineProgress,
+  PipelineStep,
+} from "./socket";
 import { loadCategories } from "./loadCategories";
 
 interface UploadProductsParams {
@@ -26,11 +30,30 @@ export async function uploadProducts({
   const categoryMap = await loadCategories(woo);
 
   for (let index = 0; index < products.length; index++) {
-    await createProduct({
-      woo,
-      product: products[index],
-      categoryMap
-    });
+    const product = products[index];
+    try {
+      await createProduct({
+        woo,
+        product,
+        categoryMap,
+      });
+    } catch (error: any) {
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unknown error";
+
+      console.error(
+        `[UPLOAD ERROR] Product "${product.Name}":`,
+        error
+      );
+
+      emitPipelineError(
+        socketId,
+        `Upload failed: ${product.Name}\n${errorMessage}`
+      );
+    }
 
     emitPipelineProgress({
       socketId,

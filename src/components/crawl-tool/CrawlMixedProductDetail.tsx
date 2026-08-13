@@ -59,13 +59,14 @@ function CrawlMixedProductDetail() {
       return data;
     } catch (error) {
       console.log("getAllSelectors:", error);
-    } 
+    }
   };
 
   const handleSubmit = async (value: FormValues) => {
     const socketId = dayjs().unix();
     setSocketId(socketId);
     setErrorMessage("");
+    setError("");
     const { urls } = value;
     try {
       const { data } = await axios.post<Product[]>(
@@ -168,12 +169,15 @@ function CrawlMixedProductDetail() {
       setProgress(_get(payload, "progress.percent"));
     });
     socket.on("crawl-error", (payload) => {
+      console.log("payload", payload);
+
       if (Number(_get(payload, "socketId")) !== socketId) return;
-      const errorMessage = `${_get(payload, "error.status")} - ${_get(
+      const errorMessage = `${_get(
         payload,
-        "error.config.url",
-      )}`;
-      setError(errorMessage);
+        "error.url",
+        "UnknownError",
+      )}\n(${_get(payload, "error.message")})`;
+      setError((prev) => `${prev}\n${errorMessage}`);
     });
 
     return () => {
@@ -220,7 +224,14 @@ function CrawlMixedProductDetail() {
         ) : null}
 
         {error && (
-          <Alert message={error} type="error" style={{ marginTop: 24 }} />
+          <Alert
+            message={error}
+            type="error"
+            style={{
+              marginTop: 24,
+              whiteSpace: "pre-line",
+            }}
+          />
         )}
         {errorMessage && (
           <Alert
