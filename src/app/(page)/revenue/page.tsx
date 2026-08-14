@@ -44,8 +44,8 @@ export default function RevenuePage() {
       const { data } = await axios.post(endpoint.revenue, {
         websiteId: values.websiteId,
         groupBy: values.groupBy,
-        from: values.range[0].toISOString(),
-        to: values.range[1].toISOString(),
+        from: values.range[0].format("YYYY-MM-DDTHH:mm:ssZ"),
+        to: values.range[1].format("YYYY-MM-DDTHH:mm:ssZ"),
       });
 
       setData(data);
