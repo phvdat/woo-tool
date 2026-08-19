@@ -130,12 +130,6 @@ export default function ProductPipelineForm() {
     };
   }, [websiteId, socket]);
 
-  useEffect(() => {
-    if (websiteOptions.length) {
-      form.setFieldValue("websiteId", websiteOptions[0].value);
-    }
-  }, [websiteOptions]);
-
   return (
     <Spin spinning={isLoading}>
       <Form<ProductPipelineFormValue>

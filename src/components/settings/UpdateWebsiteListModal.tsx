@@ -10,12 +10,15 @@ import {
   Flex,
   Form,
   Input,
+  InputNumber,
   Modal,
   Row,
   Segmented,
   Select,
+  Typography,
   message,
 } from "antd";
+import TextArea from "antd/es/input/TextArea";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -74,11 +77,18 @@ const defaultFormValue: WebsiteFormValue = {
       "Internet Culture",
       "Theme Nights",
       "Limited Editions",
-      "Collaborations"
+      "Collaborations",
     ],
     status: "publish",
     prompt: "",
     postsPerRun: 1,
+  },
+  product: {
+    promptDescriptionProduct: "",
+    promptTagsProduct: "",
+    publicTime: "",
+    gapFrom: 0,
+    gapTo: 0,
   },
 };
 
@@ -312,6 +322,76 @@ const UpdateWebsiteListModal = ({
             </Col>
 
             <Col md={{ span: 12 }} xs={{ span: 24 }}>
+              <Card title="Product" style={{ marginTop: 24 }}>
+                <label>Schedule Published</label>
+                <Row gutter={[12, 12]}>
+                  <Col span={8}>
+                    <Form.Item name={["product", "publicTime"]} shouldUpdate>
+                      <InputNumber
+                        type="text"
+                        placeholder="Start"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item
+                      name={["product", "gapFrom"]}
+                      rules={[
+                        { required: true, message: "Please input gap time!" },
+                      ]}
+                    >
+                      <InputNumber
+                        min={0}
+                        style={{ width: "100%" }}
+                        placeholder="From"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item
+                      name={["product", "gapTo"]}
+                      rules={[
+                        { required: true, message: "Please input gap time!" },
+                      ]}
+                    >
+                      <InputNumber
+                        min={0}
+                        style={{ width: "100%" }}
+                        placeholder="To"
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Form.Item
+                  name={["product", "promptDescriptionProduct"]}
+                  label="Prompt Description Product"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input Prompt Description Product!",
+                    },
+                  ]}
+                >
+                  <TextArea
+                    rows={4}
+                    placeholder="Ex: Write a story about {product-name} with 100 words"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name={["product", "promptTagsProduct"]}
+                  label="Prompt Tags Product"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input Prompt Tags Product!",
+                    },
+                  ]}
+                >
+                  <TextArea rows={4} />
+                </Form.Item>
+              </Card>
               <Card title="Auto Blog" style={{ marginTop: 24 }}>
                 <Row gutter={16}>
                   <Col span={8}>

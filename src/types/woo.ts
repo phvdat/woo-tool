@@ -52,6 +52,14 @@ export interface AutoBlogConfig {
   postsPerRun: number
 }
 
+export interface ProductConfig {
+  promptDescriptionProduct: string;
+  promptTagsProduct: string;
+  publicTime: string | Date;
+  gapFrom: number;
+  gapTo: number;
+}
+
 export enum CanvasPosition {
   northwest = "northwest",
   northeast = "northeast",
@@ -73,6 +81,7 @@ export interface WebsiteConfig {
   wpUsername: string;
   wpAppPassword: string;
   autoBlog: AutoBlogConfig;
+  product: ProductConfig;
 }
 
 export interface WooWebsitePayload extends WebsiteConfig {

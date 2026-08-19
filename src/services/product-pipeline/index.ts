@@ -38,15 +38,15 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         apiKey: user.apiKey,
         socketId: context.socketId,
         mixed: user.mixed === true,
-        promptDescriptionProduct: user.promptDescriptionProduct,
-        promptTagsProduct: user.promptTagsProduct,
+        promptDescriptionProduct: website.product.promptDescriptionProduct,
+        promptTagsProduct: website.product.promptTagsProduct,
     });
 
     const scheduledProducts = publishedTimeHelper({
         products: aiProducts,
-        publicTime: user.publicTime,
-        gapFrom: user.gapFrom,
-        gapTo: user.gapTo,
+        publicTime: website.product.publicTime,
+        gapFrom: website.product.gapFrom,
+        gapTo: website.product.gapTo,
     });
 
     const excel = await exportExcel({
@@ -59,7 +59,7 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         fileName: excel.fileName,
         filePath: excel.filePath,
     });
-    
+
     await uploadProducts({
         products: scheduledProducts,
         website,

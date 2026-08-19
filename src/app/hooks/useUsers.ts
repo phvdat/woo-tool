@@ -6,12 +6,7 @@ export interface UsersPayload {
   _id: string;
   email: string;
   telegramId: string;
-  publicTime: string | Date;
-  gapFrom: number;
-  gapTo: number;
   apiKey: string;
-  promptDescriptionProduct: string;
-  promptTagsProduct: string;
 }
 
 const fetcher = async (url: string) => {
