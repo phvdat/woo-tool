@@ -63,6 +63,7 @@ function CrawlMixedProductDetail() {
   };
 
   const handleSubmit = async (value: FormValues) => {
+    setProgress(1);
     const socketId = dayjs().unix();
     setSocketId(socketId);
     setErrorMessage("");

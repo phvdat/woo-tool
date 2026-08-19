@@ -81,10 +81,11 @@ export default function ProductPipelineForm() {
       formData.append("file", file);
       formData.append("websiteId", values.websiteId);
       await axios.post(endpoint.productPipeline, formData);
-      setProgress({
+      setProgress((prev) => ({
+        ...prev,
         percent: 100,
         step: "Completed",
-      });
+      }));
     } catch (e: any) {
       const status = e?.response?.status;
       if ([502, 503, 504, 522, 524].includes(status)) {
