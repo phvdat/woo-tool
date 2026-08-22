@@ -11,10 +11,19 @@ import ExcludeSizeChartLink from "@/components/convert-file/ExcludeSizeChartLink
 import ExistChecker from "@/components/convert-file/ExistChecker";
 import ProductItem from "@/components/convert-file/ProductItem";
 import { endpoint } from "@/constant/endpoint";
-import { fixEncoding, normFile, toCapitalizedCase, upscaleImage } from "@/helper/common";
+import {
+  fixEncoding,
+  normFile,
+  toCapitalizedCase,
+  upscaleImage,
+} from "@/helper/common";
 import detectCategory from "@/helper/detect-category";
 import { handleDownloadFile } from "@/helper/woo";
-import { DeleteOutlined, DownloadOutlined, FileSearchOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  DownloadOutlined,
+  FileSearchOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -45,7 +54,8 @@ export interface Product {
   Name: string;
   Images: string;
   Categories: string;
-  Link: string;
+  Link?: string;
+  [key: string]: any;
 }
 function ConvertFile() {
   const { data: session } = useSession();
@@ -104,22 +114,22 @@ function ConvertFile() {
       type: "array",
     });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const productsData: Product[] = XLSX.utils.sheet_to_json(worksheet);
-
+    const productsData =
+      XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
     const formattedProduct: Product[] = [];
     for (let i = 0; i < productsData.length; i++) {
-      if (!productsData[i]?.Name || !productsData[i]?.Images) {
+      const row = productsData[i];
+      if (!row?.Name || !row?.Images) {
         continue;
       }
-      formattedProduct.push({
-        key: file.uid + i,
-        Name: toCapitalizedCase(fixEncoding(productsData[i].Name)),
-        Images: upscaleImage(productsData[i].Images.replace(/,+$/, "")),
-        Categories:
-          productsData[i]?.Categories ||
-          detectCategory(productsData[i].Name, cateKeyword),
-        Link: productsData[i].Link,
-      });
+      const product: Product = {
+        ...row,
+        key: `${file.uid}${i}`,
+        Name: toCapitalizedCase(fixEncoding(String(row.Name))),
+        Images: upscaleImage(String(row.Images).replace(/,+$/, "")),
+        Categories: row.Categories || detectCategory(row.Name, cateKeyword),
+      };
+      formattedProduct.push(product);
     }
     setNewProducts((prev) => [...prev, ...formattedProduct]);
   };
@@ -412,7 +422,8 @@ function ConvertFile() {
               onClick={() => setProducts([])}
               style={{ marginLeft: 16 }}
             >
-              <DeleteOutlined />{products.length} items
+              <DeleteOutlined />
+              {products.length} items
             </Button>
           </Flex>
           <List
