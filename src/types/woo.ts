@@ -46,9 +46,8 @@ export interface WooCommerce {
 
 export interface AutoBlogConfig {
   enabled: boolean;
-  keywords: string[];
+  cron: string;
   status: "draft" | "publish";
-  prompt: string;
   postsPerRun: number
 }
 

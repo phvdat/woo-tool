@@ -1,199 +1,70 @@
 import { askAI } from "../ai/client";
 import { extractJson } from "../ai/extractJson";
+import { filterTrends } from "./filterTrends";
+import { getGoogleTrends } from "./getTrends";
 import { SelectedTrend, Trend } from "./types";
+
+let cachedTrends: Trend[] = [];
+let trendsCachedAt = 0;
+
+export async function getCachedTrends() {
+  const now = Date.now();
+  if (
+    cachedTrends &&
+    now - trendsCachedAt < 6 * 60 * 60 * 1000
+  ) {
+    return cachedTrends;
+  }
+  cachedTrends = filterTrends(
+    await getGoogleTrends()
+  );
+  trendsCachedAt = now;
+  return cachedTrends;
+}
 
 export async function selectTrends(
   trends: Trend[],
-  keywords: string[],
   max = 10
 ): Promise<SelectedTrend[]> {
   const prompt = `
-You are an SEO content strategist for a website that publishes
-trend-driven blog content.
-
-Website topics:
-
-${keywords.map((k) => `- ${k}`).join("\n")}
-
-Today's Google Trends:
-
+Select the best ${max} Google Trends topics for an informational SEO blog.
+CURRENT TRENDS:
 ${trends.map((t) => `- ${t.keyword} (${t.traffic})`).join("\n")}
-
 GOAL:
+Choose topics with the highest potential for organic traffic, prioritizing
+what is trending RIGHT NOW.
+PRIORITY:
+- Current popularity & momentum: 50%
+- Entertainment, sports, fandom & pop culture: 25%
+- SEO opportunity / lower competition: 15%
+- Long-term search interest: 10%
+ACCEPT:
+Sports, athletes, major events, championships, musicians, concerts, tours,
+anime, manga, games, esports, movies, TV shows, celebrities, fictional
+characters, fandom, major releases, announcements and cultural events.
+REJECT:
+Fashion, clothing, apparel, streetwear, sportswear, jerseys, sneakers,
+shoes, accessories, outfits, shopping, products, merchandise and product
+reviews/recommendations.
 
-Find the HOTTEST and most interesting topics that can attract
-organic search traffic.
-
-The selected topic does NOT need to be related to products,
-fashion, clothing, or the website's store.
-
-The blog exists primarily to capture search traffic from
-CURRENT trending topics.
-
-Do NOT think about merchandise, products, shirts, shoes,
-jerseys, or selling intent when selecting trends.
-
-SELECTION PRIORITY:
-
-- Current popularity and search momentum (50%)
-- Relevance to entertainment, sports, fandom, or pop culture (25%)
-- SEO opportunity / lower competition (15%)
-- Potential for sustained search interest (10%)
-
-CURRENT POPULARITY IS VERY IMPORTANT.
-
-Prefer topics that are actively trending RIGHT NOW.
-
-GOOD TOPICS:
-
-- sports teams
-- major sports events
-- athletes
-- championships
-- musicians
-- singers
-- bands
-- concerts
-- tours
-- album releases
-- anime
-- manga
-- games
-- esports
-- movies
-- TV series
-- streaming shows
-- celebrities
-- fictional characters
-- comic characters
-- major entertainment events
-- major cultural events
-- viral fandom topics
-- major seasonal events
-- major announcements
-- major releases
-- major competitions
-
-The topic should be something people are currently searching for,
-talking about, watching, following, or interested in.
-
-STRICTLY REJECT:
-
-- fashion
-- fashion trends
-- clothing trends
-- apparel trends
-- streetwear trends
-- sportswear
-- jersey trends
-- baseball jersey trends
-- football jersey trends
-- sneaker trends
-- shoe trends
-- bag trends
-- accessory trends
-- outfit ideas
-- what to wear
-- clothing styles
-- shopping trends
-- product recommendations
-- product reviews
-- generic shopping queries
-- generic merchandise topics
-- generic clothing keywords
-- generic product keywords
-
-Examples of topics to REJECT:
-
-- "2026 fashion trends"
-- "best baseball jerseys"
-- "football jersey trends"
-- "summer outfits"
-- "trending sneakers"
-- "best hoodies"
-- "streetwear trends"
-- "sportswear trends"
-
-Examples of topics to ACCEPT:
-
-- "BLACKPINK comeback"
-- "Taylor Swift"
-- "NBA Finals"
-- "World Cup 2026"
-- "One Piece"
-- "Stranger Things"
-- "Minecraft"
-- "Marvel"
-- "Super Bowl"
-- "a major athlete currently trending"
-- "a major concert or tour currently trending"
-
+Also reject politics, finance, jobs, weather, crime, lawsuits, accidents,
+local incidents, generic breaking news and unrelated business news.
 IMPORTANT:
+Choose the actual trending topic, never a product related to it.
+"baseball jerseys" → REJECT
+"MLB All-Star Game" → ACCEPT
+"football shirts" → REJECT
+"Manchester United" → ACCEPT
+"anime shirts" → REJECT
+"One Piece" → ACCEPT
 
-The keyword itself should represent the TRENDING TOPIC,
-not a product associated with that topic.
+Never select a topic because it can sell merchandise.
 
-For example:
-
-"baseball jerseys" -> REJECT
-"MLB All-Star Game" -> ACCEPT
-
-"football shirts" -> REJECT
-"Manchester United" -> ACCEPT
-
-"sneaker trends" -> REJECT
-"NBA Finals" -> ACCEPT
-
-"anime shirts" -> REJECT
-"One Piece" -> ACCEPT
-
-"summer fashion" -> REJECT
-"BLACKPINK comeback" -> ACCEPT
-
-DO NOT artificially connect a topic to products or merchandise.
-
-The selected topics will be used to create informational,
-entertaining, and trend-focused blog articles.
-
-Do NOT select a topic because it could sell merchandise.
-
-Also avoid topics that are primarily:
-
-- politics
-- finance
-- jobs
-- weather
-- crime
-- lawsuits
-- accidents
-- local incidents
-- generic breaking news
-- unrelated business news
-
-Prefer topics that are:
-
-- highly searchable
-- currently trending
-- interesting to a broad audience
-- fandom-driven
-- entertainment-driven
-- sports-driven
-- culturally relevant
-- suitable for an informational blog article
-
-Select ONLY the best ${max} trends.
-
-Return ONLY valid JSON.
-
+Return ONLY valid JSON:
 [
-  {
-    "keyword": "",
-    "reason": ""
-  }
+  {"keyword": "", "reason": ""}
 ]
 `;
-
   const content = await askAI(prompt);
-
   return extractJson<SelectedTrend[]>(content);
 }

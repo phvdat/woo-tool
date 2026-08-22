@@ -1,7 +1,17 @@
 "use client";
 
 import { endpoint } from "@/constant/endpoint";
-import { Card, Carousel, Col, Flex, Image, Input, message, Row, Typography } from "antd";
+import {
+  Card,
+  Carousel,
+  Col,
+  Flex,
+  Image,
+  Input,
+  message,
+  Row,
+  Typography,
+} from "antd";
 import Meta from "antd/es/card/Meta";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
@@ -9,7 +19,7 @@ import { Product } from "../convert-file/ConvertFile";
 import { debounce } from "lodash";
 import Container from "@/components/commons/Container";
 import { useSession } from "next-auth/react";
-import { CopyOutlined } from "@ant-design/icons";
+import { CopyOutlined, LinkOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 interface Result extends Product {
@@ -91,8 +101,10 @@ function OriginalProduct() {
                             "vi-VN",
                           )
                         : ""}
-                        &nbsp;
-                        <CopyOutlined onClick={()=> navigator.clipboard.writeText(product.Link).then(() => message.success('Copy successfully'))}/>
+                      &nbsp;
+                      <a href={product?.Link} target="_blank">
+                        <LinkOutlined />
+                      </a>
                     </Text>
                   }
                 />

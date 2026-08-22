@@ -46,41 +46,8 @@ const defaultFormValue: WebsiteFormValue = {
   wpAppPassword: "",
   autoBlog: {
     enabled: false,
-    keywords: [
-      "Sports",
-      "Music",
-      "Tours",
-      "TV Shows",
-      "Streaming",
-      "Netflix",
-      "Disney",
-      "Anime",
-      "Manga",
-      "Video Games",
-      "Esports",
-      "Comics",
-      "Superheroes",
-      "Celebrities",
-      "Bands",
-      "Singers",
-      "Actors",
-      "Entertainment",
-      "Pop Culture",
-      "Festivals",
-      "Holidays",
-      "Theme Parks",
-      "Awards",
-      "Fashion",
-      "Luxury Brands",
-      "Books",
-      "Podcasts",
-      "Internet Culture",
-      "Theme Nights",
-      "Limited Editions",
-      "Collaborations",
-    ],
     status: "publish",
-    prompt: "",
+    cron: "0 19,21,23,1,3,5 * * *",
     postsPerRun: 1,
   },
   product: {
@@ -436,12 +403,9 @@ const UpdateWebsiteListModal = ({
                     </Form.Item>
                   </Col>
                 </Row>
-                <Form.Item name={["autoBlog", "keywords"]} label="Keywords">
-                  <Select mode="tags" tokenSeparators={[","]} />
-                </Form.Item>
 
-                <Form.Item name={["autoBlog", "prompt"]} label="Custom Prompt">
-                  <Input.TextArea rows={6} />
+                <Form.Item name={["autoBlog", "cron"]} label="Cron Schedule">
+                  <Input placeholder="0 19,21,23,1,3,5 * * *" />
                 </Form.Item>
               </Card>
             </Col>
