@@ -15,6 +15,7 @@ import { insertImages, writeBlog } from "./writer";
 function normalizeKeyword(keyword: string) {
   return keyword.trim().toLowerCase();
 }
+const runningWebsites = new Set<string>();
 
 export async function runAllWebBlogs() {
   const { db } = await connectToDatabase();
@@ -31,31 +32,21 @@ export async function runAllWebBlogs() {
   }
 }
 
-export async function runAutoBlog(
-  website: WebsiteConfig,
-  runningWebsites?: Set<string>
-) {
+export async function runAutoBlog(website: WebsiteConfig) {
   if (!website.autoBlog.enabled) {
     return;
   }
-
   const websiteKey = website.shopName;
-
-  if (runningWebsites?.has(websiteKey)) {
+  if (runningWebsites.has(websiteKey)) {
     console.log(
       `[AUTO BLOG] ${website.shopName}: Already running`
     );
     return;
   }
-
-  runningWebsites?.add(websiteKey);
-
+  runningWebsites.add(websiteKey);
   try {
     const trends = await getCachedTrends();
-    const selected = await selectTrends(
-      trends,
-      10
-    );
+    const selected = await selectTrends(trends, 10);
     const historyKeywords = await getUsedKeywords(
       selected.map((e) => e.keyword)
     );
@@ -72,18 +63,17 @@ export async function runAutoBlog(
         const news = await getNewsContext(trend.keyword);
         const article = await writeBlog(
           trend,
-          news,
+          news
         );
         const images = await searchBingImages(
           article.title,
           4
         );
-        const { images: formatImgs } =
-          await formatImages({
-            websiteObject: website,
-            name: article.title,
-            images,
-          });
+        const { images: formatImgs } = await formatImages({
+          websiteObject: website,
+          name: article.title,
+          images,
+        });
         if (!formatImgs?.length) {
           console.log(
             `[AUTO BLOG] ${website.shopName}: No valid images`
@@ -117,10 +107,19 @@ export async function runAutoBlog(
           `[AUTO BLOG] ${website.shopName}: ${keyword}`
         );
       } catch (err) {
-        console.error(err);
+        console.error(
+          `[AUTO BLOG] ${website.shopName}: Failed keyword ${keyword}`,
+          err
+        );
       }
     }
+    console.log(
+      `[AUTO BLOG] ${website.shopName}: Finished. Published ${published}`
+    );
   } finally {
-    runningWebsites?.delete(websiteKey);
+    runningWebsites.delete(websiteKey);
+    console.log(
+      `[AUTO BLOG] ${website.shopName}: Released`
+    );
   }
 }

@@ -1,5 +1,6 @@
 import { WEBSITES_COLLECTION } from '@/constant/collections';
 import { authOptions } from '@/lib/auth';
+import { syncBlogCrons } from '@/lib/blog/startBlogCron';
 import { connectToDatabase } from '@/lib/mongodb';
 import { WooWebsitePayload } from '@/types/woo';
 import { ObjectId } from 'mongodb';
@@ -51,6 +52,7 @@ export async function PUT(request: Request) {
   const response = await db
     .collection(WEBSITES_COLLECTION)
     .updateOne({ _id: new ObjectId(_id) }, { $set: rest });
+  await syncBlogCrons();
   return Response.json(response, { status: 200 });
 }
 
