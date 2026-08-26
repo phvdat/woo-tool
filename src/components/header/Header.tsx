@@ -57,10 +57,10 @@ const Header = () => {
       label: <Link href={navigation.originalProduct}>Original Product</Link>,
       key: navigation.originalProduct,
     },
-    // {
-    //   label: <Link href={navigation.formatImage}>Format Image</Link>,
-    //   key: navigation.formatImage,
-    // },
+    {
+      label: <Link href={navigation.formatImage}>Format Image</Link>,
+      key: navigation.formatImage,
+    },
     {
       label: <Link href={navigation.revenue}>Revenue</Link>,
       key: navigation.revenue,
@@ -88,7 +88,7 @@ const Header = () => {
         },
       ],
     },
-  
+
     ...(isAdmin
       ? [
           {
