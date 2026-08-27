@@ -1,5 +1,5 @@
 import { createReadStream, unlinkSync } from "fs";
-import { telegramBot } from "@/services/telegram";
+import { telegramBot } from "@/services/telegram/telegram";
 
 const bot = telegramBot;
 

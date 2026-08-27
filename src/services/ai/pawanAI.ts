@@ -2,7 +2,7 @@ import axios from 'axios';
 import _get from 'lodash/get';
 const endpoint = 'https://api.pawan.krd/v1/chat/completions';
 
-export const sendMessage = async (messages: string, apiKey: string) => {
+export const pawanAI = async (messages: string, apiKey: string) => {
   const payload = {
     messages: [{ role: 'user', content: messages }],
     model: 'pai-001-light',

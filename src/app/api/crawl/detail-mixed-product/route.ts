@@ -4,7 +4,7 @@ import { executablePath } from 'puppeteer';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
-import { telegramBot } from '@/services/telegram';
+import { telegramBot } from '@/services/telegram/telegram';
 import { SelectorFormValues } from '@/components/crawl-tool/SelectorSetup';
 import { getSocket } from '@/config/socket';
 import { upscaleImage } from '@/helper/common';

@@ -5,7 +5,7 @@ import _toString from 'lodash/toString';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
-import { telegramBot } from '@/services/telegram';
+import { telegramBot } from '@/services/telegram/telegram';
 
 const bot = telegramBot;
 

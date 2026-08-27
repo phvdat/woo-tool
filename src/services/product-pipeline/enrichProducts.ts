@@ -1,8 +1,9 @@
 import { DEFAULT_PROMPT_DESCRIPTION, DEFAULT_PROMPT_TAGS } from "@/constant/commons";
-import chatgpt from "@/services/chatgpt";
+import chatgpt from "@/services/ai/chatgpt";
 import { WooCommerce } from "@/types/woo";
 import { shuffle } from "lodash";
 import { emitPipelineProgress, PipelineStep } from "./socket";
+import gemini from "../ai/gemini";
 
 interface EnrichProductsParams {
   products: WooCommerce[];
@@ -37,13 +38,16 @@ export async function enrichProducts({
       .replaceAll("{website}", website);
 
     const aiContent = await chatgpt(question, apiKey);
+    const description = product.Description.replace(
+      "(content)",
+      `<p>${aiContent}</p>`,
+    )
+    const shortDescription = await gemini(SHORT_DESCRIPTION_PROMPT.replaceAll("{{description}}", description.replace(/<[^>]*>/g, " "))) || ""
 
     result.push({
       ...product,
-      Description: product.Description.replace(
-        "(content)",
-        `<p>${aiContent}</p>`,
-      ),
+      Description: description,
+      "Short description": shortDescription,
     });
 
     emitPipelineProgress({
@@ -86,3 +90,16 @@ Remember:
 
   return mixed ? shuffle(productsWithTags) : productsWithTags;
 }
+
+const SHORT_DESCRIPTION_PROMPT = `
+Write a unique SEO meta description from the product description below.
+
+- 1 natural sentence, ideally 120-155 characters.
+- Use only provided information.
+- Focus on the design, theme, style, or key features.
+- No keyword stuffing, hype, or invented information.
+- Ignore HTML.
+- Output only the description.
+
+{{description}}
+`;

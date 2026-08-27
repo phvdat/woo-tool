@@ -1,7 +1,7 @@
 import { publishedTimeHelper } from '@/helper/common';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { sendTelegram } from '../sendTelegram';
+import { sendTelegram } from '../telegram/sendTelegram';
 import { buildProducts } from './buildProducts';
 import { enrichProducts } from './enrichProducts';
 import { exportExcel } from './exportExcel';
