@@ -4,7 +4,6 @@ import { WooCommerce } from "@/types/woo";
 import { shuffle } from "lodash";
 import { emitPipelineProgress, PipelineStep } from "./socket";
 import gemini from "../ai/gemini";
-import { pawanAI } from "../ai/pawanAI";
 
 interface EnrichProductsParams {
   products: WooCommerce[];
@@ -43,7 +42,7 @@ export async function enrichProducts({
       "(content)",
       `<p>${aiContent}</p>`,
     )
-    const shortDescription = await pawanAI(SHORT_DESCRIPTION_PROMPT.replaceAll("{{description}}", description.replace(/<[^>]*>/g, " "))) || ""
+    const shortDescription = await gemini(SHORT_DESCRIPTION_PROMPT.replaceAll("{{description}}", description.replace(/<[^>]*>/g, " "))) || ""
 
     result.push({
       ...product,
