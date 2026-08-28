@@ -1,11 +1,12 @@
 import axios from 'axios';
 import _get from 'lodash/get';
 const endpoint = 'https://api.pawan.krd/v1/chat/completions';
+const apiKey = process.env.PAWAN_API_KEY
 
-export const pawanAI = async (messages: string, apiKey: string) => {
+export const pawanAI = async (messages: string) => {
   const payload = {
     messages: [{ role: 'user', content: messages }],
-    model: 'pai-001-light',
+    model: 'stepfun-ai/Step-3.5-Flash',
     stream: false,
   };
   const { data } = await axios.post(endpoint, payload, {
