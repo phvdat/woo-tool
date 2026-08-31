@@ -30,6 +30,7 @@ export async function createProduct({
     date_created: local.format("YYYY-MM-DDTHH:mm:ss"),
     date_created_gmt: local.utc().format("YYYY-MM-DDTHH:mm:ss"),
     description: product.Description,
+    short_description: product["Short description"],
     sku: product.SKU,
     regular_price: product["Regular price"],
     sale_price: product["Sale price"] || undefined,
