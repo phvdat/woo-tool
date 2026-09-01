@@ -37,7 +37,7 @@ export async function enrichProducts({
       .replaceAll("{category}", category)
       .replaceAll("{website}", website);
 
-    const aiContent = await chatgpt(question, apiKey);
+    const aiContent = await gemini(question);
     const description = product.Description.replace(
       "(content)",
       `<p>${aiContent}</p>`,
@@ -73,7 +73,7 @@ Remember:
 - Separate each product with "|"
 `;
 
-  const tagsRaw = await chatgpt(tagPrompt, apiKey);
+  const tagsRaw = await gemini(tagPrompt);
 
   const cleanText =
     tagsRaw
