@@ -6,11 +6,11 @@ Automation system for WooCommerce, Google Trends, AI Blog, and Puppeteer crawlin
 
 ## Requirements
 
-* Node.js 20+
-* Python 3.12+
-* Google Chrome / Chromium
-* Xvfb
-* PM2
+- Node.js 20+
+- Python 3.12+
+- Google Chrome / Chromium
+- Xvfb
+- PM2
 
 ---
 
@@ -156,6 +156,12 @@ ps aux | grep Xvfb
 
 ---
 
+## Create Video
+
+```bash
+apt install ffmpeg
+```
+
 ## Run with PM2
 
 ```bash
@@ -229,6 +235,7 @@ Xvfb :99 -screen 0 1280x1024x24 &
 ```
 
 ---
+
 ## Nginx Config
 
 ```code

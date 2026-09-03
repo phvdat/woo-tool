@@ -16,9 +16,11 @@ import {
   Segmented,
   Select,
   Typography,
+  Upload,
   message,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
+import { UploadOutlined, DeleteOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -69,8 +71,47 @@ const UpdateWebsiteListModal = ({
   const [messageApi, contextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<WebsiteFormValue>();
+  const backgroundMusicUrl = Form.useWatch("backgroundMusicUrl", form);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [musicUploading, setMusicUploading] = useState<boolean>(false);
+
+  const handleMusicUpload = async (file: File) => {
+    if (!_id) {
+      messageApi.open({
+        type: "warning",
+        content: "Please save the website first before uploading music.",
+      });
+      return false;
+    }
+
+    setMusicUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("websiteId", _id);
+      formData.append("file", file);
+
+      const { data } = await axios.post(
+        "/api/woo/website-config/upload-music",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      form.setFieldsValue({ backgroundMusicUrl: data.url });
+      messageApi.open({
+        type: "success",
+        content: "Music uploaded successfully!",
+      });
+      refresh();
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.error || error?.message || "Upload failed";
+      messageApi.open({ type: "error", content: msg });
+    } finally {
+      setMusicUploading(false);
+    }
+    return false;
+  };
 
   const createWebsite = async (values: WebsiteFormValue) => {
     const payload = {
@@ -407,6 +448,38 @@ const UpdateWebsiteListModal = ({
                 <Form.Item name={["autoBlog", "cron"]} label="Cron Schedule">
                   <Input placeholder="0 19,21,23,1,3,5 * * *" />
                 </Form.Item>
+              </Card>
+              <Card title="Background Music" style={{ marginTop: 24 }}>
+                <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+                  Upload an MP3 for video generation. This music will be used automatically for all videos from this website.
+                </Typography.Text>
+                <Form.Item<WebsiteFormValue> name="backgroundMusicUrl" hidden>
+                  <Input />
+                </Form.Item>
+                {backgroundMusicUrl ? (
+                  <Flex align="center" gap={12} style={{ marginBottom: 12 }}>
+                    <audio
+                      controls
+                      src={backgroundMusicUrl}
+                      style={{ flex: 1, height: 36 }}
+                    />
+                  </Flex>
+                ) : null}
+                <Upload
+                  accept="audio/mpeg,audio/mp3,.mp3"
+                  showUploadList={false}
+                  beforeUpload={handleMusicUpload}
+                  disabled={musicUploading}
+                >
+                  <Button
+                    icon={<UploadOutlined />}
+                    loading={musicUploading}
+                  >
+                    {backgroundMusicUrl
+                      ? "Replace Music"
+                      : "Upload Music"}
+                  </Button>
+                </Upload>
               </Card>
             </Col>
           </Row>

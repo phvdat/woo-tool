@@ -22,5 +22,10 @@ export const endpoint = {
   autoBlogs: "/api/blog/run",
   productPipeline: '/api/product-pipeline',
 
-  revenue: "api/revenue"
+  revenue: "api/revenue",
+
+  videoProducts: '/api/video/products',
+  videoGenerate: '/api/video/generate',
+  videoJobs: '/api/video/jobs',
+  videoDownloadAll: '/api/video/download-all',
 };

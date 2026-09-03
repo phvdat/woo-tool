@@ -28,6 +28,10 @@ app.prepare().then(async () => {
 
     socket.on("crawl-progress", (payload) => io.emit("crawl-progress", payload));
     socket.on("crawl-error", (payload) => io.emit("crawl-error", payload));
+
+    socket.on("video-progress", (payload) => io.emit("video-progress", payload));
+    socket.on("video-completed", (payload) => io.emit("video-completed", payload));
+    socket.on("video-error", (payload) => io.emit("video-error", payload));
   });
 
   httpServer

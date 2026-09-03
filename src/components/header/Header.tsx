@@ -65,6 +65,10 @@ const Header = () => {
       label: <Link href={navigation.revenue}>Revenue</Link>,
       key: navigation.revenue,
     },
+    {
+      label: <Link href={navigation.videoGenerator}>Video Generator</Link>,
+      key: navigation.videoGenerator,
+    },
   ];
 
   const dropdownItems: MenuProps["items"] = [

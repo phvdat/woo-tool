@@ -81,6 +81,7 @@ export interface WebsiteConfig {
   wpAppPassword: string;
   autoBlog: AutoBlogConfig;
   product: ProductConfig;
+  backgroundMusicUrl?: string;
 }
 
 export interface WooWebsitePayload extends WebsiteConfig {
