@@ -1,3 +1,4 @@
+import gemini from "@/services/ai/gemini";
 import { askAI } from "../ai/client";
 import { extractJson } from "../ai/extractJson";
 import type { BlogArticle, SelectedTrend } from "../blog/types";
@@ -83,7 +84,7 @@ Return ONLY valid JSON. Do not include markdown fences or explanations.
 }
 `;
 
-  const content = await askAI(prompt);
+  const content = await gemini(prompt);
   return extractJson<BlogArticle>(content);
 }
 

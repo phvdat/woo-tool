@@ -1,3 +1,4 @@
+import gemini from "@/services/ai/gemini";
 import { askAI } from "../ai/client";
 import { extractJson } from "../ai/extractJson";
 import { filterTrends } from "./filterTrends";
@@ -65,6 +66,6 @@ Return ONLY valid JSON:
   {"keyword": "", "reason": ""}
 ]
 `;
-  const content = await askAI(prompt);
+  const content = await gemini(prompt);
   return extractJson<SelectedTrend[]>(content);
 }

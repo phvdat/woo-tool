@@ -67,7 +67,7 @@ export async function runAutoBlog(website: WebsiteConfig) {
         );
         const images = await searchBingImages(
           article.title,
-          4
+          5
         );
         const { images: formatImgs } = await formatImages({
           websiteObject: website,

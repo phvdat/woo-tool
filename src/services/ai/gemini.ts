@@ -10,7 +10,7 @@ const MODELS = [
     "gemini-3.5-flash",
 ];
 
-async function gemini(prompt: string) {
+async function gemini(prompt: string): Promise<string> {
     for (const modelName of MODELS) {
         try {
             const interaction = await ai.interactions.create({
@@ -18,7 +18,7 @@ async function gemini(prompt: string) {
                 input: prompt,
             });
 
-            const content = interaction.output_text?.replaceAll("**", "");
+            const content = interaction.output_text?.replaceAll("**", "") || "";
             return content;
         } catch (error: any) {
             const isRateLimit = error?.status === 429 || error?.message?.includes("429");
