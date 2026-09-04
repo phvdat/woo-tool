@@ -75,105 +75,101 @@ const FormatImage = () => {
         const data = await res.json();
         setLinkDownload(data.link);
       } catch (error: any) {
-        console.log("error-woo", error);
+        // Handle error silently
       }
     }
     setLoading(false);
   };
 
   return (
-    <Container title="Format Image">
+    <Container
+      title="Format Image"
+      subtitle="Add logo and format product images"
+    >
       <Card>
-        <Form
-          name="format-image-form"
-          onFinish={handleSubmit}
-          layout="vertical"
-          form={form}
-        >
-          {websiteLoading && (
-            <Spin
-              size="large"
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                zIndex: 100,
-                transform: "translateX(-50%)",
-              }}
-            />
-          )}
-
-          <Form.Item<FormatImageValues>
-            name="website"
-            label="Website"
-            rules={[
-              {
-                required: true,
-                message: "Please select for website!",
-              },
-            ]}
+        <Spin spinning={websiteLoading}>
+          <Form
+            name="format-image-form"
+            onFinish={handleSubmit}
+            layout="vertical"
+            form={form}
           >
-            <Select
-              placeholder="Select Website"
-              options={websiteOptions}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
+            <Form.Item<FormatImageValues>
+              name="website"
+              label="Website"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select for website!",
+                },
+              ]}
+            >
+              <Select
+                placeholder="Select Website"
+                options={websiteOptions}
+                size="large"
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+              />
+            </Form.Item>
+            <Form.Item<FormatImageValues>
+              label={
+                <span>
+                  Name &nbsp;
+                  <Button
+                    type="primary"
+                    ghost
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={() => handlePasteName()}
+                  >
+                    Paste
+                  </Button>
+                </span>
               }
-            />
-          </Form.Item>
-          <Form.Item<FormatImageValues>
-            label={
-              <>
-                Name &nbsp;
-                <Button
-                  type="default"
-                  icon={<CopyOutlined />}
-                  onClick={() => handlePasteName()}
-                  style={{ backgroundColor: "#007BFF" }}
-                >
-                  Paste
-                </Button>
-              </>
-            }
-            name="name"
-            rules={[{ required: true, message: "Please input product name" }]}
-          >
-            <Input allowClear />
-          </Form.Item>
+              name="name"
+              rules={[{ required: true, message: "Please input product name" }]}
+            >
+              <Input allowClear size="large" placeholder="Enter product name" />
+            </Form.Item>
 
-          <Form.Item<FormatImageValues>
-            label={
-              <>
-                Images &nbsp;
-                <Button
-                  type="default"
-                  icon={<CopyOutlined />}
-                  onClick={() => handlePasteImages()}
-                  style={{ backgroundColor: "#FFC107" }}
-                >
-                  Paste Multiple
-                </Button>
-              </>
-            }
-            name="images"
-            rules={[{ required: true, message: "Please input product images" }]}
-          >
-            <Input.TextArea rows={4} allowClear />
-          </Form.Item>
+            <Form.Item<FormatImageValues>
+              label={
+                <span>
+                  Images &nbsp;
+                  <Button
+                    type="primary"
+                    ghost
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={() => handlePasteImages()}
+                  >
+                    Paste Multiple
+                  </Button>
+                </span>
+              }
+              name="images"
+              rules={[{ required: true, message: "Please input product images" }]}
+            >
+              <Input.TextArea rows={4} allowClear placeholder="Enter image URLs (one per line or comma-separated)" />
+            </Form.Item>
 
-          <Form.Item>
-            <Button htmlType="submit" block type="primary" loading={loading}>
-              Submit
-            </Button>
-          </Form.Item>
-        </Form>
+            <Form.Item>
+              <Button htmlType="submit" block type="primary" loading={loading} size="large">
+                Format Images
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
+
         {linkDownload && (
-          <Button htmlType="button" block>
+          <Button htmlType="button" block size="large" icon={<DownloadOutlined />}>
             <a href={linkDownload} target="_blank" rel="noopener noreferrer">
-              <DownloadOutlined /> Download
+              Download Formatted Images
             </a>
           </Button>
         )}
