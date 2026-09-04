@@ -25,7 +25,7 @@ export async function runAllWebBlogs() {
     .find({
       "autoBlog.enabled": true,
     })
-    .toArray();
+    .toArray() as any;
 
   for (const website of websites) {
     await runAutoBlog(website);

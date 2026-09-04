@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
         const result = await db
           .collection(VIDEO_JOBS_COLLECTION)
-          .insertOne(job);
+          .insertOne(job as any);
 
         const insertedJob: VideoJob = {
           ...job,

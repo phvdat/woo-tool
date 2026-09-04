@@ -59,7 +59,7 @@ export async function syncBlogCrons() {
     const websites: WebsiteConfig[] = await db
         .collection(WEBSITES_COLLECTION)
         .find({})
-        .toArray();
+        .toArray() as any;
     const activeWebsiteKeys = new Set<string>();
     for (const website of websites) {
         const websiteKey = website.shopName;

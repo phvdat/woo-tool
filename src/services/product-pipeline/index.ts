@@ -12,15 +12,15 @@ import { CATEGORIES_COLLECTION, USERS_COLLECTION, WEBSITES_COLLECTION } from '@/
 export async function runProductPipeline(context: ProductPipelineContext) {
     const { db } = await connectToDatabase();
 
-    const user = await db.collection(USERS_COLLECTION).findOne({
+    const user: any = await db.collection(USERS_COLLECTION).findOne({
         email: context.userEmail,
     });
 
-    const website = await db.collection(WEBSITES_COLLECTION).findOne({
+    const website: any = await db.collection(WEBSITES_COLLECTION).findOne({
         _id: new ObjectId(context.websiteId),
     });
 
-    const categories = await db
+    const categories: any[] = await db
         .collection(CATEGORIES_COLLECTION)
         .find({ shopID: website._id.toString() })
         .toArray();

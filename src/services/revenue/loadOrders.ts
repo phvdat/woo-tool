@@ -33,7 +33,7 @@ export async function loadOrders({
   const websites: WooWebsitePayload[] = await db
     .collection(WEBSITES_COLLECTION)
     .find(filter)
-    .toArray();
+    .toArray() as any;
   const orders: any[] = [];
 
   for (const website of websites) {

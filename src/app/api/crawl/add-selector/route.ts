@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     let { db } = await connectToDatabase();
     const response = await db
       .collection(SELECTOR_COLLECTION)
-      .insertOne(payload);
+      .insertOne(payload as any);
     return Response.json(response, { status: 200 });
   } catch (error) {
     console.log(error);
