@@ -38,7 +38,7 @@ export async function GET(
       );
     }
 
-    const fileName = `product-${job.productName.replace(/[^a-zA-Z0-9]/g, '-')}.mp4`;
+    const fileName = `Product ${job.productName}.mp4`;
 
     const headers = new Headers();
     headers.set('Content-Type', 'video/mp4');

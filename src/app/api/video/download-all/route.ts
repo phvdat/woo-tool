@@ -43,25 +43,23 @@ export async function GET(request: Request) {
 
     const archive = archiver('zip', { zlib: { level: 1 } });
 
+    archive.on('error', (err) => {
+      console.error('[VIDEO DOWNLOAD ALL] archive error:', err);
+    });
+
     for (const job of jobs) {
       if (job.outputPath) {
-        const fileName = `product-${job.productName.replace(/[^a-zA-Z0-9]/g, '-')}.mp4`;
+        const fileName = `Product ${job.productName}.mp4`;
         archive.file(job.outputPath, { name: fileName });
       }
     }
 
+    archive.finalize();
+
     const headers = new Headers();
     headers.set('Content-Type', 'application/zip');
     headers.set('Content-Disposition', 'attachment; filename="videos.zip"');
-
-    const readable = new Readable({
-      read() {},
-    });
-
-    archive.pipe(Readable.toWeb(readable) as any);
-    archive.finalize();
-
-    return new Response(readable as any, { headers });
+    return new Response(Readable.toWeb(archive) as any, { headers });
   } catch (error: any) {
     console.error('[VIDEO DOWNLOAD ALL]', error?.message);
     return Response.json(

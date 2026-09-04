@@ -47,10 +47,11 @@ export function renderVideo({
       command.input(framePath).inputOptions(['-loop', '1']);
     }
 
-    const totalDuration = frameCount * displayDuration;
     const filterComplex: string[] = [];
     const fps = VIDEO_CONFIG.OUTPUT_FPS;
     const framesPerImage = Math.round(displayDuration * fps);
+    const actualClipDuration = framesPerImage / fps;
+    const totalDuration = frameCount * actualClipDuration - (frameCount - 1) * transitionDuration;
     const W = VIDEO_CONFIG.OUTPUT_WIDTH;
     const H = VIDEO_CONFIG.OUTPUT_HEIGHT;
 
@@ -88,6 +89,8 @@ export function renderVideo({
 
       if (kenBurns) {
         const zoomScale = 1.06;
+        const upscale = 2;
+        const zoomIncrement = (zoomScale - 1) / framesPerImage;
 
         const panX =
           i % 3 === 0
@@ -104,9 +107,13 @@ export function renderVideo({
               : '0';
 
         filterComplex.push(
-          `[c${i}]` +
+          `[c${i}]scale=${W * upscale}:${H * upscale}:flags=lanczos[c${i}hi]`
+        );
+
+        filterComplex.push(
+          `[c${i}hi]` +
           `zoompan=` +
-          `z='min(zoom+0.0008,${zoomScale})':` +
+          `z='min(zoom+${zoomIncrement.toFixed(6)},${zoomScale})':` +
           `x=${panX}:` +
           `y=${panY}:` +
           `d=${framesPerImage}:` +
@@ -131,7 +138,7 @@ export function renderVideo({
 
       for (let i = 1; i < frameCount; i++) {
         const nextLabel = `v${i}`;
-        const offset = i * displayDuration - transitionDuration * i;
+        const offset = i * actualClipDuration - transitionDuration * i;
         const outLabel = i === frameCount - 1 ? 'outv' : `xf${i}`;
 
         filterComplex.push(
@@ -142,11 +149,6 @@ export function renderVideo({
     }
 
     const fullFilter = filterComplex.join(';');
-
-    console.log('========== FILTER ==========');
-    console.log(fullFilter);
-    console.log('============================');
-
     command
       .complexFilter(fullFilter)
       .outputOptions([

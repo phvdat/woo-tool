@@ -58,7 +58,7 @@ export default function VideoGeneratorPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [generating, setGenerating] = useState(false);
 
-  const [displayDuration, setDisplayDuration] = useState(3);
+  const [displayDuration, setDisplayDuration] = useState(5);
   const [transitionDuration, setTransitionDuration] = useState(0.5);
   const [kenBurns, setKenBurns] = useState(true);
 
