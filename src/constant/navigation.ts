@@ -1,17 +1,16 @@
 const navigation = {
-  setting: '/setting',
-  woo: '/woo',
-  openaiContent: '/openai-content',
+  settings: '/settings',
+  productPipeline: '/product-pipeline',
   managementUser: '/management-users',
-  configCategories: '/woo/config-categories',
-  configWebsite: '/woo/config-website',
+  configCategories: '/settings/config-categories',
+  configWebsite: '/settings/config-website',
   crawlTool: '/crawl-tool',
-  updatePublishedTime: '/update-published-time',
   createInitialFile: '/create-initial-file',
-  trackingChecker: '/tracking-checker',
   convertFile: '/convert-file',
   excelSplitter: '/excel-splitter',
   originalProduct: '/original-product',
   formatImage: '/format-image',
+  revenue: '/revenue',
+  videoGenerator: '/video-generator'
 };
 export { navigation };

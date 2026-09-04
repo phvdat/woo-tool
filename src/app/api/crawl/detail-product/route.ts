@@ -5,7 +5,7 @@ import _toString from 'lodash/toString';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
-import { telegramBot } from '@/services/telegram';
+import { telegramBot } from '@/services/telegram/telegram';
 
 const bot = telegramBot;
 
@@ -35,8 +35,6 @@ export async function POST(request: Request) {
       const imgLinks = await page.$$eval(selectorImageLinks, (imgs) =>
         imgs.map((img: Element) => (img as HTMLImageElement).src)
       );
-      console.log('name', name);
-      console.log('imgLinks', imgLinks);
 
       if (selectImagesIndex) {
         const imagesIndex = selectImagesIndex.split(',');

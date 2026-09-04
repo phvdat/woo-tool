@@ -5,7 +5,7 @@ import {
   MenuOutlined,
   SettingFilled,
   ShoppingOutlined,
-  TeamOutlined
+  TeamOutlined,
 } from "@ant-design/icons";
 import {
   Avatar,
@@ -38,12 +38,6 @@ const Header = () => {
 
   const headerItems: MenuProps["items"] = [
     {
-      label: (
-        <Link href={navigation.createInitialFile}>Create Initial File</Link>
-      ),
-      key: navigation.createInitialFile,
-    },
-    {
       label: <Link href={navigation.crawlTool}>Crawl</Link>,
       key: navigation.crawlTool,
     },
@@ -52,18 +46,8 @@ const Header = () => {
       key: navigation.convertFile,
     },
     {
-      label: <Link href={navigation.woo}>Woo tool</Link>,
-      key: navigation.woo,
-    },
-    {
-      label: <Link href={navigation.openaiContent}>Openai Content</Link>,
-      key: navigation.openaiContent,
-    },
-    {
-      label: (
-        <Link href={navigation.updatePublishedTime}>Update Published Time</Link>
-      ),
-      key: navigation.updatePublishedTime,
+      label: <Link href={navigation.productPipeline}>Product Pipeline</Link>,
+      key: navigation.productPipeline,
     },
     {
       label: <Link href={navigation.excelSplitter}>Excel Splitter</Link>,
@@ -77,26 +61,38 @@ const Header = () => {
       label: <Link href={navigation.formatImage}>Format Image</Link>,
       key: navigation.formatImage,
     },
+    {
+      label: <Link href={navigation.revenue}>Revenue</Link>,
+      key: navigation.revenue,
+    },
+    {
+      label: <Link href={navigation.videoGenerator}>Video Generator</Link>,
+      key: navigation.videoGenerator,
+    },
   ];
 
   const dropdownItems: MenuProps["items"] = [
     {
-      key: navigation.setting,
+      key: navigation.settings,
       label: (
-        <Link href={navigation.setting}>
+        <Link href={navigation.settings}>
           <SettingFilled /> Setting
         </Link>
       ),
+      children: [
+        {
+          key: navigation.configCategories,
+          label: (
+            <Link href={navigation.configCategories}>Config Categories</Link>
+          ),
+        },
+        {
+          key: navigation.configWebsite,
+          label: <Link href={navigation.configWebsite}>Config Website</Link>,
+        },
+      ],
     },
 
-    {
-      label: <Link href={navigation.configCategories}><ShoppingOutlined /> Config Categories</Link>,
-      key: navigation.configCategories,
-    },
-    {
-      label: <Link href={navigation.configWebsite}><GlobalOutlined /> Config Website</Link>,
-      key: navigation.configWebsite,
-    },
     ...(isAdmin
       ? [
           {

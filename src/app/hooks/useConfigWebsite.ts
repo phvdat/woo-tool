@@ -1,17 +1,17 @@
 import { endpoint } from '@/constant/endpoint';
 import axios from 'axios';
 import useSWR from 'swr';
-import { WooWebsitePayload } from '../api/woo/website-config/route';
+import { WooWebsitePayload } from "@/types/woo";
 
-const fetcher = async (url: string, userEmail?: string) => {
-  const { data } = await axios.get<WooWebsitePayload[]>(url, { params:{ userEmail }});
+const fetcher = async (url: string) => {
+  const { data } = await axios.get<WooWebsitePayload[]>(url);
   return data;
 };
 
-export function useConfigWebsite(userEmail?:string) {
+export function useConfigWebsite() {
   const { data, error, isLoading, mutate } = useSWR(
-    [endpoint.websiteConfigList, userEmail],
-    ([endpoint, userEmail])=> fetcher(endpoint, userEmail)
+    [endpoint.websiteConfigList],
+    ([endpoint])=> fetcher(endpoint)
   );
 
   return {

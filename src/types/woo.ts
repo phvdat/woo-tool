@@ -4,7 +4,7 @@ export interface WooCommerce {
   SKU: string;
   Name: string;
   Published: string;
-  'Published Date': string;
+  'Published Date'?: string;
   'Is featured?': string;
   'Visibility in catalog': string;
   'Short description': string;
@@ -38,5 +38,53 @@ export interface WooCommerce {
   'External URL': string;
   'Button text': string;
   Position: string;
-  [key: string]: string;
+  Tags?: string;
+  'Meta: rank_math_focus_keyword'?: string;
+}
+
+
+
+export interface AutoBlogConfig {
+  enabled: boolean;
+  cron: string;
+  status: "draft" | "publish";
+  postsPerRun: number
+}
+
+export interface ProductConfig {
+  promptDescriptionProduct: string;
+  promptTagsProduct: string;
+  publicTime: string | Date;
+  gapFrom: number;
+  gapTo: number;
+}
+
+export enum CanvasPosition {
+  northwest = "northwest",
+  northeast = "northeast",
+  southeast = "southeast",
+  southwest = "southwest",
+}
+
+export interface WebsiteConfig {
+  url: string;
+  logoUrl: string;
+  logoWidth: number;
+  logoHeight: number;
+  logoPosition: CanvasPosition;
+  imageWidth: number;
+  imageHeight: number;
+  shopName: string;
+  quality: number;
+  members?: string[];
+  wpUsername: string;
+  wpAppPassword: string;
+  autoBlog: AutoBlogConfig;
+  product: ProductConfig;
+  backgroundMusicUrl?: string;
+  youtubeDescriptionTemplate?: string;
+}
+
+export interface WooWebsitePayload extends WebsiteConfig {
+  _id?: string;
 }

@@ -4,7 +4,7 @@ import { executablePath } from 'puppeteer';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { createReadStream, unlinkSync, writeFileSync } from 'fs';
-import { telegramBot } from '@/services/telegram';
+import { telegramBot } from '@/services/telegram/telegram';
 import { SelectorFormValues } from '@/components/crawl-tool/SelectorSetup';
 import { getSocket } from '@/config/socket';
 import { upscaleImage } from '@/helper/common';
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       try {
         const domain = getDomain(url);
         const selector: SelectorFormValues | undefined = selectors.find(
-          (s: SelectorFormValues) => s.domain === domain
+          (s: SelectorFormValues) => s.domain.includes(domain)
         );
 
         if (!selector) {
@@ -81,25 +81,20 @@ export async function POST(request: Request) {
 
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-        await page.waitForSelector(selector.nameSelector, { timeout: 20000 });
+        await page.waitForSelector(selector.nameSelector, { timeout: 5000 });
         const name = await page.$eval(
           selector.nameSelector,
           (el) => el.innerHTML
         );
 
-        await page.waitForSelector(selector.imagesSelector, { timeout: 20000 });
+        await page.waitForSelector(selector.imagesSelector, { timeout: 5000 });
         const imgLinks = await page.$$eval(selector.imagesSelector, (imgs) =>
           imgs
             .map((img) => {
               const el = img as HTMLImageElement;
-
-              // property trước (auto resolve URL)
               if ((el as HTMLImageElement).src && !el.src.startsWith("data:image"))
                 return el.src;
-
               if ((el as unknown as HTMLAnchorElement).href) return (el as unknown as HTMLAnchorElement).href;
-
-              // fallback attribute
               const attrs = [
                 "data-large_image",
                 "data-src",
@@ -119,10 +114,6 @@ export async function POST(request: Request) {
             })
             .filter(Boolean)
         );
-        console.log({
-          Name: formatName(name),
-          Images: formatImages(imgLinks).join(','),
-        });
         result.push({
           Name: formatName(name),
           ImagesOrigin: formatImages(imgLinks).join(','),
@@ -141,10 +132,16 @@ export async function POST(request: Request) {
           progress,
           socketId,
         });
-      } catch (err) {
-        console.error(`❌ Error while crawling ${url}:`, err);
+      } catch (error) {
+        console.error(`❌ Error while crawling ${url}:`, error);
         result.push({ error: url });
-        socket.emit('crawl-error', { err, socketId });
+        socket.emit('crawl-error', {
+          error: {
+            name: error instanceof Error ? error.name : 'UnknownError',
+            message: error instanceof Error ? error.message : String(error),
+            url: url,
+          }, socketId
+        });
         continue;
       }
     }

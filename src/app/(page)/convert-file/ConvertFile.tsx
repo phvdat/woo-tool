@@ -11,10 +11,19 @@ import ExcludeSizeChartLink from "@/components/convert-file/ExcludeSizeChartLink
 import ExistChecker from "@/components/convert-file/ExistChecker";
 import ProductItem from "@/components/convert-file/ProductItem";
 import { endpoint } from "@/constant/endpoint";
-import { fixEncoding, normFile, upscaleImage } from "@/helper/common";
+import {
+  fixEncoding,
+  normFile,
+  toCapitalizedCase,
+  upscaleImage,
+} from "@/helper/common";
 import detectCategory from "@/helper/detect-category";
 import { handleDownloadFile } from "@/helper/woo";
-import { DownloadOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  DownloadOutlined,
+  FileSearchOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -45,7 +54,8 @@ export interface Product {
   Name: string;
   Images: string;
   Categories: string;
-  Link: string;
+  Link?: string;
+  [key: string]: any;
 }
 function ConvertFile() {
   const { data: session } = useSession();
@@ -59,9 +69,7 @@ function ConvertFile() {
 
   const { cateKeyword, isLoading: cateKeywordLoading } =
     useGlobalCateKeywordConfig();
-  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite(
-    session?.user?.email || "",
-  );
+  const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const watchShopId = Form.useWatch("website", form);
   const { categories, isLoading: categoriesLoading } =
     useCategories(watchShopId);
@@ -106,22 +114,22 @@ function ConvertFile() {
       type: "array",
     });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const productsData: Product[] = XLSX.utils.sheet_to_json(worksheet);
-
+    const productsData =
+      XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
     const formattedProduct: Product[] = [];
     for (let i = 0; i < productsData.length; i++) {
-      if (!productsData[i]?.Name || !productsData[i]?.Images) {
+      const row = productsData[i];
+      if (!row?.Name || !row?.Images) {
         continue;
       }
-      formattedProduct.push({
-        key: file.uid + i,
-        Name: fixEncoding(productsData[i].Name),
-        Images: upscaleImage(productsData[i].Images.replace(/,+$/, "")),
-        Categories:
-          productsData[i]?.Categories ||
-          detectCategory(productsData[i].Name, cateKeyword),
-        Link: productsData[i].Link,
-      });
+      const product: Product = {
+        ...row,
+        key: `${file.uid}${i}`,
+        Name: toCapitalizedCase(fixEncoding(String(row.Name))),
+        Images: upscaleImage(String(row.Images).replace(/,+$/, "")),
+        Categories: row.Categories || detectCategory(row.Name, cateKeyword),
+      };
+      formattedProduct.push(product);
     }
     setNewProducts((prev) => [...prev, ...formattedProduct]);
   };
@@ -180,6 +188,7 @@ function ConvertFile() {
             );
             newList.push({
               ...product,
+              Name: i === 0 ? product.Name : `${product.Name} Ver${i + 1}`,
               Images: chunk.join(","),
               key: `${product.key}-${i}`,
             });
@@ -399,10 +408,10 @@ function ConvertFile() {
       </Container>
       {products.length > 0 && (
         <>
-          <Flex justify="space-between" style={{ marginBottom: 16 }}>
+          <Flex gap={12} justify="right" style={{ marginBottom: 16 }}>
             <ExistChecker products={products} handleDelete={handleDelete} />
-            <Button type="primary" onClick={handleCheckDuplicate}>
-              Check duplicate
+            <Button onClick={handleCheckDuplicate}>
+              <FileSearchOutlined />
             </Button>
             <ExcludeSizeChartLink
               products={products}
@@ -413,7 +422,8 @@ function ConvertFile() {
               onClick={() => setProducts([])}
               style={{ marginLeft: 16 }}
             >
-              Clear All {products.length} items
+              <DeleteOutlined />
+              {products.length} items
             </Button>
           </Flex>
           <List

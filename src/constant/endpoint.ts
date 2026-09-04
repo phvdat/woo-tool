@@ -18,4 +18,19 @@ export const endpoint = {
 
   globalConfigCateKeyword: '/api/global-config/cate-keyword',
   globalConfigSizeChartLinks: '/api/global-config/size-chart-links',
+
+  autoBlogs: "/api/blog/run",
+  productPipeline: '/api/product-pipeline',
+
+  revenue: "api/revenue",
+
+  videoProducts: '/api/video/products',
+  videoGenerate: '/api/video/generate',
+  videoJobs: '/api/video/jobs',
+  videoDownloadAll: '/api/video/download-all',
+
+  youtubeConnect: '/api/youtube/connect',
+  youtubeStatus: '/api/youtube/status',
+  youtubeDisconnect: '/api/youtube/disconnect',
+  youtubeOauthConfig: '/api/youtube/oauth-config',
 };

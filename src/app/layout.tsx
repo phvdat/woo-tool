@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <link rel='icon' href='assets/computer.png' />
+      <link rel='icon' href='assets/favicon.png' />
       <body>
         <AntdRegistry>
           <ConfigProvider theme={theme}>{children}</ConfigProvider>

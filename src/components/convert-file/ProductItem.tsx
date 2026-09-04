@@ -123,7 +123,7 @@ const ProductItem = function ProductItem({
               }}
             ></Select>
 
-            <Link href={currentProduct.Link || ""}>
+            <Link href={currentProduct.Link || ""} target="_blank">
               <Button>
                 <LinkOutlined />
               </Button>

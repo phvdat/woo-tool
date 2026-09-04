@@ -1,9 +1,8 @@
-import { Product } from '@/app/(page)/convert-file/ConvertFile';
 import { SelectorFormValues } from '@/components/crawl-tool/SelectorSetup';
+import { SELECTOR_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-const SELECTOR_COLLECTION = 'selector-webs';
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
     let { db } = await connectToDatabase();
     const response = await db
       .collection(SELECTOR_COLLECTION)
-      .insertOne(payload);
+      .insertOne(payload as any);
     return Response.json(response, { status: 200 });
   } catch (error) {
     console.log(error);

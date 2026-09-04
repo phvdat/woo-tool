@@ -1,27 +1,29 @@
-import { WebsiteFormValue } from '@/components/woo/UpdateWebsiteListModal';
+import { WEBSITES_COLLECTION } from '@/constant/collections';
+import { authOptions } from '@/lib/auth';
+import { syncBlogCrons } from '@/lib/blog/startBlogCron';
 import { connectToDatabase } from '@/lib/mongodb';
+import { WooWebsitePayload } from '@/types/woo';
 import { ObjectId } from 'mongodb';
+import { getServerSession } from 'next-auth';
 
-const WEBSITES_COLLECTION = 'watermark-websites';
-
-export interface WooWebsitePayload extends WebsiteFormValue {
-  _id?: string;
-}
 
 export async function GET(request: Request) {
-  const searchParams = new URL(request.url).searchParams;
-  const userEmail = searchParams.get('userEmail');
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    return Response.json({}, { status: 401 });
+  }
+  const userEmail = session.user.email;
   let { db } = await connectToDatabase();
   let query: any = {};
-  // chỉ filter khi có email
-  if (userEmail) {
-    query = {
-      $or: [
-        { owner: userEmail.toLowerCase() },
-        { members: userEmail.toLowerCase() }
-      ]
-    };
+  if (!userEmail) {
+    return Response.json([], { status: 200 });
   }
+  query = {
+    $or: [
+      { owner: userEmail.toLowerCase() },
+      { members: userEmail.toLowerCase() }
+    ]
+  };
   const response = await db
     .collection(WEBSITES_COLLECTION)
     .find(query)
@@ -50,6 +52,7 @@ export async function PUT(request: Request) {
   const response = await db
     .collection(WEBSITES_COLLECTION)
     .updateOne({ _id: new ObjectId(_id) }, { $set: rest });
+  await syncBlogCrons();
   return Response.json(response, { status: 200 });
 }
 

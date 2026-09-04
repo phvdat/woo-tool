@@ -1,136 +1,292 @@
-# 🦾 Next.js + Puppeteer on Ubuntu Server
+# Next.js Automation System
 
-This project is a **Next.js app** bootstrapped with `create-next-app`.
-It includes **Puppeteer** for web crawling. On headless Ubuntu servers, Puppeteer needs a virtual display (**Xvfb**) when using `headless: false`.
+Automation system for WooCommerce, Google Trends, AI Blog, and Puppeteer crawling.
 
 ---
 
-# 🚀 Development (Local)
+## Requirements
 
-Run the development server locally:
+- Node.js 20+
+- Python 3.12+
+- Google Chrome / Chromium
+- Xvfb
+- PM2
+
+---
+
+## Install
+
+### Ubuntu packages
+
+```bash
+sudo apt update
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+nvm install 20
+
+nvm alias default 20
+nvm use 20
+
+npm install -g pm2
+pm2 startup
+pm2 save
+
+sudo apt install -y \
+python3 \
+python3-venv \
+python3-pip \
+xvfb \
+chromium-browser \
+libnss3 \
+libatk-bridge2.0-0 \
+libatk1.0-0 \
+libcups2 \
+libdrm2 \
+libxkbcommon0 \
+libxcomposite1 \
+libxdamage1 \
+libxrandr2 \
+libgbm1 \
+libxss1 \
+libasound2t64 \
+libgtk-3-0 \
+libxshmfence1 \
+fonts-liberation \
+xdg-utils
+
+sudo mkdir -p /var/www/html/uploads
+
+sudo chown -R ubuntu:ubuntu /var/www/html/uploads
+
+sudo chmod -R 755 /var/www/html/uploads
+```
+
+> If `chromium-browser` is unavailable:
+
+```bash
+sudo apt install -y chromium
+```
+
+---
+
+### Install Node packages
+
+```bash
+npm install
+```
+
+---
+
+### Setup Python
+
+Create virtual environment:
+
+```bash
+cd python
+```
+
+```bash
+python3 -m venv .venv
+```
+
+Activate:
+
+```bash
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Deactivate:
+
+```bash
+deactivate
+```
+
+---
+
+## Environment
+
+Create
+
+```text
+.env
+```
+
+Fill your environment variables.
+
+---
+
+## Development
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the result.
-
 ---
 
-# 🧩 Production Build & Run on Ubuntu Server
-
-If you’re running on an Ubuntu server (no GUI), Puppeteer requires a virtual display.
-
-## 1️⃣ Install dependencies (once)
-
-```bash
-sudo apt update
-sudo apt install -y xvfb
-npm install
-```
-
-## 2️⃣ Build the project
+## Build
 
 ```bash
 npm run build
 ```
 
-## 3️⃣ Start the virtual display (Xvfb)
+---
+
+## Start Xvfb
 
 ```bash
 Xvfb :99 -screen 0 1280x1024x24 &
 export DISPLAY=:99
 ```
 
-Verify Xvfb:
+Verify:
 
 ```bash
 ps aux | grep Xvfb
 ```
 
-## 4️⃣ Run with PM2
+---
+
+## Create Video
 
 ```bash
-DISPLAY=:99 pm2 start npm --name "system" -- run start
+apt install ffmpeg
 ```
 
-## 5️⃣ Check logs
+## Run with PM2
+
+```bash
+DISPLAY=:99 pm2 start npm --name system -- run start
+```
+
+View logs:
 
 ```bash
 pm2 logs system
 ```
 
-## 6️⃣ Auto-start on reboot (optional)
+Save PM2:
 
 ```bash
-pm2 startup
 pm2 save
 ```
 
-If server reboots, you must start Xvfb again unless automated.
-
-Example startup script:
+Auto start after reboot:
 
 ```bash
-Xvfb :99 -screen 0 1280x1024x24 &
-export DISPLAY=:99
-pm2 resurrect
+pm2 startup
 ```
 
 ---
 
-# 🗑️ Automatic Cleanup of Uploaded Images (Cron Job)
+# Ubuntu Cron
 
-If your app stores images in `public/uploads/`, you may want to **automatically delete files older than 7 days**.
-
-## ⏰ Server Timezone
-
-Your server uses:
-
-```
-UTC (Etc/UTC)
-```
-
-Việt Nam (UTC+7)  →  Server UTC difference = **+7 hours**.
-
-So to run cleanup at **03:00 AM Vietnam time**, set cron to run at **20:00 UTC (8 PM) the previous day)**.
-
----
-
-# 🧹 7-Day Auto Cleanup Script (Cron)
-
-### 1️⃣ Open crontab
+Open crontab
 
 ```bash
 crontab -e
 ```
 
-### 2️⃣ Add rule to delete files older than 7 days
+### Run Auto Blog every day at 09:00 UTC
 
 ```bash
-0 20 * * * find /var/www/your-app/public/uploads -type f -mtime +7 -delete
+0 9 * * * curl -X POST http://localhost:3000/api/blog/run
 ```
-
-### 3️⃣ (Optional) Delete empty folders
-
-```bash
-5 20 * * * find /var/www/your-app/public/uploads -type d -empty -delete
-```
-
-### Schedule Explanation
-
-* Cron runs on **UTC**, not Vietnam time.
-* 20:00 UTC = 03:00 AM Vietnam.
-* `-mtime +7` = delete files older than 7 days.
 
 ---
 
-# 🔗 Additional Resources
+### Cleanup uploaded images older than 7 days
 
-* Next.js Documentation
-* Puppeteer Troubleshooting
-* PM2 Docs
+```bash
+0 3 * * * find /var/www/your-project/public/uploads -type f -mtime +7 -delete
+```
+
+Delete empty folders:
+
+```bash
+5 3 * * * find /var/www/your-project/public/uploads -type d -empty -delete
+```
 
 ---
 
-Feel free to expand the script section if you want automatic logging, email reports, or rotation!
+## Restart Services
+
+Restart Next.js
+
+```bash
+pm2 restart system
+```
+
+Restart Xvfb
+
+```bash
+pkill Xvfb
+
+Xvfb :99 -screen 0 1280x1024x24 &
+```
+
+---
+
+## Nginx Config
+
+```code
+server {
+    listen 80;
+    server_name woo.deveric.io.vn;
+
+    client_max_body_size 100M;
+
+    location /uploads/ {
+        alias /var/www/html/uploads/;
+        autoindex off;
+
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+
+        access_log off;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+## Project Structure
+
+```text
+project/
+├── src/
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   └── ...
+├── python/
+│   ├── .venv/
+│   ├── requirements.txt
+│   ├── google_trends.py
+├── prompts/
+├── public/
+├── package.json
+├── tsconfig.json
+└── README.md
+```

@@ -1,5 +1,5 @@
 import { UsersPayload } from '@/app/hooks/useUsers';
-import { USERS_COLLECTION } from '@/constant/commons';
+import { USERS_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
