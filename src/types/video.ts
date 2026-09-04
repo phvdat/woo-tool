@@ -19,6 +19,7 @@ export interface VideoJob {
   progress: number;
   outputPath: string | null;
   error: string | null;
+  productUrl: string | null;
   config: VideoJobConfig;
   createdAt: Date;
   completedAt: Date | null;

@@ -9,6 +9,7 @@ import {
   CloudDownloadOutlined,
   DeleteOutlined,
   DownloadOutlined,
+  LinkOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
   VideoCameraOutlined,
@@ -20,6 +21,7 @@ import {
   Col,
   Image,
   message,
+  Modal,
   Progress,
   Row,
   Select,
@@ -28,6 +30,7 @@ import {
   Switch,
   Table,
   Tag,
+  Tooltip,
   Typography,
   Upload,
 } from "antd";
@@ -57,6 +60,7 @@ export default function VideoGeneratorPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [generating, setGenerating] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   const [displayDuration, setDisplayDuration] = useState(5);
   const [transitionDuration, setTransitionDuration] = useState(0.5);
@@ -178,6 +182,38 @@ export default function VideoGeneratorPage() {
     window.open(`${endpoint.videoDownloadAll}?ids=${completedIds}`, "_blank");
   };
 
+  const handleDeleteAll = () => {
+    Modal.confirm({
+      title: "Delete All",
+      content: `Delete all ${jobs.length} video jobs? This cannot be undone.`,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setDeletingAll(true);
+        try {
+          await axios.delete(endpoint.videoJobs, {
+            data: { ids: jobs.map((j) => j._id) },
+          });
+          message.success("All jobs deleted");
+          refreshJobs();
+        } catch (error: any) {
+          message.error("Failed to delete jobs");
+        } finally {
+          setDeletingAll(false);
+        }
+      },
+    });
+  };
+
+  const handleCopyProductLink = async (productUrl: string) => {
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      message.success("Product link copied");
+    } catch {
+      message.error("Failed to copy link");
+    }
+  };
+
   const selectedWebsite = websiteConfigList?.find(
     (w) => w._id === selectedWebsiteId,
   );
@@ -282,7 +318,7 @@ export default function VideoGeneratorPage() {
     {
       title: "Actions",
       key: "actions",
-      width: 120,
+      width: 180,
       render: (_: any, record: VideoJob) => (
         <Space>
           {record.status === "completed" && (
@@ -294,6 +330,16 @@ export default function VideoGeneratorPage() {
             >
               Download
             </Button>
+          )}
+          {record.productUrl && (
+            <Tooltip title="Copy product link">
+              <Button
+                type="link"
+                size="small"
+                icon={<LinkOutlined />}
+                onClick={() => handleCopyProductLink(record.productUrl!)}
+              />
+            </Tooltip>
           )}
           <Button
             type="link"
@@ -441,13 +487,25 @@ export default function VideoGeneratorPage() {
               </Space>
             }
             extra={
-              hasCompletedJobs && (
-                <Button
-                  icon={<CloudDownloadOutlined />}
-                  onClick={handleDownloadAll}
-                >
-                  Download All (ZIP)
-                </Button>
+              jobs.length > 0 && (
+                <Space>
+                  {hasCompletedJobs && (
+                    <Button
+                      icon={<CloudDownloadOutlined />}
+                      onClick={handleDownloadAll}
+                    >
+                      Download All (ZIP)
+                    </Button>
+                  )}
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={deletingAll}
+                    onClick={handleDeleteAll}
+                  >
+                    Delete All
+                  </Button>
+                </Space>
               )
             }
             size="small"

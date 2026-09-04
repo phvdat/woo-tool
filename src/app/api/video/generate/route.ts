@@ -79,6 +79,7 @@ export async function POST(request: Request) {
           progress: 0,
           outputPath: null,
           error: null,
+          productUrl: product.permalink || null,
           config: jobConfig,
           createdAt: new Date(),
           completedAt: null,
