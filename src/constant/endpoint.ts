@@ -28,4 +28,9 @@ export const endpoint = {
   videoGenerate: '/api/video/generate',
   videoJobs: '/api/video/jobs',
   videoDownloadAll: '/api/video/download-all',
+
+  youtubeConnect: '/api/youtube/connect',
+  youtubeStatus: '/api/youtube/status',
+  youtubeDisconnect: '/api/youtube/disconnect',
+  youtubeOauthConfig: '/api/youtube/oauth-config',
 };

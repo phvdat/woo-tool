@@ -7,3 +7,4 @@ export const SIZE_CHART_LINKS_CONFIG_COLLECTION = 'size_chart_links'
 export const CATEGORIES_COLLECTION = 'categories';
 export const PRODUCT_DATA_COLLECTION = 'product-data';
 export const VIDEO_JOBS_COLLECTION = 'videoJobs';
+export const YOUTUBE_CHANNELS_COLLECTION = 'youtubeChannels';

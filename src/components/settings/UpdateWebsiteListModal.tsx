@@ -18,12 +18,15 @@ import {
   Typography,
   Upload,
   message,
+  Tag,
+  Popconfirm,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import { UploadOutlined, DeleteOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { UploadOutlined, DeleteOutlined, YoutubeOutlined, DisconnectOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useYouTubeChannel } from "@/app/hooks/useYouTubeChannel";
 
 interface WebsiteFormValue extends WebsiteConfig {}
 
@@ -75,6 +78,120 @@ const UpdateWebsiteListModal = ({
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [musicUploading, setMusicUploading] = useState<boolean>(false);
+  const [disconnecting, setDisconnecting] = useState<boolean>(false);
+
+  const [oauthClientId, setOauthClientId] = useState("");
+  const [oauthClientSecret, setOauthClientSecret] = useState("");
+  const [oauthSaving, setOauthSaving] = useState(false);
+  const [oauthConfigured, setOauthConfigured] = useState(false);
+  const [loadingOauth, setLoadingOauth] = useState(false);
+
+  const { channelStatus, refresh: refreshChannel } = useYouTubeChannel(_id || null);
+
+  useEffect(() => {
+    if (!isModalOpen || !_id) return;
+    setLoadingOauth(true);
+    axios
+      .get(`${endpoint.youtubeOauthConfig}?siteId=${_id}`)
+      .then(({ data }) => {
+        setOauthConfigured(data.configured);
+        if (data.clientId) setOauthClientId(data.clientId);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingOauth(false));
+  }, [isModalOpen, _id]);
+
+  const handleSaveOauth = async () => {
+    if (!_id) return;
+    if (!oauthClientId.trim()) {
+      messageApi.open({ type: "warning", content: "Client ID is required" });
+      return;
+    }
+    if (!oauthClientSecret.trim()) {
+      messageApi.open({ type: "warning", content: "Client Secret is required" });
+      return;
+    }
+    setOauthSaving(true);
+    try {
+      await axios.put(endpoint.youtubeOauthConfig, {
+        siteId: _id,
+        clientId: oauthClientId.trim(),
+        clientSecret: oauthClientSecret.trim(),
+      });
+      setOauthConfigured(true);
+      setOauthClientSecret("");
+      messageApi.open({ type: "success", content: "OAuth credentials saved" });
+    } catch (error: any) {
+      messageApi.open({
+        type: "error",
+        content: error?.response?.data?.error || "Failed to save credentials",
+      });
+    } finally {
+      setOauthSaving(false);
+    }
+  };
+
+  const handleYouTubeConnect = useCallback(() => {
+    if (!_id) {
+      messageApi.open({
+        type: "warning",
+        content: "Please save the website first before connecting YouTube.",
+      });
+      return;
+    }
+    const popup = window.open(
+      `${endpoint.youtubeConnect}?siteId=${_id}`,
+      "youtube-connect",
+      "width=600,height=700"
+    );
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "youtube-connected") {
+        messageApi.open({
+          type: "success",
+          content: `Connected to YouTube channel: ${event.data.channelTitle}`,
+        });
+        refreshChannel();
+        refresh();
+      } else if (event.data?.type === "youtube-error") {
+        messageApi.open({
+          type: "error",
+          content: event.data.error || "Failed to connect YouTube channel",
+        });
+      }
+      window.removeEventListener("message", handler);
+    };
+    window.addEventListener("message", handler);
+
+    const checkClosed = setInterval(() => {
+      if (popup?.closed) {
+        clearInterval(checkClosed);
+        window.removeEventListener("message", handler);
+        refreshChannel();
+      }
+    }, 500);
+  }, [_id, messageApi, refreshChannel, refresh]);
+
+  const handleYouTubeDisconnect = useCallback(async () => {
+    if (!_id) return;
+    setDisconnecting(true);
+    try {
+      await axios.delete(`${endpoint.youtubeDisconnect}?siteId=${_id}`);
+      messageApi.open({
+        type: "success",
+        content: "YouTube channel disconnected",
+      });
+      refreshChannel();
+      refresh();
+    } catch (error: any) {
+      messageApi.open({
+        type: "error",
+        content: error?.response?.data?.error || "Failed to disconnect",
+      });
+    } finally {
+      setDisconnecting(false);
+    }
+  }, [_id, messageApi, refreshChannel, refresh]);
 
   const handleMusicUpload = async (file: File) => {
     if (!_id) {
@@ -164,6 +281,11 @@ const UpdateWebsiteListModal = ({
     }
     setLoading(false);
   };
+
+  const redirectUri = typeof window !== "undefined"
+    ? `${window.location.origin}/api/youtube/callback`
+    : "http://localhost:3000/api/youtube/callback";
+
   return (
     <>
       {contextHolder}
@@ -480,6 +602,98 @@ const UpdateWebsiteListModal = ({
                       : "Upload Music"}
                   </Button>
                 </Upload>
+              </Card>
+              <Card title="YouTube Channel" style={{ marginTop: 24 }}>
+                <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+                  Connect a YouTube channel to auto-publish rendered videos.
+                </Typography.Text>
+
+                {channelStatus?.connected ? (
+                  <Flex align="center" justify="space-between" gap={12}>
+                    <Flex align="center" gap={8}>
+                      <YoutubeOutlined style={{ color: "#FF0000", fontSize: 18 }} />
+                      <div>
+                        <div>
+                          <strong>{channelStatus.channelTitle}</strong>
+                        </div>
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                          Connected by {channelStatus.connectedByEmail}
+                        </Typography.Text>
+                      </div>
+                    </Flex>
+                    <Popconfirm
+                      title="Disconnect this YouTube channel?"
+                      onConfirm={handleYouTubeDisconnect}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button
+                        danger
+                        size="small"
+                        icon={<DisconnectOutlined />}
+                        loading={disconnecting}
+                      >
+                        Disconnect
+                      </Button>
+                    </Popconfirm>
+                  </Flex>
+                ) : (
+                  <>
+                    <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
+                      <Typography.Text strong>Step 1: OAuth Credentials</Typography.Text>
+                      {oauthConfigured && <CheckCircleOutlined style={{ color: "#52c41a" }} />}
+                    </Flex>
+                    <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12, fontSize: 12 }}>
+                      Create an OAuth 2.0 Client ID (Web application) in Google Cloud Console for this website&apos;s channel. Set the Authorized redirect URI to:
+                    </Typography.Text>
+                    <Typography.Text
+                      code
+                      copyable
+                      style={{ display: "block", marginBottom: 12, fontSize: 11 }}
+                    >
+                      {redirectUri}
+                    </Typography.Text>
+                    <Flex vertical gap={8}>
+                      <Input
+                        placeholder="Client ID"
+                        value={oauthClientId}
+                        onChange={(e) => setOauthClientId(e.target.value)}
+                        disabled={loadingOauth}
+                      />
+                      <Input.Password
+                        placeholder={oauthConfigured ? "•••••••• (saved, leave blank to keep)" : "Client Secret"}
+                        value={oauthClientSecret}
+                        onChange={(e) => setOauthClientSecret(e.target.value)}
+                        disabled={loadingOauth}
+                      />
+                      <Button
+                        type="primary"
+                        ghost
+                        size="small"
+                        loading={oauthSaving}
+                        onClick={handleSaveOauth}
+                        disabled={!_id}
+                      >
+                        {oauthConfigured ? "Update Credentials" : "Save Credentials"}
+                      </Button>
+                    </Flex>
+
+                    {oauthConfigured && (
+                      <>
+                        <Flex align="center" gap={8} style={{ marginTop: 16, marginBottom: 8 }}>
+                          <Typography.Text strong>Step 2: Connect Channel</Typography.Text>
+                        </Flex>
+                        <Button
+                          type="primary"
+                          icon={<YoutubeOutlined />}
+                          onClick={handleYouTubeConnect}
+                        >
+                          Connect YouTube Channel
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
               </Card>
             </Col>
           </Row>

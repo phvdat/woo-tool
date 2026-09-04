@@ -17,6 +17,8 @@ const handler = app.getRequestHandler();
 app.prepare().then(async () => {
   const { startBlogCron } = await import("@/lib/blog/startBlogCron");
   startBlogCron();
+  const { startYoutubeRetryCron } = await import("@/services/youtube/youtubeService");
+  startYoutubeRetryCron();
   const httpServer = createServer(handler);
 
   const io = new Server(httpServer);

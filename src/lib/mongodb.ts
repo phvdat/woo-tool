@@ -8,12 +8,16 @@ if (!MONGODB_URI)
 if (!MONGODB_DB)
   throw new Error('Define the MONGODB_DB environmental variable');
 
-// Biến toàn cục để giữ kết nối qua các reloads
-let cached = (global as any)._mongo || { client: null, db: null };
+interface MongoCache {
+  client: MongoClient | null;
+  db: Db | null;
+}
+
+let cached: MongoCache = (global as any)._mongo || { client: null, db: null };
 
 export async function connectToDatabase() {
   if (cached.client && cached.db) {
-    return { client: cached.client, db: cached.db };
+    return { client: cached.client as MongoClient, db: cached.db as Db };
   }
 
   const client = new MongoClient(MONGODB_URI);

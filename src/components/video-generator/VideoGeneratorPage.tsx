@@ -4,7 +4,7 @@ import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import { useVideoJobs } from "@/app/hooks/useVideoJobs";
 import Container from "@/components/commons/Container";
 import { endpoint } from "@/constant/endpoint";
-import { VideoJob, VideoJobStatus, VideoProduct } from "@/types/video";
+import { VideoJob, VideoJobStatus, VideoProduct, YoutubePublishStatus } from "@/types/video";
 import {
   CloudDownloadOutlined,
   DeleteOutlined,
@@ -46,6 +46,13 @@ const statusColors: Record<VideoJobStatus, string> = {
   preparing: "processing",
   rendering: "processing",
   completed: "success",
+  failed: "error",
+};
+
+const youtubeStatusColors: Record<YoutubePublishStatus, string> = {
+  not_published: "default",
+  publishing: "processing",
+  published: "success",
   failed: "error",
 };
 
@@ -316,9 +323,36 @@ export default function VideoGeneratorPage() {
       ),
     },
     {
+      title: "YouTube",
+      dataIndex: "youtubeStatus",
+      key: "youtubeStatus",
+      width: 120,
+      render: (youtubeStatus: YoutubePublishStatus | undefined, record: VideoJob) => {
+        if (record.status !== "completed") return null;
+        if (!youtubeStatus || youtubeStatus === "not_published") {
+          return <Tag>-</Tag>;
+        }
+        return (
+          <Tag color={youtubeStatusColors[youtubeStatus]}>
+            {youtubeStatus === "published" && record.youtubeVideoId ? (
+              <a
+                href={`https://www.youtube.com/watch?v=${record.youtubeVideoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                VIEW
+              </a>
+            ) : (
+              youtubeStatus.toUpperCase()
+            )}
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Actions",
       key: "actions",
-      width: 180,
+      width: 140,
       render: (_: any, record: VideoJob) => (
         <Space>
           {record.status === "completed" && (

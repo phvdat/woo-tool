@@ -5,6 +5,7 @@ import { ObjectId } from 'mongodb';
 import { VIDEO_CONFIG } from './config';
 import { prepImages, cleanupTempDir } from './imagePrep';
 import { renderVideo } from './renderVideo';
+import { publishToYoutube } from '@/services/youtube/youtubeService';
 import path from 'path';
 
 let isProcessing = false;
@@ -90,6 +91,10 @@ async function processJob(job: VideoJob) {
       completedAt: new Date(),
     });
     emitVideoCompleted(jobId);
+
+    publishToYoutube(jobId, job.websiteId).catch((err) => {
+      console.error(`[YOUTUBE AUTO-PUBLISH] Job ${jobId} failed:`, err?.message || err);
+    });
   } catch (error: any) {
     const message = error?.message || 'Unknown error';
     console.error(`[VIDEO JOB] Job ${jobId} failed:`, message);
