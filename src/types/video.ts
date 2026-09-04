@@ -16,6 +16,8 @@ export interface VideoJob {
   productId: string;
   productName: string;
   images: string[];
+  productTags?: string[];
+  productShortDescription?: string;
   status: VideoJobStatus;
   progress: number;
   outputPath: string | null;

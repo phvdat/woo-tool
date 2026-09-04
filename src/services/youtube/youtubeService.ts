@@ -218,13 +218,24 @@ export async function publishToYoutube(
 
   const siteDisplayName = website?.shopName || 'Our Shop';
   const siteHomepageUrl = website?.url || '';
+  const youtubeDescriptionTemplate = website?.youtubeDescriptionTemplate || '';
 
   const productUrl = job.productUrl || '';
   const productName = job.productName || 'Product';
+  const productTags = (job.productTags as string[]) || [];
+  const productShortDescription = (job.productShortDescription as string) || '';
 
   const title = buildTitle(productName, siteDisplayName);
-  const description = buildDescription(productName, siteDisplayName, siteHomepageUrl, productUrl);
-  const tags = buildTags(productName, siteDisplayName);
+  const description = buildDescription(
+    productName,
+    siteDisplayName,
+    siteHomepageUrl,
+    productUrl,
+    productTags,
+    productShortDescription,
+    youtubeDescriptionTemplate
+  );
+  const tags = buildTags(productName, siteDisplayName, productTags);
 
   await db
     .collection(VIDEO_JOBS_COLLECTION)
@@ -373,8 +384,25 @@ function buildDescription(
   productName: string,
   siteDisplayName: string,
   siteHomepageUrl: string,
-  productUrl: string
+  productUrl: string,
+  productTags: string[],
+  productShortDescription: string,
+  template: string
 ): string {
+  if (template) {
+    const tagsAsHashtags = productTags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+    const tagsAsText = productTags.join(', ');
+
+    return template
+      .replace(/\{productName\}/g, productName)
+      .replace(/\{shortDescription\}/g, productShortDescription)
+      .replace(/\{productUrl\}/g, productUrl)
+      .replace(/\{shopName\}/g, siteDisplayName)
+      .replace(/\{siteUrl\}/g, siteHomepageUrl)
+      .replace(/\{tags\}/g, tagsAsText)
+      .replace(/\{tagsHashtags\}/g, tagsAsHashtags);
+  }
+
   const parts: string[] = [];
 
   if (productUrl) {
@@ -385,6 +413,11 @@ function buildDescription(
   parts.push(`${productName}`);
   parts.push('');
 
+  if (productShortDescription) {
+    parts.push(productShortDescription);
+    parts.push('');
+  }
+
   if (productUrl) {
     parts.push(`See details & order: ${productUrl}`);
   }
@@ -393,13 +426,27 @@ function buildDescription(
     parts.push(`Discover more products at ${siteDisplayName}: ${siteHomepageUrl}`);
   }
 
-  parts.push('');
-  parts.push(`#${productName.replace(/\s+/g, '')} #shop #product`);
+  if (productTags.length > 0) {
+    parts.push('');
+    parts.push(productTags.map(t => `#${t.replace(/\s+/g, '')}`).join(' '));
+  } else {
+    parts.push('');
+    parts.push(`#${productName.replace(/\s+/g, '')} #shop #product`);
+  }
 
   return parts.join('\n');
 }
 
-function buildTags(productName: string, siteDisplayName: string): string[] {
+function buildTags(productName: string, siteDisplayName: string, productTags: string[] = []): string[] {
+  if (productTags.length > 0) {
+    const tags = [...productTags, siteDisplayName];
+    const totalLength = tags.join(',').length;
+    if (totalLength > 490) {
+      return tags.slice(0, 3);
+    }
+    return tags;
+  }
+
   const tags: string[] = [productName, siteDisplayName];
   const categories = productName.split(/\s+/).filter((w) => w.length > 3);
   tags.push(...categories.slice(0, 5));

@@ -83,11 +83,21 @@ export async function POST(request: Request) {
           ? audioFiles[Math.floor(Math.random() * audioFiles.length)].url
           : backgroundMusicPath;
 
+        const productTags = (product.tags || [])
+          .map((t: any) => t.name)
+          .filter(Boolean);
+
+        const productShortDescription = (product.short_description || '')
+          .replace(/<[^>]*>/g, '')
+          .trim();
+
         const job: VideoJob = {
           websiteId,
           productId: String(productId),
           productName: product.name,
           images: imageUrls,
+          productTags,
+          productShortDescription,
           status: 'pending',
           progress: 0,
           outputPath: null,

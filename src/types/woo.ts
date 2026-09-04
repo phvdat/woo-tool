@@ -82,6 +82,7 @@ export interface WebsiteConfig {
   autoBlog: AutoBlogConfig;
   product: ProductConfig;
   backgroundMusicUrl?: string;
+  youtubeDescriptionTemplate?: string;
 }
 
 export interface WooWebsitePayload extends WebsiteConfig {
