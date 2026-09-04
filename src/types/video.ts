@@ -31,6 +31,15 @@ export interface VideoJob {
   youtubeRetryCount?: number;
 }
 
+export interface AudioFile {
+  _id?: string;
+  filename: string;
+  originalName: string;
+  url: string;
+  size: number;
+  createdAt: Date;
+}
+
 export interface VideoProduct {
   id: number;
   name: string;

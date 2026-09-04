@@ -15,4 +15,5 @@ export const VIDEO_PATHS = {
   TEMP_BASE: '/tmp/video-gen',
   OUTPUT_BASE: '/var/www/html/uploads/videos',
   MUSIC_BASE: '/var/www/html/uploads/music',
+  MUSIC_GLOBAL_BASE: '/var/www/html/uploads/music/global',
 } as const;

@@ -8,3 +8,4 @@ export const CATEGORIES_COLLECTION = 'categories';
 export const PRODUCT_DATA_COLLECTION = 'product-data';
 export const VIDEO_JOBS_COLLECTION = 'videoJobs';
 export const YOUTUBE_CHANNELS_COLLECTION = 'youtubeChannels';
+export const AUDIO_FILES_COLLECTION = 'audioFiles';

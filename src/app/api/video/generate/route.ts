@@ -1,4 +1,4 @@
-import { VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION } from '@/constant/collections';
+import { VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, AUDIO_FILES_COLLECTION } from '@/constant/collections';
 import { authOptions } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobConfig } from '@/types/video';
@@ -46,6 +46,11 @@ export async function POST(request: Request) {
 
     const backgroundMusicPath = website.backgroundMusicUrl || null;
 
+    const audioFiles = await db
+      .collection(AUDIO_FILES_COLLECTION)
+      .find({})
+      .toArray();
+
     const jobConfig: VideoJobConfig = {
       displayDuration: userConfig?.displayDuration || VIDEO_CONFIG.DEFAULT_DISPLAY_DURATION,
       transitionDuration: userConfig?.transitionDuration || VIDEO_CONFIG.DEFAULT_TRANSITION_DURATION,
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
       try {
         const { data: product } = await woo.get(`/products/${productId}`);
 
-        const imageUrls = (product.images || [])
+        let imageUrls = (product.images || [])
           .map((img: any) => img.src)
           .filter(Boolean);
 
@@ -69,6 +74,14 @@ export async function POST(request: Request) {
           console.warn(`[VIDEO GENERATE] Product ${productId} has no images, skipping`);
           continue;
         }
+
+        if (imageUrls.length === 1) {
+          imageUrls = [imageUrls[0], imageUrls[0]];
+        }
+
+        const selectedMusic = audioFiles.length > 0
+          ? audioFiles[Math.floor(Math.random() * audioFiles.length)].url
+          : backgroundMusicPath;
 
         const job: VideoJob = {
           websiteId,
@@ -80,7 +93,10 @@ export async function POST(request: Request) {
           outputPath: null,
           error: null,
           productUrl: product.permalink || null,
-          config: jobConfig,
+          config: {
+            ...jobConfig,
+            backgroundMusicPath: selectedMusic,
+          },
           createdAt: new Date(),
           completedAt: null,
         };

@@ -4,14 +4,16 @@ import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import { useVideoJobs } from "@/app/hooks/useVideoJobs";
 import Container from "@/components/commons/Container";
 import { endpoint } from "@/constant/endpoint";
-import { VideoJob, VideoJobStatus, VideoProduct, YoutubePublishStatus } from "@/types/video";
+import { AudioFile, VideoJob, VideoJobStatus, VideoProduct, YoutubePublishStatus } from "@/types/video";
 import {
+  AudioOutlined,
   CloudDownloadOutlined,
   DeleteOutlined,
   DownloadOutlined,
   LinkOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
+  UploadOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
 import {
@@ -73,6 +75,10 @@ export default function VideoGeneratorPage() {
   const [transitionDuration, setTransitionDuration] = useState(0.5);
   const [kenBurns, setKenBurns] = useState(true);
 
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [loadingAudio, setLoadingAudio] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+
   const { jobs, mutate: refreshJobs } = useVideoJobs({
     websiteId: selectedWebsiteId || undefined,
   });
@@ -100,6 +106,52 @@ export default function VideoGeneratorPage() {
       socket.disconnect();
     };
   }, [refreshJobs]);
+
+  const fetchAudioFiles = useCallback(async () => {
+    setLoadingAudio(true);
+    try {
+      const { data } = await axios.get("/api/video/audio");
+      setAudioFiles(data.audioFiles || []);
+    } catch (error: any) {
+      message.error(
+        error?.response?.data?.error || "Failed to fetch audio files",
+      );
+    } finally {
+      setLoadingAudio(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAudioFiles();
+  }, [fetchAudioFiles]);
+
+  const handleUploadAudio = async (file: File) => {
+    setUploadingAudio(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await axios.post("/api/video/audio", formData);
+      message.success("Audio uploaded successfully");
+      fetchAudioFiles();
+    } catch (error: any) {
+      message.error(
+        error?.response?.data?.error || "Failed to upload audio",
+      );
+    } finally {
+      setUploadingAudio(false);
+    }
+    return false;
+  };
+
+  const handleDeleteAudio = async (audioId: string) => {
+    try {
+      await axios.delete(`/api/video/audio/${audioId}`);
+      message.success("Audio deleted");
+      fetchAudioFiles();
+    } catch (error: any) {
+      message.error("Failed to delete audio");
+    }
+  };
 
   const fetchProducts = useCallback(
     async (websiteId: string, pageNum: number) => {
@@ -506,6 +558,77 @@ export default function VideoGeneratorPage() {
                 </Text>
               </div>
             )}
+          </Card>
+        </Col>
+
+        <Col span={24}>
+          <Card
+            title={
+              <Space>
+                <AudioOutlined />
+                <span>Audio Library</span>
+                <Tag>{audioFiles.length}</Tag>
+              </Space>
+            }
+            size="small"
+          >
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              <Upload
+                accept="audio/*"
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  handleUploadAudio(file as unknown as File);
+                  return false;
+                }}
+                disabled={uploadingAudio}
+              >
+                <Button
+                  icon={<UploadOutlined />}
+                  loading={uploadingAudio}
+                >
+                  Upload Audio
+                </Button>
+              </Upload>
+
+              <Table
+                rowKey="_id"
+                dataSource={audioFiles}
+                loading={loadingAudio}
+                pagination={{ pageSize: 5, showSizeChanger: false }}
+                size="small"
+                locale={{ emptyText: "No audio files uploaded" }}
+                columns={[
+                  {
+                    title: "Name",
+                    dataIndex: "originalName",
+                    key: "originalName",
+                    ellipsis: true,
+                  },
+                  {
+                    title: "Size",
+                    dataIndex: "size",
+                    key: "size",
+                    width: 100,
+                    render: (size: number) =>
+                      `${(size / 1024 / 1024).toFixed(2)} MB`,
+                  },
+                  {
+                    title: "Actions",
+                    key: "actions",
+                    width: 80,
+                    render: (_: any, record: AudioFile) => (
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDeleteAudio(record._id!)}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </Space>
           </Card>
         </Col>
 
