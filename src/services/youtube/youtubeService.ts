@@ -10,6 +10,7 @@ import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
 const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
   'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube.force-ssl',
 ];
 
 const MAX_YOUTUBE_RETRIES = 3;
@@ -220,6 +221,7 @@ export async function publishToYoutube(
   const siteDisplayName = website?.shopName || 'Our Shop';
   const siteHomepageUrl = website?.url || '';
   const youtubeDescriptionTemplate = website?.youtubeDescriptionTemplate || '';
+  const youtubeCommentTemplate = website?.youtubeCommentTemplate || '';
 
   const productUrl = job.productUrl || '';
   const productName = job.productName || 'Product';
@@ -273,6 +275,17 @@ export async function publishToYoutube(
 
     const videoId = response.data.id;
     if (!videoId) throw new Error('No video ID returned from YouTube API');
+
+    const commentText = buildComment(
+      productName,
+      siteDisplayName,
+      siteHomepageUrl,
+      productUrl,
+      productTags,
+      productShortDescription,
+      youtubeCommentTemplate
+    );
+    await addYoutubeComment(videoId, siteId, commentText).catch(() => {});
 
     await db
       .collection(VIDEO_JOBS_COLLECTION)
@@ -335,6 +348,37 @@ export async function publishToYoutube(
 
     return { error: errorMessage, retryable };
   }
+}
+
+export async function addYoutubeComment(
+  videoId: string,
+  siteId: string,
+  commentText: string
+): Promise<void> {
+  if (!commentText) return;
+
+  const oauth2Client = await getOAuth2ClientForSite(siteId);
+  const channel = await getChannelBySiteId(siteId);
+  if (!channel?.refreshTokenEncrypted) return;
+
+  const refreshToken = decrypt(channel.refreshTokenEncrypted);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+  const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+
+  await youtube.commentThreads.insert({
+    part: ['snippet'],
+    requestBody: {
+      snippet: {
+        videoId,
+        topLevelComment: {
+          snippet: {
+            textDisplay: commentText,
+          },
+        },
+      },
+    },
+  });
 }
 
 export async function retryFailedPublishes(): Promise<number> {
@@ -467,4 +511,30 @@ function buildTags(productName: string, siteDisplayName: string, productTags: st
     return tags.slice(0, 3);
   }
   return tags;
+}
+
+function buildComment(
+  productName: string,
+  siteDisplayName: string,
+  siteHomepageUrl: string,
+  productUrl: string,
+  productTags: string[],
+  productShortDescription: string,
+  template: string
+): string {
+  if (template) {
+    const tagsAsHashtags = productTags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+    const tagsAsText = productTags.join(', ');
+
+    return template
+      .replace(/\{productName\}/g, productName)
+      .replace(/\{shortDescription\}/g, productShortDescription)
+      .replace(/\{productUrl\}/g, productUrl)
+      .replace(/\{shopName\}/g, siteDisplayName)
+      .replace(/\{siteUrl\}/g, siteHomepageUrl)
+      .replace(/\{tags\}/g, tagsAsText)
+      .replace(/\{tagsHashtags\}/g, tagsAsHashtags);
+  }
+
+  return productUrl;
 }

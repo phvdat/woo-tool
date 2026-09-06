@@ -14,6 +14,7 @@ import AutoVideoConfig from "./website/AutoVideoConfig";
 import MusicUploader from "./website/MusicUploader";
 import YouTubeConfig from "./website/YouTubeConfig";
 import YouTubeDescriptionTemplate from "./website/YouTubeDescriptionTemplate";
+import YouTubeCommentTemplate from "./website/YouTubeCommentTemplate";
 
 interface WebsiteFormValue extends WebsiteConfig {}
 
@@ -146,6 +147,7 @@ const UpdateWebsiteListModal = ({
                 <MusicUploader siteId={_id} onRefresh={refresh} />
                 <YouTubeConfig siteId={_id} onRefresh={refresh} />
                 <YouTubeDescriptionTemplate />
+                <YouTubeCommentTemplate />
               </div>
             </Col>
           </Row>

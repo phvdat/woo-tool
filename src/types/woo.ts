@@ -83,6 +83,7 @@ export interface WebsiteConfig {
   product: ProductConfig;
   backgroundMusicUrl?: string;
   youtubeDescriptionTemplate?: string;
+  youtubeCommentTemplate?: string;
   autoVideo?: {
     enabled: boolean;
   };
