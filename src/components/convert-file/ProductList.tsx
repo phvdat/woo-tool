@@ -5,12 +5,10 @@ import ExistChecker from "@/components/convert-file/ExistChecker";
 import ExcludeSizeChartLink from "@/components/convert-file/ExcludeSizeChartLink";
 import { DeleteOutlined, DownloadOutlined, FileSearchOutlined } from "@ant-design/icons";
 import { Button, Flex, message, Switch, Typography } from "antd";
+import { useMediaQuery } from "usehooks-ts";
 import { FixedSizeList as List } from "react-window";
-import { useCallback, useMemo } from "react";
 
 const { Text } = Typography;
-
-const ROW_HEIGHT = 320;
 
 export interface Product {
   key: string;
@@ -59,7 +57,9 @@ export default function ProductList({
   uploadAble,
   onSetUploadAble,
 }: ProductListProps) {
-  const handleCheckDuplicate = useCallback(() => {
+  const matches = useMediaQuery("(min-width: 992px)");
+
+  const handleCheckDuplicate = () => {
     const nameMap: Record<string, number> = {};
     products.forEach((product) => {
       const normalizedName = product.Name.trim().toLowerCase();
@@ -71,51 +71,7 @@ export default function ProductList({
     } else {
       message.success("No duplicate names found");
     }
-  }, [products]);
-
-  const displayProducts = searchProduct || products;
-
-  const itemData = useMemo(
-    () => ({
-      products: displayProducts,
-      handleNameChange: onNameChange,
-      handleCategoryChange: onCategoryChange,
-      handleDelete: onDeleteProduct,
-      categoriesOptions,
-      handleImagesChange: onImagesChange,
-      handleDuplicateRow: onDuplicateRow,
-      setProducts: onSetProducts,
-      mergeSourceKey,
-      setMergeSourceKey: onSetMergeSourceKey,
-      handleMergeProduct: onMergeProduct,
-      handleSplitProduct: onSplitProduct,
-    }),
-    [
-      displayProducts,
-      onNameChange,
-      onCategoryChange,
-      onDeleteProduct,
-      categoriesOptions,
-      onImagesChange,
-      onDuplicateRow,
-      onSetProducts,
-      mergeSourceKey,
-      onSetMergeSourceKey,
-      onMergeProduct,
-      onSplitProduct,
-    ],
-  );
-
-  const Row = useCallback(
-    ({ index, style }: { index: number; style: React.CSSProperties }) => (
-      <ProductItemComponent
-        index={index}
-        style={style}
-        data={itemData}
-      />
-    ),
-    [itemData],
-  );
+  };
 
   return (
     <div>
@@ -136,15 +92,27 @@ export default function ProductList({
           overflow: "auto",
         }}
       >
-        <List
-          height={600}
-          itemCount={displayProducts.length}
-          itemSize={ROW_HEIGHT}
-          width="100%"
-          itemData={itemData}
-        >
-          {Row}
-        </List>
+        {(searchProduct || products).map((product, index) => (
+          <ProductItemComponent
+            key={product.key}
+            index={index}
+            style={{}}
+            data={{
+              products: searchProduct || products,
+              handleNameChange: onNameChange,
+              handleCategoryChange: onCategoryChange,
+              handleDelete: onDeleteProduct,
+              categoriesOptions,
+              handleImagesChange: onImagesChange,
+              handleDuplicateRow: onDuplicateRow,
+              setProducts: onSetProducts,
+              mergeSourceKey,
+              setMergeSourceKey: onSetMergeSourceKey,
+              handleMergeProduct: onMergeProduct,
+              handleSplitProduct: onSplitProduct,
+            }}
+          />
+        ))}
       </div>
 
       <Flex gap={16} align="center" justify="space-between" style={{ marginTop: 16 }}>

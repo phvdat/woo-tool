@@ -44,7 +44,7 @@ interface ProductItemProps {
   style: any;
 }
 
-const ProductItem = React.memo(function ProductItem({
+const ProductItem = function ProductItem({
   data: {
     handleNameChange,
     handleCategoryChange,
@@ -256,6 +256,6 @@ const ProductItem = React.memo(function ProductItem({
       </Row>
     </div>
   );
-});
+};
 
-export default ProductItem as React.MemoExoticComponent<React.FC<ProductItemProps>>;
+export default ProductItem;
