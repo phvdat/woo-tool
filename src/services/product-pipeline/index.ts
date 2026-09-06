@@ -70,24 +70,18 @@ export async function runProductPipeline(context: ProductPipelineContext) {
 
     if (website.autoVideo?.enabled && productIds.length > 0) {
         try {
-            const result = await createVideoJobsFromPipeline({
+            await createVideoJobsFromPipeline({
                 websiteId: context.websiteId,
                 productIds,
                 website,
             });
-            if (user.telegramId) {
-                await sendTelegramMessage({
-                    telegramId: user.telegramId,
-                    message: `<b>Video Pipeline</b>\n\nCreated: ${result.created} video job(s)\nErrors: ${result.errors}\n\nJobs are being processed in the queue (max 2 concurrent).`,
-                });
-            }
         } catch (error: any) {
             console.error('[PIPELINE] Failed to create video jobs:', error);
             if (user.telegramId) {
                 await sendTelegramMessage({
                     telegramId: user.telegramId,
                     message: `<b>Video Pipeline Error</b>\n\nFailed to create video jobs: ${error?.message || 'Unknown error'}`,
-                }).catch(() => {});
+                }).catch(() => { });
             }
         }
     }
