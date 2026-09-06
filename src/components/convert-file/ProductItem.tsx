@@ -148,8 +148,8 @@ const ProductItem = function ProductItem({
           </Flex>
         </Col>
         <Col span={24} lg={{ span: 16 }} style={{ padding: "12px 4px" }}>
-          <Flex>
-            <div style={{ flex: 1 }}>
+          <Row gutter={[0, 12]}>
+            <Col span={24} lg={{ span: 19 }} style={{ flex: 1 }}>
               {isEdit ? (
                 <Input.TextArea
                   placeholder="Image Urls"
@@ -177,8 +177,8 @@ const ProductItem = function ProductItem({
                       >
                         <Image
                           src={img}
-                          width={100}
-                          height={100}
+                          width={80}
+                          height={80}
                           alt="product"
                           loading="lazy"
                         />
@@ -210,48 +210,51 @@ const ProductItem = function ProductItem({
                   )}
                 </>
               )}
-            </div>
-
-            <Flex gap={4} wrap justify="space-around" style={{ maxWidth: 136 }}>
-              <Button
-                onClick={() => setIsEdit((prev) => !prev)}
-                style={{ padding: "2px 8px" }}
-              >
-                <EditOutlined />
-              </Button>
-              <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
-                <PlusSquareOutlined />
-              </Button>
-              <Button
-                type={
-                  currentProduct.key === mergeSourceKey ? "primary" : "default"
-                }
-                onClick={() => {
-                  if (!mergeSourceKey) {
-                    setMergeSourceKey(currentProduct.key);
-                  } else {
-                    handleMergeProduct(currentProduct.key);
+            </Col>
+            <Col span={24} lg={{ span: 5 }}>
+              <Flex gap={4} wrap>
+                <Button
+                  onClick={() => setIsEdit((prev) => !prev)}
+                  style={{ padding: "2px 8px" }}
+                >
+                  <EditOutlined />
+                </Button>
+                <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
+                  <PlusSquareOutlined />
+                </Button>
+                <Button
+                  type={
+                    currentProduct.key === mergeSourceKey
+                      ? "primary"
+                      : "default"
                   }
-                }}
-              >
-                <MergeOutlined />
-              </Button>
-              <InputNumber
-                placeholder="Split"
-                addonAfter={
-                  <ScissorOutlined
-                    onClick={() =>
-                      isNumber(productSplit) &&
-                      handleSplitProduct(currentProduct.key, productSplit)
+                  onClick={() => {
+                    if (!mergeSourceKey) {
+                      setMergeSourceKey(currentProduct.key);
+                    } else {
+                      handleMergeProduct(currentProduct.key);
                     }
-                  />
-                }
-                onChange={(value) => setProductSplit(value as number)}
-                value={productSplit}
-                style={{ width: "90px" }}
-              />
-            </Flex>
-          </Flex>
+                  }}
+                >
+                  <MergeOutlined />
+                </Button>
+                <InputNumber
+                  placeholder="Split"
+                  addonAfter={
+                    <ScissorOutlined
+                      onClick={() =>
+                        isNumber(productSplit) &&
+                        handleSplitProduct(currentProduct.key, productSplit)
+                      }
+                    />
+                  }
+                  onChange={(value) => setProductSplit(value as number)}
+                  value={productSplit}
+                  style={{ width: "90px" }}
+                />
+              </Flex>
+            </Col>
+          </Row>
         </Col>
       </Row>
     </div>

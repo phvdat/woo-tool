@@ -8,6 +8,8 @@ import {
   FormatPainterOutlined,
   HomeOutlined,
   LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
   PlayCircleOutlined,
   SettingOutlined,
   ShoppingOutlined,
@@ -15,84 +17,185 @@ import {
   ToolOutlined,
   VideoCameraOutlined,
 } from "@ant-design/icons";
-import { Avatar, Drawer, Dropdown, Menu, MenuProps, Typography } from "antd";
+import {
+  Avatar,
+  Button,
+  Drawer,
+  Dropdown,
+  Grid,
+  Menu,
+  MenuProps,
+  Typography,
+} from "antd";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
-interface SidebarProps {
-  open: boolean;
-  onClose: () => void;
-  isMobile: boolean;
-}
-
-const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
+const Sidebar = () => {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   const { data } = useSession();
+  const [collapsed, setCollapsed] = useState(true);
   const email = data?.user?.email;
   const isAdmin = email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const menuItems: MenuProps["items"] = [
     {
       key: "tools",
-      label: <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Tools</Text>,
+      label: (
+        <Text
+          type="secondary"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Tools
+        </Text>
+      ),
       type: "group",
       children: [
         {
           key: navigation.crawlTool,
           icon: <CloudDownloadOutlined />,
-          label: <Link href={navigation.crawlTool} onClick={onClose}>Crawl Tool</Link>,
+          label: (
+            <Link
+              href={navigation.crawlTool}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Crawl Tool
+            </Link>
+          ),
         },
         {
           key: navigation.convertFile,
           icon: <ToolOutlined />,
-          label: <Link href={navigation.convertFile} onClick={onClose}>Convert File</Link>,
+          label: (
+            <Link
+              href={navigation.convertFile}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Convert File
+            </Link>
+          ),
         },
         {
           key: navigation.productPipeline,
           icon: <ShoppingOutlined />,
-          label: <Link href={navigation.productPipeline} onClick={onClose}>Product Pipeline</Link>,
+          label: (
+            <Link
+              href={navigation.productPipeline}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Product Pipeline
+            </Link>
+          ),
         },
         {
           key: navigation.excelSplitter,
           icon: <FileExcelOutlined />,
-          label: <Link href={navigation.excelSplitter} onClick={onClose}>Excel Splitter</Link>,
+          label: (
+            <Link
+              href={navigation.excelSplitter}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Excel Splitter
+            </Link>
+          ),
         },
         {
           key: navigation.originalProduct,
           icon: <HomeOutlined />,
-          label: <Link href={navigation.originalProduct} onClick={onClose}>Original Product</Link>,
+          label: (
+            <Link
+              href={navigation.originalProduct}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Original Product
+            </Link>
+          ),
         },
         {
           key: navigation.formatImage,
           icon: <FormatPainterOutlined />,
-          label: <Link href={navigation.formatImage} onClick={onClose}>Format Image</Link>,
+          label: (
+            <Link
+              href={navigation.formatImage}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Format Image
+            </Link>
+          ),
         },
       ],
     },
     {
       key: "media",
-      label: <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Media</Text>,
+      label: (
+        <Text
+          type="secondary"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Media
+        </Text>
+      ),
       type: "group",
       children: [
         {
           key: navigation.videoGenerator,
           icon: <PlayCircleOutlined />,
-          label: <Link href={navigation.videoGenerator} onClick={onClose}>Video Generator</Link>,
+          label: (
+            <Link
+              href={navigation.videoGenerator}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Video Generator
+            </Link>
+          ),
         },
       ],
     },
     {
       key: "analytics",
-      label: <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Analytics</Text>,
+      label: (
+        <Text
+          type="secondary"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Analytics
+        </Text>
+      ),
       type: "group",
       children: [
         {
           key: navigation.revenue,
           icon: <BarChartOutlined />,
-          label: <Link href={navigation.revenue} onClick={onClose}>Revenue</Link>,
+          label: (
+            <Link
+              href={navigation.revenue}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Revenue
+            </Link>
+          ),
         },
       ],
     },
@@ -101,30 +204,70 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
     },
     {
       key: "settings",
-      label: <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Settings</Text>,
+      label: (
+        <Text
+          type="secondary"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Settings
+        </Text>
+      ),
       type: "group",
       children: [
         {
           key: navigation.settings,
           icon: <SettingOutlined />,
-          label: <Link href={navigation.settings} onClick={onClose}>Profile</Link>,
+          label: (
+            <Link
+              href={navigation.settings}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Profile
+            </Link>
+          ),
         },
         {
           key: navigation.configWebsite,
           icon: <SettingOutlined />,
-          label: <Link href={navigation.configWebsite} onClick={onClose}>Config Website</Link>,
+          label: (
+            <Link
+              href={navigation.configWebsite}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Config Website
+            </Link>
+          ),
         },
         {
           key: navigation.configCategories,
           icon: <SettingOutlined />,
-          label: <Link href={navigation.configCategories} onClick={onClose}>Config Categories</Link>,
+          label: (
+            <Link
+              href={navigation.configCategories}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Config Categories
+            </Link>
+          ),
         },
         ...(isAdmin
           ? [
               {
                 key: navigation.managementUser,
                 icon: <TeamOutlined />,
-                label: <Link href={navigation.managementUser} onClick={onClose}>Users</Link>,
+                label: (
+                  <Link
+                    href={navigation.managementUser}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    Users
+                  </Link>
+                ),
               },
             ]
           : []),
@@ -138,7 +281,9 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
       label: (
         <div style={{ padding: "4px 0" }}>
           <div style={{ fontWeight: 500 }}>{data?.user?.name || "User"}</div>
-          <Text type="secondary" style={{ fontSize: 12 }}>{email}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {email}
+          </Text>
         </div>
       ),
       disabled: true,
@@ -154,7 +299,12 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
 
   const findSelectedKey = (items: MenuProps["items"], path: string): string => {
     for (const item of items || []) {
-      if (item && "key" in item && item.key && path.startsWith(String(item.key))) {
+      if (
+        item &&
+        "key" in item &&
+        item.key &&
+        path.startsWith(String(item.key))
+      ) {
         return String(item.key);
       }
       if (item && "children" in item && item.children) {
@@ -168,7 +318,11 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
   const selectedKey = findSelectedKey(menuItems, pathname);
 
   const sidebarContent = (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{ width: 256 }}
+      onMouseEnter={() => setCollapsed(false)}
+      onMouseLeave={() => setCollapsed(true)}
+    >
       <div
         style={{
           height: 64,
@@ -196,24 +350,32 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
         >
           W
         </div>
-        <span
-          style={{
-            marginLeft: 12,
-            fontSize: 18,
-            fontWeight: 700,
-            color: "#111827",
-            whiteSpace: "nowrap",
-          }}
-        >
-          WooTool
-        </span>
+        {!isMobile && !collapsed && (
+          <span
+            style={{
+              marginLeft: 12,
+              fontSize: 18,
+              fontWeight: 700,
+              color: "#111827",
+              whiteSpace: "nowrap",
+            }}
+          >
+            WooTool
+          </span>
+        )}
       </div>
 
       <Menu
         mode="inline"
         selectedKeys={[selectedKey]}
         items={menuItems}
-        style={{ borderRight: "none", padding: "8px 0", flex: 1, overflow: "auto" }}
+        inlineCollapsed={collapsed}
+        style={{
+          borderRight: "none",
+          padding: "8px 0",
+          flex: 1,
+          overflow: "auto",
+        }}
       />
 
       <div
@@ -250,26 +412,34 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
               size={32}
               style={{ flexShrink: 0 }}
             />
-            <div style={{ overflow: "hidden" }}>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "#111827",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {data?.user?.name || "User"}
+            {!collapsed && (
+              <div style={{ overflow: "hidden" }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#111827",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {data?.user?.name || "User"}
+                </div>
+                <Text
+                  type="secondary"
+                  style={{
+                    fontSize: 11,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "block",
+                  }}
+                >
+                  {email}
+                </Text>
               </div>
-              <Text
-                type="secondary"
-                style={{ fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}
-              >
-                {email}
-              </Text>
-            </div>
+            )}
           </div>
         </Dropdown>
       </div>
@@ -278,22 +448,47 @@ const Sidebar = ({ open, onClose, isMobile }: SidebarProps) => {
 
   if (isMobile) {
     return (
-      <Drawer
-        placement="left"
-        onClose={onClose}
-        open={open}
-        width={260}
-        styles={{ body: { padding: 0, height: "100%" }, header: { display: "none" } }}
-      >
-        {sidebarContent}
-      </Drawer>
+      <div>
+        <div
+          style={{
+            height: 56,
+            display: "flex",
+            alignItems: "center",
+            padding: "0 16px",
+            background: "#ffffff",
+            borderBottom: "1px solid #F3F4F6",
+            position: "sticky",
+            top: 0,
+            zIndex: 50,
+          }}
+        >
+          <Button
+            type="text"
+            icon={sidebarOpen ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{ fontSize: 16, width: 40, height: 40 }}
+          />
+        </div>
+        <Drawer
+          placement="left"
+          onClose={() => setSidebarOpen(false)}
+          open={sidebarOpen}
+          width={260}
+          styles={{
+            body: { padding: 0, height: "100%" },
+            header: { display: "none" },
+          }}
+        >
+          {sidebarContent}
+        </Drawer>
+      </div>
     );
   }
 
   return (
     <div
       style={{
-        width: open ? 240 : 72,
+        width: collapsed ? 88 : 256,
         transition: "width 0.25s ease",
         height: "100vh",
         position: "fixed",
