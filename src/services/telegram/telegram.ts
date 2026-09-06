@@ -3,6 +3,16 @@ import FormData from 'form-data';
 import { createReadStream } from 'fs';
 
 export const telegramBot = {
+  sendMessage: async (chatId: string, text: string) => {
+    const url = `${process.env.TELEGRAM_BOT_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const response = await axios.post(url, {
+      chat_id: chatId.toString(),
+      text,
+      parse_mode: 'HTML',
+    });
+    return response.data;
+  },
+
   sendDocument: async (
     chatId: string,
     stream: NodeJS.ReadableStream,

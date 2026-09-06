@@ -70,6 +70,10 @@ export async function POST(request: Request) {
           .map((img: any) => img.src)
           .filter(Boolean);
 
+        if (imageUrls.length > VIDEO_CONFIG.MAX_IMAGES) {
+          imageUrls = imageUrls.slice(0, VIDEO_CONFIG.MAX_IMAGES);
+        }
+
         if (imageUrls.length === 0) {
           console.warn(`[VIDEO GENERATE] Product ${productId} has no images, skipping`);
           continue;

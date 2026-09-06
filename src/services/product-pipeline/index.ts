@@ -2,12 +2,14 @@ import { publishedTimeHelper } from '@/helper/common';
 import { connectToDatabase } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { sendTelegram } from '../telegram/sendTelegram';
+import { sendTelegramMessage } from '../telegram/sendTelegramMessage';
 import { buildProducts } from './buildProducts';
 import { enrichProducts } from './enrichProducts';
 import { exportExcel } from './exportExcel';
 import { ProductPipelineContext } from "./types";
 import { uploadProducts } from './uploadProducts';
 import { CATEGORIES_COLLECTION, USERS_COLLECTION, WEBSITES_COLLECTION } from '@/constant/collections';
+import { createVideoJobsFromPipeline } from '../video/createVideoJobsFromPipeline';
 
 export async function runProductPipeline(context: ProductPipelineContext) {
     const { db } = await connectToDatabase();
@@ -60,11 +62,35 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         filePath: excel.filePath,
     });
 
-    await uploadProducts({
+    const { productIds } = await uploadProducts({
         products: scheduledProducts,
         website,
         socketId: context.socketId,
     });
+
+    if (website.autoVideo?.enabled && productIds.length > 0) {
+        try {
+            const result = await createVideoJobsFromPipeline({
+                websiteId: context.websiteId,
+                productIds,
+                website,
+            });
+            if (user.telegramId) {
+                await sendTelegramMessage({
+                    telegramId: user.telegramId,
+                    message: `<b>Video Pipeline</b>\n\nCreated: ${result.created} video job(s)\nErrors: ${result.errors}\n\nJobs are being processed in the queue (max 2 concurrent).`,
+                });
+            }
+        } catch (error: any) {
+            console.error('[PIPELINE] Failed to create video jobs:', error);
+            if (user.telegramId) {
+                await sendTelegramMessage({
+                    telegramId: user.telegramId,
+                    message: `<b>Video Pipeline Error</b>\n\nFailed to create video jobs: ${error?.message || 'Unknown error'}`,
+                }).catch(() => {});
+            }
+        }
+    }
 
     return aiProducts;
 }

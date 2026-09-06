@@ -10,6 +10,7 @@ import { useState } from "react";
 import WebsiteForm from "./website/WebsiteForm";
 import ProductConfigForm from "./website/ProductConfigForm";
 import BlogConfigForm from "./website/BlogConfigForm";
+import AutoVideoConfig from "./website/AutoVideoConfig";
 import MusicUploader from "./website/MusicUploader";
 import YouTubeConfig from "./website/YouTubeConfig";
 import YouTubeDescriptionTemplate from "./website/YouTubeDescriptionTemplate";
@@ -47,6 +48,9 @@ const defaultFormValue: WebsiteFormValue = {
     publicTime: "",
     gapFrom: 0,
     gapTo: 0,
+  },
+  autoVideo: {
+    enabled: false,
   },
 };
 
@@ -138,6 +142,7 @@ const UpdateWebsiteListModal = ({
             <Col md={{ span: 12 }} xs={{ span: 24 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <BlogConfigForm />
+                <AutoVideoConfig />
                 <MusicUploader siteId={_id} onRefresh={refresh} />
                 <YouTubeConfig siteId={_id} onRefresh={refresh} />
                 <YouTubeDescriptionTemplate />

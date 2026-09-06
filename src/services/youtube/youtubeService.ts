@@ -1,10 +1,11 @@
 import { google } from 'googleapis';
 import { createReadStream } from 'fs';
-import { YOUTUBE_CHANNELS_COLLECTION, VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION } from '@/constant/collections';
+import { YOUTUBE_CHANNELS_COLLECTION, VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, USERS_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { decrypt, encrypt } from '@/lib/encryption';
 import { ObjectId } from 'mongodb';
 import { YoutubeChannel, YoutubePublishJobFields } from '@/types/youtube';
+import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
 
 const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
@@ -320,6 +321,17 @@ export async function publishToYoutube(
           },
         }
       );
+
+    const user = await db
+      .collection(USERS_COLLECTION)
+      .findOne({ email: website?.members?.[0] });
+    if (user?.telegramId) {
+      const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      await sendTelegramMessage({
+        telegramId: user.telegramId,
+        message: `<b>YouTube Upload Failed</b>\n\nProduct: ${job.productName || 'Unknown'}\nError: ${errorMessage}\nRetry: ${retryCount}/${MAX_YOUTUBE_RETRIES}\nTime: ${time}`,
+      }).catch(() => {});
+    }
 
     return { error: errorMessage, retryable };
   }

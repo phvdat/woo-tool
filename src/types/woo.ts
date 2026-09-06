@@ -83,6 +83,9 @@ export interface WebsiteConfig {
   product: ProductConfig;
   backgroundMusicUrl?: string;
   youtubeDescriptionTemplate?: string;
+  autoVideo?: {
+    enabled: boolean;
+  };
 }
 
 export interface WooWebsitePayload extends WebsiteConfig {
