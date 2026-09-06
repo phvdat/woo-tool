@@ -1,5 +1,6 @@
 "use client";
 
+import { useCategories } from "@/app/hooks/useCategories";
 import { useGlobalCateKeywordConfig } from "@/app/hooks/useGlobalCateKeywordConfig";
 import { useLocalStorage } from "@/app/hooks/useLocalStorage";
 import Container from "@/components/commons/Container";
@@ -8,11 +9,10 @@ import FileUploader from "@/components/convert-file/FileUploader";
 import ProductList from "@/components/convert-file/ProductList";
 import { endpoint } from "@/constant/endpoint";
 import { handleDownloadFile } from "@/helper/woo";
-import { message } from "antd";
+import { Form, message } from "antd";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
+import { useMemo, useState } from "react";
 
 export const CONVERT_DATA = "CONVERT_DATA";
 
@@ -27,7 +27,7 @@ export interface Product {
 
 export default function ConvertFile() {
   const { data: session } = useSession();
-  const [form] = (require("antd")).Form.useForm();
+  const [form] = Form.useForm();
   const { cateKeyword } = useGlobalCateKeywordConfig();
 
   const [products, setProducts] = useLocalStorage<Product[]>(CONVERT_DATA, []);
@@ -35,11 +35,18 @@ export default function ConvertFile() {
   const [uploadAble, setUploadable] = useState(true);
   const [mergeSourceKey, setMergeSourceKey] = useState<string | null>(null);
 
+  const watchShopId = Form.useWatch("website", form);
+  const { categories } = useCategories(watchShopId);
+  console.log(watchShopId);
+  console.log(categories);
+
   const categoriesOptions = useMemo(() => {
-    const allCates = products.map((p) => p.Categories?.trim() || "Missing Cate");
-    const unique = Array.from(new Set(allCates)).sort();
-    return unique.map((c) => ({ label: c, value: c }));
-  }, [products]);
+    if (!categories || !watchShopId) return [];
+    return categories.map((category) => ({
+      label: category.category,
+      value: category.category,
+    }));
+  }, [categories, watchShopId]);
 
   const updateBoth = (updater: (list: Product[]) => Product[]) => {
     setProducts((prev) => updater(prev));
@@ -58,7 +65,7 @@ export default function ConvertFile() {
     const filtered = products.filter(
       (p) =>
         p.Name.toLowerCase().includes(value.toLowerCase()) ||
-        p.Categories.toLowerCase().includes(value.toLowerCase())
+        p.Categories.toLowerCase().includes(value.toLowerCase()),
     );
     setSearchProduct(filtered);
   };
@@ -72,20 +79,26 @@ export default function ConvertFile() {
       products.filter((p) => {
         const cat = p.Categories?.trim() || "Missing Cate";
         return cat === category;
-      })
+      }),
     );
   };
 
   const handleNameChange = (key: string, value: string) => {
-    updateBoth((list) => list.map((p) => (p.key === key ? { ...p, Name: value } : p)));
+    updateBoth((list) =>
+      list.map((p) => (p.key === key ? { ...p, Name: value } : p)),
+    );
   };
 
   const handleCategoryChange = (key: string, value: string) => {
-    updateBoth((list) => list.map((p) => (p.key === key ? { ...p, Categories: value } : p)));
+    updateBoth((list) =>
+      list.map((p) => (p.key === key ? { ...p, Categories: value } : p)),
+    );
   };
 
   const handleImagesChange = (key: string, value: string) => {
-    updateBoth((list) => list.map((p) => (p.key === key ? { ...p, Images: value } : p)));
+    updateBoth((list) =>
+      list.map((p) => (p.key === key ? { ...p, Images: value } : p)),
+    );
   };
 
   const handleDelete = (key: string) => {
@@ -111,7 +124,10 @@ export default function ConvertFile() {
           const imageArray = product.Images.split(",");
           const totalChunks = Math.ceil(imageArray.length / splitCount);
           for (let i = 0; i < totalChunks; i++) {
-            const chunk = imageArray.slice(i * splitCount, (i + 1) * splitCount);
+            const chunk = imageArray.slice(
+              i * splitCount,
+              (i + 1) * splitCount,
+            );
             newList.push({
               ...product,
               Name: i === 0 ? product.Name : `${product.Name} Ver${i + 1}`,
@@ -137,11 +153,17 @@ export default function ConvertFile() {
       const source = list.find((p) => p.key === mergeSourceKey);
       const target = list.find((p) => p.key === targetKey);
       if (!source || !target) return list;
-      const mergedImages = [...source.Images.split(","), ...target.Images.split(",")];
+      const mergedImages = [
+        ...source.Images.split(","),
+        ...target.Images.split(","),
+      ];
       return list
         .map((p) => {
           if (p.key === mergeSourceKey) {
-            return { ...p, Images: Array.from(new Set(mergedImages)).join(",") };
+            return {
+              ...p,
+              Images: Array.from(new Set(mergedImages)).join(","),
+            };
           }
           return p;
         })
@@ -165,7 +187,11 @@ export default function ConvertFile() {
           message.error("Missing user email");
           return;
         }
-        const payload = products.map((p) => ({ ...p, email, createdAt: new Date() }));
+        const payload = products.map((p) => ({
+          ...p,
+          email,
+          createdAt: new Date(),
+        }));
         await axios.post(endpoint.productData, payload);
         message.success("Products uploaded successfully");
       } catch {

@@ -4,9 +4,24 @@ import { useCategories } from "@/app/hooks/useCategories";
 import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import { useGlobalCateKeywordConfig } from "@/app/hooks/useGlobalCateKeywordConfig";
 import CateKeywordConfig from "@/components/convert-file/CateKeywordConfig";
-import { normFile, toCapitalizedCase, fixEncoding, upscaleImage } from "@/helper/common";
+import {
+  normFile,
+  toCapitalizedCase,
+  fixEncoding,
+  upscaleImage,
+} from "@/helper/common";
 import detectCategory from "@/helper/detect-category";
-import { Button, Card, Col, Form, Input, Radio, Row, Select, Upload } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  Radio,
+  Row,
+  Select,
+  Upload,
+} from "antd";
 import { useMemo } from "react";
 
 export interface Product {
@@ -33,10 +48,12 @@ export default function FileUploader({
   onSearch,
   onCategoryFilter,
 }: FileUploaderProps) {
-  const { cateKeyword, isLoading: cateKeywordLoading } = useGlobalCateKeywordConfig();
+  const { cateKeyword, isLoading: cateKeywordLoading } =
+    useGlobalCateKeywordConfig();
   const { websiteConfigList, isLoading: websiteLoading } = useConfigWebsite();
   const watchShopId = Form.useWatch("website", form);
-  const { categories, isLoading: categoriesLoading } = useCategories(watchShopId);
+  const { categories, isLoading: categoriesLoading } =
+    useCategories(watchShopId);
 
   const categoriesOptions = useMemo(() => {
     if (!categories) return [];
@@ -59,9 +76,9 @@ export default function FileUploader({
     ...Array.from(
       new Set(
         products.map((product) =>
-          product.Categories?.trim() ? product.Categories : "Missing Cate"
-        )
-      )
+          product.Categories?.trim() ? product.Categories : "Missing Cate",
+        ),
+      ),
     ).sort((a, b) => {
       if (a === "Missing Cate") return -1;
       if (b === "Missing Cate") return 1;
@@ -75,7 +92,8 @@ export default function FileUploader({
     const XLSX = await import("xlsx");
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const productsData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
+    const productsData =
+      XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
 
     const formattedProduct: Product[] = [];
     for (let i = 0; i < productsData.length; i++) {
@@ -96,9 +114,7 @@ export default function FileUploader({
     <Card>
       <Form name="initial-file" layout="vertical" form={form}>
         {(categoriesLoading || websiteLoading || cateKeywordLoading) && (
-          <div style={{ textAlign: "center", padding: 16 }}>
-            Loading...
-          </div>
+          <div style={{ textAlign: "center", padding: 16 }}>Loading...</div>
         )}
         <Row gutter={16}>
           <Col span={24} sm={{ span: 12 }}>
@@ -109,7 +125,9 @@ export default function FileUploader({
                   Website &nbsp;
                   {watchShopId && (
                     <CateKeywordConfig
-                      categoriesOptions={categoriesOptions.map((item) => item.value)}
+                      categoriesOptions={categoriesOptions.map(
+                        (item) => item.value,
+                      )}
                     />
                   )}
                 </>
@@ -121,7 +139,9 @@ export default function FileUploader({
                 options={websiteOptions}
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
                 }
               />
             </Form.Item>
