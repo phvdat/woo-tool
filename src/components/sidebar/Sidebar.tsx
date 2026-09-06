@@ -5,7 +5,9 @@ import {
   BarChartOutlined,
   CloudDownloadOutlined,
   FileExcelOutlined,
+  FolderOutlined,
   FormatPainterOutlined,
+  GlobalOutlined,
   HomeOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -233,7 +235,7 @@ const Sidebar = () => {
         },
         {
           key: navigation.configWebsite,
-          icon: <SettingOutlined />,
+          icon: <GlobalOutlined />,
           label: (
             <Link
               href={navigation.configWebsite}
@@ -245,7 +247,7 @@ const Sidebar = () => {
         },
         {
           key: navigation.configCategories,
-          icon: <SettingOutlined />,
+          icon: <FolderOutlined />,
           label: (
             <Link
               href={navigation.configCategories}

@@ -111,23 +111,12 @@ export default function ProductPipelineForm() {
       setProcessing(false);
     };
 
-    const onFinished = (payload: any) => {
-      if (payload.socketId !== websiteId) return;
-      setProcessing(false);
-      setProgress({
-        percent: 100,
-        step: "Completed",
-      });
-    };
-
     socket.on("pipeline-progress", onProgress);
     socket.on("pipeline-error", onError);
-    socket.on("pipeline-finished", onFinished);
 
     return () => {
       socket.off("pipeline-progress", onProgress);
       socket.off("pipeline-error", onError);
-      socket.off("pipeline-finished", onFinished);
     };
   }, [websiteId, socket]);
 
