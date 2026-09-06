@@ -12,7 +12,7 @@ import { handleDownloadFile } from "@/helper/woo";
 import { Form, message } from "antd";
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 export const CONVERT_DATA = "CONVERT_DATA";
 
@@ -48,75 +48,94 @@ export default function ConvertFile() {
     }));
   }, [categories, watchShopId]);
 
-  const updateBoth = (updater: (list: Product[]) => Product[]) => {
+  const updateBoth = useCallback((updater: (list: Product[]) => Product[]) => {
     setProducts((prev) => updater(prev));
     setSearchProduct((prev) => (prev ? updater(prev) : prev));
-  };
+  }, []);
 
-  const handleProductsLoaded = (newProducts: Product[]) => {
+  const handleProductsLoaded = useCallback((newProducts: Product[]) => {
     setProducts((prev) => [...prev, ...newProducts]);
-  };
+  }, []);
 
-  const handleSearch = (value: string) => {
-    if (!value) {
-      setSearchProduct(null);
-      return;
+  const handleSearch = useCallback(
+    (value: string) => {
+      if (!value) {
+        setSearchProduct(null);
+        return;
+      }
+      const filtered = products.filter(
+        (p) =>
+          p.Name.toLowerCase().includes(value.toLowerCase()) ||
+          p.Categories.toLowerCase().includes(value.toLowerCase()),
+      );
+      setSearchProduct(filtered);
+    },
+    [products],
+  );
+
+  const handleCategoryFilter = useCallback(
+    (category: string) => {
+      if (category === "All Cate") {
+        setSearchProduct(null);
+        return;
+      }
+      setSearchProduct(
+        products.filter((p) => {
+          const cat = p.Categories?.trim() || "Missing Cate";
+          return cat === category;
+        }),
+      );
+    },
+    [products],
+  );
+
+  const nameChangeTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const handleNameChange = useCallback((key: string, value: string) => {
+    if (nameChangeTimers.current[key]) {
+      clearTimeout(nameChangeTimers.current[key]);
     }
-    const filtered = products.filter(
-      (p) =>
-        p.Name.toLowerCase().includes(value.toLowerCase()) ||
-        p.Categories.toLowerCase().includes(value.toLowerCase()),
+    setSearchProduct((prev) =>
+      prev
+        ? prev.map((p) => (p.key === key ? { ...p, Name: value } : p))
+        : prev,
     );
-    setSearchProduct(filtered);
-  };
+    nameChangeTimers.current[key] = setTimeout(() => {
+      setProducts((prev) =>
+        prev.map((p) => (p.key === key ? { ...p, Name: value } : p)),
+      );
+    }, 300);
+  }, []);
 
-  const handleCategoryFilter = (category: string) => {
-    if (category === "All Cate") {
-      setSearchProduct(null);
-      return;
-    }
-    setSearchProduct(
-      products.filter((p) => {
-        const cat = p.Categories?.trim() || "Missing Cate";
-        return cat === category;
-      }),
-    );
-  };
-
-  const handleNameChange = (key: string, value: string) => {
-    updateBoth((list) =>
-      list.map((p) => (p.key === key ? { ...p, Name: value } : p)),
-    );
-  };
-
-  const handleCategoryChange = (key: string, value: string) => {
+  const handleCategoryChange = useCallback((key: string, value: string) => {
     updateBoth((list) =>
       list.map((p) => (p.key === key ? { ...p, Categories: value } : p)),
     );
-  };
+  }, [updateBoth]);
 
-  const handleImagesChange = (key: string, value: string) => {
+  const handleImagesChange = useCallback((key: string, value: string) => {
     updateBoth((list) =>
       list.map((p) => (p.key === key ? { ...p, Images: value } : p)),
     );
-  };
+  }, [updateBoth]);
 
-  const handleDelete = (key: string) => {
+  const handleDelete = useCallback((key: string) => {
     updateBoth((list) => list.filter((p) => p.key !== key));
-  };
+  }, [updateBoth]);
 
-  const handleDuplicateRow = (key: string) => {
-    const index = products.findIndex((p) => p.key === key);
-    if (index === -1) return;
-    const newList = [
-      ...products.slice(0, index + 1),
-      { ...products[index], key: products[index].key + Date.now() },
-      ...products.slice(index + 1),
-    ];
-    setProducts(newList);
-  };
+  const handleDuplicateRow = useCallback((key: string) => {
+    setProducts((prev) => {
+      const index = prev.findIndex((p) => p.key === key);
+      if (index === -1) return prev;
+      return [
+        ...prev.slice(0, index + 1),
+        { ...prev[index], key: prev[index].key + Date.now() },
+        ...prev.slice(index + 1),
+      ];
+    });
+  }, []);
 
-  const handleSplitProduct = (key: string, splitCount: number) => {
+  const handleSplitProduct = useCallback((key: string, splitCount: number) => {
     setProducts((prev) => {
       const newList: Product[] = [];
       prev.forEach((product) => {
@@ -142,9 +161,9 @@ export default function ConvertFile() {
       return newList;
     });
     setSearchProduct(null);
-  };
+  }, []);
 
-  const handleMergeProduct = (targetKey: string) => {
+  const handleMergeProduct = useCallback((targetKey: string) => {
     if (!mergeSourceKey || mergeSourceKey === targetKey) {
       setMergeSourceKey(null);
       return;
@@ -170,7 +189,7 @@ export default function ConvertFile() {
         .filter((p) => p.key !== targetKey);
     });
     setMergeSourceKey(null);
-  };
+  }, [mergeSourceKey, updateBoth]);
 
   const handleSubmit = async () => {
     const isCategoryValid = products.every((p) => p.Categories);
