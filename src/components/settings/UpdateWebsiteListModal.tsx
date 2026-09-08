@@ -34,6 +34,7 @@ const defaultFormValue: WebsiteFormValue = {
   logoPosition: CanvasPosition.northwest,
   shopName: "",
   quality: 100,
+  owner: "",
   members: [],
   wpUsername: "",
   wpAppPassword: "",
@@ -135,13 +136,17 @@ const UpdateWebsiteListModal = ({
         >
           <Row gutter={16}>
             <Col md={{ span: 12 }} xs={{ span: 24 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              >
                 <WebsiteForm form={form} />
                 <ProductConfigForm />
               </div>
             </Col>
             <Col md={{ span: 12 }} xs={{ span: 24 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 16 }}
+              >
                 <BlogConfigForm />
                 <AutoVideoConfig />
                 <MusicUploader siteId={_id} onRefresh={refresh} />
@@ -153,12 +158,19 @@ const UpdateWebsiteListModal = ({
           </Row>
 
           <Flex justify="center" style={{ marginTop: 24 }}>
-            <Button type="primary" htmlType="submit" loading={loading} size="large">
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              size="large"
+            >
               {_id ? "Update Website" : "Create Website"}
             </Button>
           </Flex>
 
-          {error && <Alert message={error} type="error" style={{ marginTop: 16 }} />}
+          {error && (
+            <Alert message={error} type="error" style={{ marginTop: 16 }} />
+          )}
         </Form>
       </Modal>
     </>

@@ -106,7 +106,7 @@ export async function runAutoBlog(website: WebsiteConfig) {
 
         const user = await db
           .collection(USERS_COLLECTION)
-          .findOne({ email: website.members?.[0] });
+          .findOne({ email: website.owner });
         if (user?.telegramId) {
           const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
           await sendTelegramMessage({
