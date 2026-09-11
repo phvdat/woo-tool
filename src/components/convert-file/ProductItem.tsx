@@ -199,7 +199,7 @@ const ProductItem = function ProductItem({
                       const currentStyleIndices = (
                         currentProduct["Choose Your Style"] || ""
                       )
-                        .split(",")
+                        .split("|")
                         .map(Number)
                         .filter((n) => Number.isInteger(n) && n > 0);
                       const totalImages =

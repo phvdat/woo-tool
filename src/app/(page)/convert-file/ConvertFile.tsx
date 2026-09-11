@@ -181,7 +181,7 @@ function ConvertFile() {
       list.map((p) => {
         if (p.key !== productKey) return p;
         const current = (p["Choose Your Style"] || "")
-          .split(",")
+          .split("|")
           .map(Number)
           .filter((n) => Number.isInteger(n) && n > 0);
         let next: number[];
@@ -192,7 +192,7 @@ function ConvertFile() {
           next.push(styleIndex);
           next.sort((a, b) => a - b);
         }
-        return { ...p, "Choose Your Style": next.join(",") };
+        return { ...p, "Choose Your Style": next.join("|") };
       }),
     );
   };
