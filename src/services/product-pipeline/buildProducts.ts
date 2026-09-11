@@ -10,6 +10,7 @@ interface SheetData {
   Name: string;
   Images: string;
   Link?: string;
+  'Choose Your Style'?: string;
 }
 
 interface BuildProductsParams {
@@ -63,6 +64,27 @@ export async function buildProducts({
     }
     const images = row.Images.split(",");
 
+    const styleRaw = row['Choose Your Style'];
+    let processedStyleData: string | undefined;
+    if (styleRaw) {
+      const styleIndices = String(styleRaw)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map(Number);
+      for (const idx of styleIndices) {
+        if (!Number.isInteger(idx) || idx < 1 || idx > images.length) {
+          throw new Error(
+            `Invalid "Choose Your Style" index "${idx}" at row ${index + 1}. Available images: 1-${images.length}`,
+          );
+        }
+      }
+      processedStyleData = JSON.stringify({
+        indices: styleIndices,
+        names: styleIndices.map((i) => `Style ${String(i).padStart(2, '0')}`),
+      });
+    }
+
     const watermarkImages = await addWatermark({
       imageHeight: Number(website.imageHeight),
       imageWidth: Number(website.imageWidth),
@@ -87,6 +109,7 @@ export async function buildProducts({
         Images: watermarkImages.join(","),
         "Image Origin": row.Images,
         Link: row.Link,
+        ...(processedStyleData ? { "Choose Your Style Data": processedStyleData } : {}),
       }),
     );
 

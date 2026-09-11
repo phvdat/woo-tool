@@ -40,6 +40,8 @@ export interface WooCommerce {
   Position: string;
   Tags?: string;
   'Meta: rank_math_focus_keyword'?: string;
+  'Choose Your Style'?: string;
+  'Choose Your Style Data'?: string;
 }
 
 
