@@ -1,13 +1,16 @@
 "use client";
 import { useUser } from "@/app/hooks/useUser";
+import Container from "@/components/commons/Container";
 import { UsersFormValues } from "@/components/management-users/ManagementUsersForm";
 import { endpoint } from "@/constant/endpoint";
 import { handleErrorMongoDB } from "@/helper/common";
-import { Button, Form, Input, message } from "antd";
+import { Card, Button, Form, Input, message, Row, Col, Typography } from "antd";
+import { UserOutlined, KeyOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 const { TextArea } = Input;
+const { Text } = Typography;
 
 interface SettingProps {
   isAdmin: boolean;
@@ -33,7 +36,7 @@ const Setting = ({ isAdmin }: SettingProps) => {
       message.success("Update information successfully");
     } catch (error) {
       const { errorMessage } = handleErrorMongoDB(error);
-      console.log("error update user", errorMessage);
+      message.error(errorMessage || "Failed to update information");
     } finally {
       setLoading(false);
     }
@@ -46,43 +49,86 @@ const Setting = ({ isAdmin }: SettingProps) => {
   }, [form, user]);
 
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: "20px auto",
-      }}
+    <Container
+      title="Profile Settings"
+      subtitle="Manage your account settings and preferences"
+      breadcrumb={[{ title: "Settings" }, { title: "Profile" }]}
     >
-      <Form
-        onFinish={updateInformation}
-        form={form}
-        initialValues={user}
-        layout="vertical"
-        disabled={loading}
-        labelCol={{ style: { minWidth: 150 } }}
-        labelAlign="left"
-      >
-        <Form.Item<UsersFormValues>
-          name="telegramId"
-          label="Telegram ID"
-          shouldUpdate
-          rules={[{ required: true, message: "Please input telegram id" }]}
-        >
-          <Input type="text" placeholder="Enter telegram id for receive file" />
-        </Form.Item>
+      <Row gutter={[24, 24]}>
+        <Col xs={24} lg={8}>
+          <Card>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #4F46E5, #7C3AED)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 16px",
+                  fontSize: 32,
+                  color: "white",
+                  fontWeight: 700,
+                }}
+              >
+                {data?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <Text strong style={{ fontSize: 16, display: "block" }}>
+                {data?.user?.name || "User"}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                {data?.user?.email}
+              </Text>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} lg={16}>
+          <Card title="Account Information">
+            <Form
+              onFinish={updateInformation}
+              form={form}
+              initialValues={user}
+              layout="vertical"
+              disabled={loading}
+            >
+              <Form.Item<UsersFormValues>
+                name="telegramId"
+                label={
+                  <span>
+                    <UserOutlined style={{ marginRight: 8 }} />
+                    Telegram ID
+                  </span>
+                }
+                rules={[{ required: true, message: "Please input telegram id" }]}
+              >
+                <Input placeholder="Enter telegram id for receive file" size="large" />
+              </Form.Item>
 
-        <Form.Item<UsersFormValues>
-          name="apiKey"
-          label="Key ChatGPT"
-          rules={[{ required: true, message: "Please input API key!" }]}
-        >
-          <Input type="text" placeholder="API key" />
-        </Form.Item>
+              <Form.Item<UsersFormValues>
+                name="apiKey"
+                label={
+                  <span>
+                    <KeyOutlined style={{ marginRight: 8 }} />
+                    API Key (ChatGPT)
+                  </span>
+                }
+                rules={[{ required: true, message: "Please input API key!" }]}
+              >
+                <Input.Password placeholder="Enter your API key" size="large" />
+              </Form.Item>
 
-        <Button type="primary" htmlType="submit" block>
-          Save
-        </Button>
-      </Form>
-    </div>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" block size="large" loading={loading}>
+                  Save Changes
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

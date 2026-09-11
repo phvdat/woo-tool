@@ -55,6 +55,7 @@ export interface Product {
   Images: string;
   Categories: string;
   Link?: string;
+  'Choose Your Style'?: string;
   [key: string]: any;
 }
 function ConvertFile() {
@@ -154,6 +155,45 @@ function ConvertFile() {
   const handleImagesChange = (productKey: string, value: string) => {
     updateBoth((list) =>
       list.map((p) => (p.key === productKey ? { ...p, Images: value } : p)),
+    );
+  };
+
+  const handleChooseStyleToggle = (productKey: string, enabled: boolean) => {
+    updateBoth((list) =>
+      list.map((p) => {
+        if (p.key !== productKey) return p;
+        if (enabled) {
+          const count = p.Images?.split(",").filter(Boolean).length || 0;
+          const allIndices = Array.from({ length: count }, (_, i) => i + 1);
+          return { ...p, "Choose Your Style": allIndices.join(",") };
+        }
+        return { ...p, "Choose Your Style": "" };
+      }),
+    );
+  };
+
+  const handleChooseStyleChange = (
+    productKey: string,
+    imageIndex: number,
+    styleIndex: number | null,
+  ) => {
+    updateBoth((list) =>
+      list.map((p) => {
+        if (p.key !== productKey) return p;
+        const current = (p["Choose Your Style"] || "")
+          .split(",")
+          .map(Number)
+          .filter((n) => Number.isInteger(n) && n > 0);
+        let next: number[];
+        if (styleIndex === null) {
+          next = current.filter((i) => i !== imageIndex);
+        } else {
+          next = current.filter((i) => i !== imageIndex);
+          next.push(styleIndex);
+          next.sort((a, b) => a - b);
+        }
+        return { ...p, "Choose Your Style": next.join(",") };
+      }),
     );
   };
 
@@ -310,7 +350,7 @@ function ConvertFile() {
 
   return (
     <div>
-      <Container title="Display File Data">
+      <Container title="Display File Data" size="lg">
         <Card>
           <Form name="initial-file" layout="vertical" form={form}>
             {(categoriesLoading || websiteLoading || cateKeywordLoading) && (
@@ -431,8 +471,8 @@ function ConvertFile() {
               border: "1px solid #d9d9d9",
               borderRadius: 4,
             }}
-            height={800}
-            itemSize={matches ? 127 : 310}
+            height={600}
+            itemSize={matches ? 136 : 284}
             itemCount={searchProduct ? searchProduct.length : products.length}
             overscanCount={5}
             itemData={{
@@ -448,6 +488,8 @@ function ConvertFile() {
               setMergeSourceKey,
               handleMergeProduct,
               handleSplitProduct,
+              handleChooseStyleToggle,
+              handleChooseStyleChange,
             }}
             width={"100%"}
           >

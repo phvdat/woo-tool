@@ -1,8 +1,9 @@
 "use client";
 
 import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
+import Container from "@/components/commons/Container";
 import { endpoint } from "@/constant/endpoint";
-import { Card, Flex, Spin, Typography } from "antd";
+import { Card, Flex, Spin } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -55,32 +56,36 @@ export default function RevenuePage() {
   }
 
   return (
-    <Spin spinning={isLoading}>
-      <Flex vertical gap={16}>
-        <Typography.Title level={3}>Revenue Dashboard</Typography.Title>
+    <Container
+      title="Revenue Dashboard"
+      subtitle="Track your sales and revenue analytics"
+      size="lg"
+    >
+      <Spin spinning={isLoading}>
+        <Flex vertical gap={16}>
+          <Card>
+            <RevenueFilter
+              websites={websiteConfigList}
+              loading={loading}
+              onChange={handleSearch}
+            />
+          </Card>
 
-        <Card>
-          <RevenueFilter
-            websites={websiteConfigList}
-            loading={loading}
-            onChange={handleSearch}
-          />
-        </Card>
+          <Card>
+            <RevenueChart data={data.chart} />
+          </Card>
 
-        <Card>
-          <RevenueChart data={data.chart} />
-        </Card>
+          <RevenueSummary {...data.summary} />
 
-        <RevenueSummary {...data.summary} />
+          <Card>
+            <RevenueWebsiteTable data={data.websiteStats} loading={loading} />
+          </Card>
 
-        <Card>
-          <RevenueWebsiteTable data={data.websiteStats} loading={loading} />
-        </Card>
-
-        <Card title="Latest Orders">
-          <RevenueLatestOrders data={data.latestOrders} loading={loading} />
-        </Card>
-      </Flex>
-    </Spin>
+          <Card title="Latest Orders">
+            <RevenueLatestOrders data={data.latestOrders} loading={loading} />
+          </Card>
+        </Flex>
+      </Spin>
+    </Container>
   );
 }

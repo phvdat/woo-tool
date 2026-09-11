@@ -27,7 +27,6 @@ export default function RevenueFilter({
 
   const handleValuesChange = () => {
     const values = form.getFieldsValue(true);
-    console.log(values);
 
     if (
       values.websiteId !== undefined &&

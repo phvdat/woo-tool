@@ -105,7 +105,7 @@ const SearchResult = ({ result }: { result: Product[] }) => {
             <Card
               style={{ maxWidth: 240 }}
               cover={
-                <Carousel>
+                <Carousel autoplay={false}>
                   {product.Images.split(",").map((image, index) => (
                     <Image src={image} alt={product.Name} key={index} />
                   ))}

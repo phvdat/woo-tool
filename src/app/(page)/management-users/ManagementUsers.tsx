@@ -1,21 +1,23 @@
 'use client';
+import Container from '@/components/commons/Container';
 import ManagementUsersForm from '@/components/management-users/ManagementUsersForm';
 import UserList from '@/components/management-users/UserList';
-import { Typography } from 'antd';
-const { Title } = Typography;
+import { Card } from 'antd';
 
 const ManagementUsers = () => {
   return (
-    <div
-      style={{
-        maxWidth: 600,
-        margin: '20px auto',
-      }}
+    <Container
+      title="User Management"
+      subtitle="Manage user accounts and permissions"
+      breadcrumb={[{ title: "Settings" }, { title: "Users" }]}
     >
-      <Title level={4}>Management Users</Title>
-      <ManagementUsersForm />
-      <UserList />
-    </div>
+      <Card style={{ marginBottom: 16 }}>
+        <ManagementUsersForm />
+      </Card>
+      <Card title="User List">
+        <UserList />
+      </Card>
+    </Container>
   );
 };
 

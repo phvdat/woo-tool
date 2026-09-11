@@ -5,7 +5,11 @@ import ProductPipelineForm from "@/components/product-pipeline/ProductPipelineFo
 
 const ProductPipeline = () => {
   return (
-    <Container title="Product Pipeline">
+    <Container
+      title="Product Pipeline"
+      subtitle="Automate product import and processing"
+      size="lg"
+    >
       <Instruction />
       <ProductPipelineForm />
     </Container>

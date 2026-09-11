@@ -1,5 +1,5 @@
 export { default } from 'next-auth/middleware';
 
 export const config = {
-  matcher: ['/((?!uploads|_next|favicon.ico|api/youtube/callback).*)'],
+  matcher: ['/((?!api/auth|login|uploads|_next|favicon.ico|api/youtube/callback).*)'],
 };

@@ -40,6 +40,8 @@ export interface WooCommerce {
   Position: string;
   Tags?: string;
   'Meta: rank_math_focus_keyword'?: string;
+  'Choose Your Style'?: string;
+  'Choose Your Style Data'?: string;
 }
 
 
@@ -83,6 +85,11 @@ export interface WebsiteConfig {
   product: ProductConfig;
   backgroundMusicUrl?: string;
   youtubeDescriptionTemplate?: string;
+  youtubeCommentTemplate?: string;
+  owner: string;
+  autoVideo?: {
+    enabled: boolean;
+  };
 }
 
 export interface WooWebsitePayload extends WebsiteConfig {

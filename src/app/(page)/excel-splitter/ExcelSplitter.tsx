@@ -1,19 +1,17 @@
 "use client";
 import { useLocalStorage } from "@/app/hooks/useLocalStorage";
+import Container from "@/components/commons/Container";
+import ProductSorter from "./ProductSorter";
 import { normFile } from "@/helper/common";
 import { UploadOutlined } from "@ant-design/icons";
 import { Button, Card, Form, Input, Upload } from "antd";
 import _get from "lodash/get";
 import { useEffect, useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
 import * as XLSX from "xlsx";
-import ProductSorter from "./ProductSorter";
-import Container from "@/components/commons/Container";
 
 const SPLIT_NAME_LOCAL_KEY = "splitName";
 
 const ExcelSplitter = () => {
-  const matches = useMediaQuery("(min-width: 992px)");
   const [form] = Form.useForm();
   const [items, setItems] = useState<any[]>([]);
   const [websiteNames, setWebsiteNames] = useLocalStorage(
@@ -35,7 +33,7 @@ const ExcelSplitter = () => {
     // Ensure each item has a unique id
     const prepared = rawData.map((item: any, index: number) => ({
       ...item,
-      id: `item-${index}`, // đảm bảo mỗi item có id duy nhất
+      id: `item-${index}`,
     }));
 
     setItems(prepared);
@@ -49,7 +47,11 @@ const ExcelSplitter = () => {
 
   return (
     <>
-      <Container title="Excel Splitter">
+      <Container
+        title="Excel Splitter"
+        subtitle="Split Excel files for multiple websites"
+        size="lg"
+      >
         <Card>
           <Form onFinish={handleSubmit} layout="vertical" form={form}>
             <Form.Item
@@ -65,6 +67,7 @@ const ExcelSplitter = () => {
               <Input
                 style={{ width: "100%" }}
                 placeholder="Website names split by comma"
+                size="large"
               />
             </Form.Item>
 
@@ -76,14 +79,14 @@ const ExcelSplitter = () => {
               rules={[{ required: true, message: "Please upload file!" }]}
             >
               <Upload beforeUpload={() => false} maxCount={1}>
-                <Button icon={<UploadOutlined />} block>
+                <Button icon={<UploadOutlined />} block size="large">
                   Upload Excel
                 </Button>
               </Upload>
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" block>
+              <Button type="primary" htmlType="submit" block size="large">
                 Load Data
               </Button>
             </Form.Item>

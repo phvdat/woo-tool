@@ -6,6 +6,9 @@ import { USERS_COLLECTION } from '@/constant/collections';
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/login",
+  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || '',

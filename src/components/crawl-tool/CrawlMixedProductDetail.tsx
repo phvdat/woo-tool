@@ -12,7 +12,7 @@ import {
   Spin,
 } from "antd";
 import * as XLSX from "xlsx";
-import { isEmpty } from "lodash";
+import { isEmpty, debounce } from "lodash";
 import dayjs from "dayjs";
 import { endpoint } from "@/constant/endpoint";
 import { useUser } from "@/app/hooks/useUser";
@@ -104,65 +104,77 @@ function CrawlMixedProductDetail() {
     );
   };
 
-  const checkMissingDomain = async () => {
-    setLoading(true);
-    const selectors: SelectorFormValues[] = await getAllSelectors();
-    const urls = form.getFieldValue("urls");
-    if (!urls) {
-      setErrorMessage("Please enter product URLs first.");
-      return;
-    }
+  const checkMissingDomain = useMemo(
+    () =>
+      debounce(async () => {
+        setLoading(true);
+        const selectors: SelectorFormValues[] = await getAllSelectors();
+        const urls = form.getFieldValue("urls");
+        if (!urls) {
+          setErrorMessage("Please enter product URLs first.");
+          return;
+        }
 
-    const urlList = urls.split("\n").map((url: string) => url.trim());
+        const urlList = urls.split("\n").map((url: string) => url.trim());
 
-    const selectorDomainSet: Set<string> = new Set(
-      selectors.map((s: Selector) => s.domain.toLowerCase()),
-    );
-    const uniqueDomains: Set<string> = new Set();
-    for (let i = 0; i < urlList.length; i++) {
-      const rawUrl = urlList[i].trim();
-      if (!rawUrl) continue;
+        const selectorDomainSet: Set<string> = new Set(
+          selectors.map((s: Selector) => s.domain.toLowerCase()),
+        );
+        const uniqueDomains: Set<string> = new Set();
+        for (let i = 0; i < urlList.length; i++) {
+          const rawUrl = urlList[i].trim();
+          if (!rawUrl) continue;
 
-      try {
-        const domain: string = new URL(rawUrl).hostname
-          .replace(/^www\./, "")
-          .toLowerCase();
-        uniqueDomains.add(domain);
-      } catch {
-        // ignore invalid URL
-      }
-      setLoading(false);
-    }
+          try {
+            const domain: string = new URL(rawUrl).hostname
+              .replace(/^www\./, "")
+              .toLowerCase();
+            uniqueDomains.add(domain);
+          } catch {
+            // ignore invalid URL
+          }
+        }
+        setLoading(false);
 
-    const missingDomains: string[] = [];
+        const missingDomains: string[] = [];
 
-    uniqueDomains.forEach((domain: string) => {
-      if (!selectorDomainSet.has(domain)) {
-        missingDomains.push(domain);
-      }
-    });
-    if (missingDomains.length > 0) {
-      setErrorMessage(
-        `The following domains are missing in the selectors:\n${missingDomains.join(
-          "\n",
-        )}`,
-      );
-    } else {
-      setErrorMessage("");
-    }
-  };
+        uniqueDomains.forEach((domain: string) => {
+          if (!selectorDomainSet.has(domain)) {
+            missingDomains.push(domain);
+          }
+        });
+        if (missingDomains.length > 0) {
+          setErrorMessage(
+            `The following domains are missing in the selectors:\n${missingDomains.join(
+              "\n",
+            )}`,
+          );
+        } else {
+          setErrorMessage("");
+        }
+      }, 500),
+    [form],
+  );
 
-  const uniqueLink = () => {
-    const urls = form.getFieldValue("urls");
-    if (!urls) return;
-    const urlList = urls.split("\n").map((url: string) => url.trim());
-    const uniqueUrls = Array.from(new Set(urlList));
-    form.setFieldValue("urls", uniqueUrls.join("\n"));
-  };
+  const uniqueLink = useMemo(
+    () =>
+      debounce(() => {
+        const urls = form.getFieldValue("urls");
+        if (!urls) return;
+        const urlList = urls.split("\n").map((url: string) => url.trim());
+        const uniqueUrls = Array.from(new Set(urlList));
+        form.setFieldValue("urls", uniqueUrls.join("\n"));
+      }, 500),
+    [form],
+  );
 
   useEffect(() => {
     getAllSelectors();
-  }, []);
+    return () => {
+      uniqueLink.cancel();
+      checkMissingDomain.cancel();
+    };
+  }, [uniqueLink, checkMissingDomain]);
 
   useEffect(() => {
     socket.on("crawl-progress", (payload) => {

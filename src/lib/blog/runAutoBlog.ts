@@ -1,4 +1,4 @@
-import { WEBSITES_COLLECTION } from "@/constant/collections";
+import { USERS_COLLECTION, WEBSITES_COLLECTION } from "@/constant/collections";
 import { formatImages } from "@/helper/format-image";
 import { connectToDatabase } from "@/lib/mongodb";
 import { WebsiteConfig } from "@/types/woo";
@@ -11,6 +11,7 @@ import { searchBingImages } from "./searchImages";
 import { getCachedTrends, selectTrends } from "./selectTrends.ts";
 import { publishWordpress, uploadImagesToWordpress } from "./wordpress";
 import { insertImages, writeBlog } from "./writer";
+import { sendTelegramMessage } from "@/services/telegram/sendTelegramMessage";
 
 function normalizeKeyword(keyword: string) {
   return keyword.trim().toLowerCase();
@@ -44,6 +45,7 @@ export async function runAutoBlog(website: WebsiteConfig) {
     return;
   }
   runningWebsites.add(websiteKey);
+  const { db } = await connectToDatabase();
   try {
     const trends = await getCachedTrends();
     const selected = await selectTrends(trends, 10);
@@ -95,12 +97,24 @@ export async function runAutoBlog(website: WebsiteConfig) {
           medias.map((item) => item.source_url),
           article.title
         );
-        await publishWordpress(
+        const post = await publishWordpress(
           website,
           article,
           medias[0]?.id
         );
         await saveKeyword(keyword);
+
+        const user = await db
+          .collection(USERS_COLLECTION)
+          .findOne({ email: website.owner });
+        if (user?.telegramId) {
+          const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+          await sendTelegramMessage({
+            telegramId: user.telegramId,
+            message: `<b>Blog Created</b>\n\nTitle: ${article.title}\nLink: ${post.link}\nTime: ${time}`,
+          }).catch(() => { });
+        }
+
         historyKeywords.add(keyword);
         published++;
         console.log(

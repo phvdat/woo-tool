@@ -1,4 +1,4 @@
-import { VIDEO_JOBS_COLLECTION } from '@/constant/collections';
+import { VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, USERS_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobStatus } from '@/types/video';
 import { ObjectId } from 'mongodb';
@@ -6,6 +6,7 @@ import { VIDEO_CONFIG } from './config';
 import { prepImages, cleanupTempDir } from './imagePrep';
 import { renderVideo } from './renderVideo';
 import { publishToYoutube } from '@/services/youtube/youtubeService';
+import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
 import path from 'path';
 
 let isProcessing = false;
@@ -50,6 +51,22 @@ async function updateJobStatus(
       { _id: new ObjectId(jobId) },
       { $set: { status, ...extra } }
     );
+}
+
+async function getTelegramIdForJob(job: VideoJob): Promise<string | null> {
+  try {
+    const { db } = await connectToDatabase();
+    const website = await db
+      .collection(WEBSITES_COLLECTION)
+      .findOne({ _id: new ObjectId(job.websiteId) });
+    if (!website) return null;
+    const user = await db
+      .collection(USERS_COLLECTION)
+      .findOne({ email: website.members?.[0] });
+    return user?.telegramId || null;
+  } catch {
+    return null;
+  }
 }
 
 async function processJob(job: VideoJob) {
@@ -100,6 +117,15 @@ async function processJob(job: VideoJob) {
     console.error(`[VIDEO JOB] Job ${jobId} failed:`, message);
     await updateJobStatus(jobId, 'failed', { error: message });
     emitVideoError(jobId, message);
+
+    const telegramId = await getTelegramIdForJob(job);
+    if (telegramId) {
+      const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      await sendTelegramMessage({
+        telegramId,
+        message: `<b>Video Generation Failed</b>\n\nProduct: ${job.productName}\nError: ${message}\nTime: ${time}`,
+      }).catch(() => {});
+    }
   } finally {
     cleanupTempDir(frameDir);
     processingCount--;

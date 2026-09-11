@@ -3,7 +3,7 @@ import Container from "@/components/commons/Container";
 import CrawlListProductUrl from "@/components/crawl-tool/CrawlListProductUrl";
 import CrawlMixedProductDetail from "@/components/crawl-tool/CrawlMixedProductDetail";
 import SelectorSetup from "@/components/crawl-tool/SelectorSetup";
-import { Carousel, Divider, Segmented, Slider } from "antd";
+import { Card, Carousel, Divider, Segmented } from "antd";
 import { useRef, useState } from "react";
 
 const TOOL_OPTIONS = {
@@ -36,25 +36,32 @@ function CrawlTool() {
   };
 
   return (
-    <Container title="Crawl Tool">
-      <Segmented
-        options={Object.values(TOOL_OPTIONS)}
-        block
-        value={option}
-        onChange={handleChangeTool}
-      />
-      <Divider />
-      <Carousel ref={carouselRef}>
-        <div>
-          <CrawlMixedProductDetail />
-        </div>
-        <div>
-          <CrawlListProductUrl />
-        </div>
-        <div>
-          <SelectorSetup />
-        </div>
-      </Carousel>
+    <Container
+      title="Crawl Tool"
+      subtitle="Extract product data from websites"
+      size="lg"
+    >
+      <Card>
+        <Segmented
+          options={Object.values(TOOL_OPTIONS)}
+          block
+          value={option}
+          onChange={handleChangeTool}
+          size="large"
+        />
+        <Divider style={{ margin: "16px 0" }} />
+        <Carousel ref={carouselRef} dots={false}>
+          <div>
+            <CrawlMixedProductDetail />
+          </div>
+          <div>
+            <CrawlListProductUrl />
+          </div>
+          <div>
+            <SelectorSetup />
+          </div>
+        </Carousel>
+      </Card>
     </Container>
   );
 }

@@ -18,7 +18,7 @@ export async function uploadProducts({
   products,
   website,
   socketId,
-}: UploadProductsParams) {
+}: UploadProductsParams): Promise<{ productIds: number[] }> {
   const woo = axios.create({
     baseURL: `${website.url}/wp-json/wc/v3`,
     auth: {
@@ -28,15 +28,19 @@ export async function uploadProducts({
     timeout: 60_000,
   });
   const categoryMap = await loadCategories(woo);
+  const createdWooIds: number[] = [];
 
   for (let index = 0; index < products.length; index++) {
     const product = products[index];
     try {
-      await createProduct({
+      const wooProduct = await createProduct({
         woo,
         product,
         categoryMap,
       });
+      if (wooProduct?.id) {
+        createdWooIds.push(wooProduct.id);
+      }
     } catch (error: any) {
 
       const errorMessage =
@@ -63,4 +67,6 @@ export async function uploadProducts({
       totalRows: products.length,
     });
   }
+
+  return { productIds: createdWooIds };
 }

@@ -1,18 +1,23 @@
 import { Typography } from "antd";
 import React, { ReactNode } from "react";
+import PageHeader from "./PageHeader";
 
 const { Title } = Typography;
 type ContainerProps = {
   children: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "full";
   style?: React.CSSProperties;
-  title?: string; // optional title
+  title?: string;
+  subtitle?: string;
+  breadcrumb?: { title: string; path?: string }[];
+  extra?: ReactNode;
 };
 
 const sizeMap = {
   sm: 640,
   md: 960,
   lg: 1200,
+  full: "100%",
 };
 
 const Container: React.FC<ContainerProps> = ({
@@ -20,21 +25,20 @@ const Container: React.FC<ContainerProps> = ({
   size = "md",
   style,
   title,
+  subtitle,
+  breadcrumb,
+  extra,
 }) => {
   return (
     <div
       style={{
-        maxWidth: sizeMap[size],
-        padding: "16px",
-        margin: "16px auto",
+        maxWidth: typeof sizeMap[size] === "number" ? sizeMap[size] : undefined,
         width: "100%",
         ...style,
       }}
     >
-      {title && (
-        <Title level={4} style={{ textAlign: "center", margin: "16px" }}>
-          {title}
-        </Title>
+      {(title || breadcrumb) && (
+        <PageHeader title={title || ""} subtitle={subtitle} breadcrumb={breadcrumb} extra={extra} />
       )}
       {children}
     </div>

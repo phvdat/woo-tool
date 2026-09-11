@@ -1,15 +1,17 @@
 "use client";
 
 import { endpoint } from "@/constant/endpoint";
+import Container from "@/components/commons/Container";
 import {
   Card,
   Carousel,
   Col,
+  Empty,
   Flex,
   Image,
   Input,
-  message,
   Row,
+  Skeleton,
   Typography,
 } from "antd";
 import Meta from "antd/es/card/Meta";
@@ -17,9 +19,8 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { Product } from "../convert-file/ConvertFile";
 import { debounce } from "lodash";
-import Container from "@/components/commons/Container";
 import { useSession } from "next-auth/react";
-import { CopyOutlined, LinkOutlined } from "@ant-design/icons";
+import { CopyOutlined, LinkOutlined, SearchOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 interface Result extends Product {
@@ -44,7 +45,7 @@ function OriginalProduct() {
         });
         setResult(data.slice(0, 100));
       } catch (error) {
-        console.error("Error fetching product data: ", error);
+        // Handle error silently
       } finally {
         setLoading(false);
       }
@@ -60,22 +61,36 @@ function OriginalProduct() {
   }, [keyword, searchProductsDebounced]);
 
   return (
-    <>
-      <Container title="Original Product">
-        <Card>
-          <Input
-            placeholder="Search product by name"
-            size="large"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-          />
-        </Card>
-      </Container>
-      <Row gutter={[16, 16]}>
-        {loading ? (
-          <p style={{ textAlign: "center" }}>Loading...</p>
-        ) : (
-          result.map((product, index) => (
+    <Container
+      title="Original Products"
+      subtitle="Search and view your uploaded products"
+      size="lg"
+    >
+      <Card style={{ marginBottom: 16 }}>
+        <Input
+          placeholder="Search product by name..."
+          size="large"
+          prefix={<SearchOutlined style={{ color: "#9CA3AF" }} />}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          allowClear
+        />
+      </Card>
+
+      {loading ? (
+        <Row gutter={[16, 16]}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Col xl={{ span: 4 }} md={{ span: 8 }} xs={{ span: 12 }} key={i}>
+              <Card>
+                <Skeleton.Image active style={{ width: "100%", height: 200 }} />
+                <Skeleton active paragraph={{ rows: 1 }} style={{ marginTop: 16 }} />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      ) : result.length > 0 ? (
+        <Row gutter={[16, 16]}>
+          {result.map((product, index) => (
             <Col
               xl={{ span: 4 }}
               md={{ span: 8 }}
@@ -83,37 +98,52 @@ function OriginalProduct() {
               key={product.key + index}
             >
               <Card
-                style={{ maxWidth: 240 }}
+                hoverable
                 cover={
-                  <Carousel>
+                  <Carousel autoplay>
                     {product.Images.split(",").map((image, index) => (
                       <Image src={image} alt={product.Name} key={index} />
                     ))}
                   </Carousel>
                 }
               >
-                <Meta description={<Text>{product.Name}</Text>} />
                 <Meta
                   description={
-                    <Text type="secondary">
-                      {product.createdAt
-                        ? new Date(product.createdAt).toLocaleDateString(
-                            "vi-VN",
-                          )
-                        : ""}
-                      &nbsp;
-                      <a href={product?.Link} target="_blank">
-                        <LinkOutlined />
-                      </a>
+                    <Text ellipsis style={{ fontSize: 13 }}>
+                      {product.Name}
                     </Text>
+                  }
+                />
+                <Meta
+                  description={
+                    <Flex justify="space-between" align="center">
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {product.createdAt
+                          ? new Date(product.createdAt).toLocaleDateString("vi-VN")
+                          : ""}
+                      </Text>
+                      {product?.Link && (
+                        <a href={product.Link} target="_blank" rel="noopener noreferrer">
+                          <LinkOutlined />
+                        </a>
+                      )}
+                    </Flex>
                   }
                 />
               </Card>
             </Col>
-          ))
-        )}
-      </Row>
-    </>
+          ))}
+        </Row>
+      ) : (
+        <Empty
+          description={
+            keyword
+              ? <Text type="secondary">No products found for &quot;{keyword}&quot;</Text>
+              : <Text type="secondary">Type a keyword to search products</Text>
+          }
+        />
+      )}
+    </Container>
   );
 }
 

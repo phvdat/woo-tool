@@ -20,6 +20,8 @@ import {
   InputNumber,
   Row,
   Select,
+  Switch,
+  Tooltip,
 } from "antd";
 import { isNumber } from "lodash";
 import Link from "next/link";
@@ -39,6 +41,12 @@ interface ProductItemProps {
     setMergeSourceKey: React.Dispatch<React.SetStateAction<string | null>>;
     handleMergeProduct: (productKey: string) => void;
     handleSplitProduct: (productKey: string, splitCount: number) => void;
+    handleChooseStyleToggle: (productKey: string, enabled: boolean) => void;
+    handleChooseStyleChange: (
+      productKey: string,
+      imageIndex: number,
+      styleIndex: number | null,
+    ) => void;
   };
   index: number;
   style: any;
@@ -57,6 +65,8 @@ const ProductItem = function ProductItem({
     setMergeSourceKey,
     handleMergeProduct,
     handleSplitProduct,
+    handleChooseStyleToggle,
+    handleChooseStyleChange,
   },
   index,
   style,
@@ -90,7 +100,13 @@ const ProductItem = function ProductItem({
         }}
       >
         <Col span={24} lg={{ span: 8 }} style={{ padding: "12px 4px" }}>
-          <Flex style={{ width: "100%" }} gap={12} wrap justify="space-between">
+          <Flex
+            style={{ width: "100%" }}
+            gap={12}
+            wrap
+            justify="space-between"
+            align="center"
+          >
             <Select
               value={currentProduct.Categories}
               placeholder="Select Category"
@@ -123,6 +139,15 @@ const ProductItem = function ProductItem({
               }}
             ></Select>
 
+            <Tooltip title="Choose Your Style (variant)">
+              <Switch
+                size="small"
+                checked={!!currentProduct["Choose Your Style"]}
+                onChange={(checked) =>
+                  handleChooseStyleToggle(currentProduct.key, checked)
+                }
+              />
+            </Tooltip>
             <Link href={currentProduct.Link || ""} target="_blank">
               <Button>
                 <LinkOutlined />
@@ -148,8 +173,8 @@ const ProductItem = function ProductItem({
           </Flex>
         </Col>
         <Col span={24} lg={{ span: 16 }} style={{ padding: "12px 4px" }}>
-          <Flex>
-            <div style={{ flex: 1 }}>
+          <Row gutter={[0, 12]}>
+            <Col span={24} lg={{ span: 19 }} style={{ flex: 1 }}>
               {isEdit ? (
                 <Input.TextArea
                   placeholder="Image Urls"
@@ -167,91 +192,144 @@ const ProductItem = function ProductItem({
               ) : (
                 <>
                   {currentProduct.Images?.split(",").map(
-                    (img: string, idx: number) => (
-                      <div
-                        key={idx}
-                        style={{
-                          position: "relative",
-                          display: "inline-block",
-                        }}
-                      >
-                        <Image
-                          src={img}
-                          width={100}
-                          height={100}
-                          alt="product"
-                          loading="lazy"
-                        />
-                        <CloseOutlined
-                          onClick={() => {
-                            const newImages = currentProduct.Images.split(",")
-                              .filter((_, i) => i !== idx)
-                              .join(",");
-                            handleImagesChange(currentProduct.key, newImages);
-                          }}
+                    (img: string, idx: number) => {
+                      const imageIndex = idx + 1;
+                      const styleEnabled =
+                        !!currentProduct["Choose Your Style"];
+                      const currentStyleIndices = (
+                        currentProduct["Choose Your Style"] || ""
+                      )
+                        .split(",")
+                        .map(Number)
+                        .filter((n) => Number.isInteger(n) && n > 0);
+                      const totalImages =
+                        currentProduct.Images?.split(",").length || 0;
+                      const styleOptions = [
+                        { value: -1, label: "None" },
+                        ...Array.from({ length: totalImages }, (_, i) => ({
+                          value: i + 1,
+                          label: i + 1,
+                        })),
+                      ];
+                      const selectedStyle = currentStyleIndices.includes(
+                        imageIndex,
+                      )
+                        ? imageIndex
+                        : -1;
+
+                      return (
+                        <div
+                          key={idx}
                           style={{
-                            position: "absolute",
-                            top: 4,
-                            right: 4,
-                            width: 18,
-                            height: 18,
-                            borderRadius: "50%",
-                            background: "rgba(0,0,0,0.6)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            color: "#fff",
-                            fontSize: 12,
+                            position: "relative",
+                            display: "inline-block",
+                            marginRight: 8,
+                            marginBottom: styleEnabled ? 4 : 0,
                           }}
-                        />
-                      </div>
-                    ),
+                        >
+                          <div style={{ position: "relative" }}>
+                            <Image
+                              src={img}
+                              width={80}
+                              height={80}
+                              alt="product"
+                              loading="lazy"
+                            />
+                            <CloseOutlined
+                              onClick={() => {
+                                const newImages = currentProduct.Images.split(
+                                  ",",
+                                )
+                                  .filter((_, i) => i !== idx)
+                                  .join(",");
+                                handleImagesChange(
+                                  currentProduct.key,
+                                  newImages,
+                                );
+                              }}
+                              style={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                width: 18,
+                                height: 18,
+                                borderRadius: "50%",
+                                background: "rgba(0,0,0,0.6)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                color: "#fff",
+                                fontSize: 12,
+                              }}
+                            />
+                          </div>
+                          {styleEnabled && (
+                            <Select
+                              size="small"
+                              value={selectedStyle}
+                              options={styleOptions}
+                              onChange={(val) =>
+                                handleChooseStyleChange(
+                                  currentProduct.key,
+                                  imageIndex,
+                                  val === -1 ? null : val,
+                                )
+                              }
+                              style={{ width: 80, marginTop: 2 }}
+                            />
+                          )}
+                        </div>
+                      );
+                    },
                   )}
                 </>
               )}
-            </div>
-
-            <Flex gap={4} wrap justify="space-around" style={{ maxWidth: 136 }}>
-              <Button
-                onClick={() => setIsEdit((prev) => !prev)}
-                style={{ padding: "2px 8px" }}
-              >
-                <EditOutlined />
-              </Button>
-              <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
-                <PlusSquareOutlined />
-              </Button>
-              <Button
-                type={
-                  currentProduct.key === mergeSourceKey ? "primary" : "default"
-                }
-                onClick={() => {
-                  if (!mergeSourceKey) {
-                    setMergeSourceKey(currentProduct.key);
-                  } else {
-                    handleMergeProduct(currentProduct.key);
+            </Col>
+            <Col span={24} lg={{ span: 5 }}>
+              <Flex gap={4} wrap>
+                <Button
+                  onClick={() => setIsEdit((prev) => !prev)}
+                  style={{ padding: "2px 8px" }}
+                >
+                  <EditOutlined />
+                </Button>
+                <Button onClick={() => handleDuplicateRow(currentProduct.key)}>
+                  <PlusSquareOutlined />
+                </Button>
+                <Button
+                  type={
+                    currentProduct.key === mergeSourceKey
+                      ? "primary"
+                      : "default"
                   }
-                }}
-              >
-                <MergeOutlined />
-              </Button>
-              <InputNumber
-                placeholder="Split"
-                addonAfter={
-                  <ScissorOutlined
-                    onClick={() =>
-                      isNumber(productSplit) &&
-                      handleSplitProduct(currentProduct.key, productSplit)
+                  onClick={() => {
+                    if (!mergeSourceKey) {
+                      setMergeSourceKey(currentProduct.key);
+                    } else {
+                      handleMergeProduct(currentProduct.key);
                     }
-                  />
-                }
-                onChange={(value) => setProductSplit(value as number)}
-                value={productSplit}
-                style={{ width: "90px" }}
-              />
-            </Flex>
-          </Flex>
+                  }}
+                >
+                  <MergeOutlined />
+                </Button>
+                <InputNumber
+                  placeholder="Split"
+                  addonAfter={
+                    <ScissorOutlined
+                      onClick={() =>
+                        isNumber(productSplit) &&
+                        handleSplitProduct(currentProduct.key, productSplit)
+                      }
+                    />
+                  }
+                  onChange={(value) => setProductSplit(value as number)}
+                  value={productSplit}
+                  style={{ width: "90px" }}
+                />
+              </Flex>
+            </Col>
+          </Row>
         </Col>
       </Row>
     </div>
