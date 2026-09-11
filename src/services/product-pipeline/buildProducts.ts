@@ -68,7 +68,7 @@ export async function buildProducts({
     let processedStyleData: string | undefined;
     if (styleRaw) {
       const styleIndices = String(styleRaw)
-        .split(',')
+        .split('|')
         .map((s) => s.trim())
         .filter(Boolean)
         .map(Number);

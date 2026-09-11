@@ -55,7 +55,7 @@ export interface Product {
   Images: string;
   Categories: string;
   Link?: string;
-  'Choose Your Style'?: string;
+  "Choose Your Style"?: string;
   [key: string]: any;
 }
 function ConvertFile() {
@@ -165,7 +165,7 @@ function ConvertFile() {
         if (enabled) {
           const count = p.Images?.split(",").filter(Boolean).length || 0;
           const allIndices = Array.from({ length: count }, (_, i) => i + 1);
-          return { ...p, "Choose Your Style": allIndices.join(",") };
+          return { ...p, "Choose Your Style": allIndices.join("|") };
         }
         return { ...p, "Choose Your Style": "" };
       }),
