@@ -11,6 +11,7 @@ const navigation = {
   originalProduct: '/original-product',
   formatImage: '/format-image',
   revenue: '/revenue',
-  videoGenerator: '/video-generator'
+  videoGenerator: '/video-generator',
+  productSpy: '/product-spy'
 };
 export { navigation };

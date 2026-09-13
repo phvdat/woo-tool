@@ -33,4 +33,10 @@ export const endpoint = {
   youtubeStatus: '/api/youtube/status',
   youtubeDisconnect: '/api/youtube/disconnect',
   youtubeOauthConfig: '/api/youtube/oauth-config',
+
+  spyCompetitors: '/api/product-spy/competitors',
+  spyTelegramConfig: '/api/product-spy/telegram-config',
+  spyCheckNow: '/api/product-spy/check-now',
+  spyTestTelegram: '/api/product-spy/test-telegram',
+  spyProducts: '/api/product-spy/products',
 };

@@ -19,6 +19,7 @@
     "archiver": "^7.0.1",
     "axios": "^1.6.8",
     "axios-retry": "^4.5.0",
+    "cheerio": "^1.2.0",
     "dayjs": "^1.11.13",
     "exiftool-vendored": "^30.5.0",
     "file-saver": "^2.0.5",

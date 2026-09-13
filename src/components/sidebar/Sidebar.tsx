@@ -4,6 +4,7 @@ import { navigation } from "@/constant/navigation";
 import {
   BarChartOutlined,
   CloudDownloadOutlined,
+  EyeOutlined,
   FileExcelOutlined,
   FolderOutlined,
   FormatPainterOutlined,
@@ -134,6 +135,18 @@ const Sidebar = () => {
               onClick={() => setSidebarOpen(false)}
             >
               Format Image
+            </Link>
+          ),
+        },
+        {
+          key: navigation.productSpy,
+          icon: <EyeOutlined />,
+          label: (
+            <Link
+              href={navigation.productSpy}
+              onClick={() => setSidebarOpen(false)}
+            >
+              Product Spy
             </Link>
           ),
         },

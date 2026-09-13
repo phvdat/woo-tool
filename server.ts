@@ -19,6 +19,8 @@ app.prepare().then(async () => {
   startBlogCron();
   const { startYoutubeRetryCron } = await import("@/services/youtube/youtubeService");
   startYoutubeRetryCron();
+  const { startProductSpyCron } = await import("@/services/product-spy/scheduler");
+  startProductSpyCron();
   const httpServer = createServer(handler);
 
   const io = new Server(httpServer);

@@ -13,6 +13,17 @@ export const telegramBot = {
     return response.data;
   },
 
+  sendPhoto: async (chatId: string, photo: string, { caption }: { caption: string }) => {
+    const url = `${process.env.TELEGRAM_BOT_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}/sendPhoto`;
+    const response = await axios.post(url, {
+      chat_id: chatId.toString(),
+      photo,
+      caption,
+      parse_mode: 'HTML',
+    });
+    return response.data;
+  },
+
   sendDocument: async (
     chatId: string,
     stream: NodeJS.ReadableStream,
