@@ -13,12 +13,14 @@ import {
   LoadingOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import {
   Button,
   Card,
   Modal,
+  Select,
   Space,
   Switch,
   Table,
@@ -28,7 +30,7 @@ import {
   message,
 } from "antd";
 import axios from "axios";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import CompetitorForm from "./CompetitorForm";
 
 const { Text } = Typography;
@@ -39,7 +41,23 @@ export default function CompetitorTable() {
   const [editing, setEditing] = useState<SpyCompetitor | null>(null);
   const [checking, setChecking] = useState<string | null>(null);
   const [checkingAll, setCheckingAll] = useState(false);
+  const [reDetecting, setReDetecting] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const [platformFilter, setPlatformFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  const filteredCompetitors = useMemo(() => {
+    if (!competitors) return [];
+    return competitors.filter((c) => {
+      if (platformFilter && c.platform !== platformFilter) return false;
+      if (statusFilter) {
+        if (statusFilter === "none" && c.lastStatus) return false;
+        if (statusFilter === "success" && c.lastStatus !== "success") return false;
+        if (statusFilter === "error" && c.lastStatus !== "error") return false;
+      }
+      return true;
+    });
+  }, [competitors, platformFilter, statusFilter]);
 
   const handleDelete = async (_id: string) => {
     Modal.confirm({
@@ -92,6 +110,19 @@ export default function CompetitorTable() {
       messageApi.error(err?.response?.data?.error || "Failed to start check");
     } finally {
       setCheckingAll(false);
+    }
+  };
+
+  const handleRedetectAll = async () => {
+    setReDetecting(true);
+    try {
+      const { data } = await axios.patch(endpoint.spyCompetitors);
+      messageApi.success(`Re-detected ${data.updated} platform(s)`);
+      await mutate();
+    } catch (err: any) {
+      messageApi.error(err?.response?.data?.error || "Failed to re-detect platforms");
+    } finally {
+      setReDetecting(false);
     }
   };
 
@@ -216,7 +247,13 @@ export default function CompetitorTable() {
             <Button
               type="text"
               size="small"
-              icon={checking === record._id ? <LoadingOutlined /> : <ThunderboltOutlined />}
+              icon={
+                checking === record._id ? (
+                  <LoadingOutlined />
+                ) : (
+                  <ThunderboltOutlined />
+                )
+              }
               onClick={() => handleCheckNow(record._id!)}
               disabled={checking !== null}
             />
@@ -253,9 +290,7 @@ export default function CompetitorTable() {
           <Space>
             <EyeOutlined />
             <span>Competitors</span>
-            {enabledCount > 0 && (
-              <Tag color="green">{enabledCount} active</Tag>
-            )}
+            {enabledCount > 0 && <Tag color="green">{enabledCount} active</Tag>}
           </Space>
         }
         extra={
@@ -268,6 +303,13 @@ export default function CompetitorTable() {
             >
               Check All
             </Button>
+            <Button
+              icon={<SearchOutlined />}
+              onClick={handleRedetectAll}
+              loading={reDetecting}
+            >
+              Re-detect Platform
+            </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               Add Competitor
             </Button>
@@ -275,15 +317,43 @@ export default function CompetitorTable() {
         }
         size="small"
       >
+        <Space style={{ marginBottom: 12 }} wrap>
+          <Select
+            placeholder="All Platforms"
+            allowClear
+            style={{ width: 150 }}
+            value={platformFilter}
+            onChange={setPlatformFilter}
+            options={[
+              { value: "woocommerce", label: "WooCommerce" },
+              { value: "shopify", label: "Shopify" },
+              { value: "generic", label: "Generic" },
+            ]}
+          />
+          <Select
+            placeholder="All Statuses"
+            allowClear
+            style={{ width: 140 }}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: "success", label: "Success" },
+              { value: "error", label: "Error" },
+              { value: "none", label: "Not Checked" },
+            ]}
+          />
+        </Space>
         <Table
           rowKey="_id"
           columns={columns}
-          dataSource={competitors}
+          dataSource={filteredCompetitors}
           loading={isLoading}
-          pagination={{ pageSize: 10, showSizeChanger: false }}
+          pagination={{ pageSize: 25, showSizeChanger: false }}
           size="small"
           scroll={{ x: 900 }}
-          locale={{ emptyText: "No competitors yet. Add one to start monitoring." }}
+          locale={{
+            emptyText: "No competitors yet. Add one to start monitoring.",
+          }}
         />
       </Card>
 

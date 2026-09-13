@@ -133,3 +133,38 @@ export async function DELETE(request: Request) {
     );
   }
 }
+
+export async function PATCH() {
+  try {
+    const { db } = await connectToDatabase();
+    const competitors = await db
+      .collection(SPY_COMPETITORS_COLLECTION)
+      .find()
+      .toArray();
+
+    let updated = 0;
+    for (const comp of competitors) {
+      try {
+        const { platform } = await detectPlatform(comp.url);
+        if (platform !== comp.platform) {
+          await db
+            .collection(SPY_COMPETITORS_COLLECTION)
+            .updateOne(
+              { _id: comp._id },
+              { $set: { platform } }
+            );
+          updated++;
+        }
+      } catch {
+        // skip failed detections
+      }
+    }
+
+    return NextResponse.json({ success: true, updated });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to re-detect platforms" },
+      { status: 500 }
+    );
+  }
+}

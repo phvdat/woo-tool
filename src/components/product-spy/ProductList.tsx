@@ -37,8 +37,13 @@ export default function ProductList() {
   const { competitors } = useSpyCompetitors();
 
   const [preset, setPreset] = useState<PresetRange>("7days");
-  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
-  const [competitorFilter, setCompetitorFilter] = useState<string | undefined>(undefined);
+  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([
+    null,
+    null,
+  ]);
+  const [competitorFilter, setCompetitorFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
@@ -46,7 +51,10 @@ export default function ProductList() {
     const today = dayjs();
     switch (preset) {
       case "today":
-        return { from: today.format("YYYY-MM-DD"), to: today.format("YYYY-MM-DD") };
+        return {
+          from: today.format("YYYY-MM-DD"),
+          to: today.format("YYYY-MM-DD"),
+        };
       case "yesterday":
         return {
           from: today.subtract(1, "day").format("YYYY-MM-DD"),
@@ -94,9 +102,7 @@ export default function ProductList() {
         <Space>
           <EyeOutlined />
           <span>Detected Products</span>
-          {response && (
-            <Tag color="blue">{response.total} total</Tag>
-          )}
+          {response && <Tag color="blue">{response.total} total</Tag>}
         </Space>
       }
       size="small"
@@ -188,7 +194,7 @@ export default function ProductList() {
                 }}
                 dataSource={group.products}
                 renderItem={(item) => (
-                  <List.Item>
+                  <List.Item style={{ height: "100%" }}>
                     <Card
                       size="small"
                       hoverable
@@ -228,24 +234,35 @@ export default function ProductList() {
                       ]}
                     >
                       <Card.Meta
-                        title={
-                          <Text
-                            ellipsis={{ tooltip: item.title }}
-                            style={{ fontSize: 13 }}
-                          >
-                            {item.title}
-                          </Text>
-                        }
+                        // title={
+                        //   <Text
+                        //     ellipsis={{ tooltip: item.title }}
+                        //     style={{ fontSize: 13 }}
+                        //   >
+                        //     {item.title}
+                        //   </Text>
+                        // }
                         description={
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 4,
+                            }}
+                          >
                             {item.price && (
-                              <Text strong style={{ color: "#52c41a", fontSize: 14 }}>
+                              <Text
+                                strong
+                                style={{ color: "#52c41a", fontSize: 14 }}
+                              >
                                 ${parseFloat(item.price).toFixed(2)}
                               </Text>
                             )}
+
                             <Text type="secondary" style={{ fontSize: 12 }}>
                               {item.competitorName}
                             </Text>
+
                             <Text type="secondary" style={{ fontSize: 11 }}>
                               {dayjs(item.firstSeenAt).format("HH:mm")}
                             </Text>
@@ -260,7 +277,13 @@ export default function ProductList() {
           ))}
 
           {response && response.totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: 8,
+              }}
+            >
               <Pagination
                 current={response.page}
                 total={response.total}
