@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const platform = await detectPlatform(url);
+    const { platform } = await detectPlatform(url);
 
     const competitor = {
       name,
@@ -90,7 +90,8 @@ export async function PUT(request: Request) {
           { status: 400 }
         );
       }
-      updates.platform = await detectPlatform(updates.url);
+      const { platform } = await detectPlatform(updates.url);
+      updates.platform = platform;
     }
 
     const { db } = await connectToDatabase();

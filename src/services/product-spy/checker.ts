@@ -14,7 +14,25 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
   const compId = competitor._id!;
 
   try {
-    const products = await fetchProducts(competitor.url, competitor.platform);
+    const { products, debug } = await fetchProducts(competitor.url, competitor.platform);
+
+    if (products.length === 0) {
+      const now = new Date().toISOString();
+      const debugInfo = debug.length > 0 ? `\nDebug: ${debug.join("; ")}` : "";
+      await db
+        .collection(SPY_COMPETITORS_COLLECTION)
+        .updateOne(
+          { _id: new ObjectId(compId) },
+          {
+            $set: {
+              lastCheckAt: now,
+              lastStatus: "error",
+              lastError: `No products found from this competitor. The crawler may not be able to detect this site's products.${debugInfo}`,
+            },
+          }
+        );
+      return;
+    }
 
     const productCol = db.collection(SPY_PRODUCTS_COLLECTION);
 

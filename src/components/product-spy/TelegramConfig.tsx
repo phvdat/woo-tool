@@ -5,11 +5,17 @@ import { endpoint } from "@/constant/endpoint";
 import { CheckCircleOutlined, SendOutlined } from "@ant-design/icons";
 import { Button, Card, Input, Space, message } from "antd";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function TelegramConfig() {
   const { config, mutate } = useSpyTelegramConfig();
-  const [chatId, setChatId] = useState(config?.chatId || "");
+  const [chatId, setChatId] = useState("");
+
+  useEffect(() => {
+    if (config?.chatId) {
+      setChatId(config.chatId);
+    }
+  }, [config]);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
