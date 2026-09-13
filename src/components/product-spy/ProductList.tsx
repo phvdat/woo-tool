@@ -22,8 +22,6 @@ const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 const { Option } = Select;
 
-type PresetRange = "today" | "yesterday" | "7days" | "custom";
-
 function formatDateGroup(dateStr: string): string {
   return dayjs(dateStr).format("YYYY-MM-DD (ddd)");
 }
@@ -36,10 +34,9 @@ interface GroupedProducts {
 export default function ProductList() {
   const { competitors } = useSpyCompetitors();
 
-  const [preset, setPreset] = useState<PresetRange>("7days");
-  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([
-    null,
-    null,
+  const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
+    dayjs().subtract(6, "day"),
+    dayjs(),
   ]);
   const [competitorFilter, setCompetitorFilter] = useState<string | undefined>(
     undefined,
@@ -48,32 +45,11 @@ export default function ProductList() {
   const pageSize = 50;
 
   const { from, to } = useMemo(() => {
-    const today = dayjs();
-    switch (preset) {
-      case "today":
-        return {
-          from: today.format("YYYY-MM-DD"),
-          to: today.format("YYYY-MM-DD"),
-        };
-      case "yesterday":
-        return {
-          from: today.subtract(1, "day").format("YYYY-MM-DD"),
-          to: today.subtract(1, "day").format("YYYY-MM-DD"),
-        };
-      case "7days":
-        return {
-          from: today.subtract(6, "day").format("YYYY-MM-DD"),
-          to: today.format("YYYY-MM-DD"),
-        };
-      case "custom":
-        return {
-          from: customRange[0]?.format("YYYY-MM-DD") || undefined,
-          to: customRange[1]?.format("YYYY-MM-DD") || undefined,
-        };
-      default:
-        return { from: undefined, to: undefined };
-    }
-  }, [preset, customRange]);
+    return {
+      from: range[0]?.format("YYYY-MM-DD") || undefined,
+      to: range[1]?.format("YYYY-MM-DD") || undefined,
+    };
+  }, [range]);
 
   const { response, isLoading } = useSpyProducts({
     from,
@@ -111,32 +87,21 @@ export default function ProductList() {
         <Space wrap size="middle">
           <Space>
             <Text type="secondary">Range:</Text>
-            <Select
-              value={preset}
-              onChange={(v) => {
-                setPreset(v);
-                setPage(1);
-              }}
-              style={{ width: 130 }}
-              size="small"
-            >
-              <Option value="today">Today</Option>
-              <Option value="yesterday">Yesterday</Option>
-              <Option value="7days">Last 7 days</Option>
-              <Option value="custom">Custom range</Option>
-            </Select>
-          </Space>
-
-          {preset === "custom" && (
             <RangePicker
-              value={customRange as any}
+              value={range}
               onChange={(dates) => {
-                setCustomRange(dates as [Dayjs | null, Dayjs | null]);
+                setRange(dates as [Dayjs | null, Dayjs | null]);
                 setPage(1);
               }}
+              presets={[
+                { label: "Today", value: [dayjs(), dayjs()] },
+                { label: "Yesterday", value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")] },
+                { label: "Last 7 days", value: [dayjs().subtract(6, "day"), dayjs()] },
+                { label: "Last 30 days", value: [dayjs().subtract(29, "day"), dayjs()] },
+              ]}
               size="small"
             />
-          )}
+          </Space>
 
           <Space>
             <Text type="secondary">Competitor:</Text>
