@@ -1,8 +1,9 @@
 import { RawSpyProduct } from "@/types/product-spy";
 import { fetchWooCommerceProducts, isWooCommerceStore } from "./woocommerce";
+import { fetchShopifyProducts, isShopifyStore } from "./shopify";
 import { fetchGenericProducts, GenericFetchResult } from "./generic";
 
-export type Platform = "woocommerce" | "generic";
+export type Platform = "woocommerce" | "shopify" | "generic";
 
 export interface FetchResult {
   products: RawSpyProduct[];
@@ -12,11 +13,20 @@ export interface FetchResult {
 export async function detectPlatform(
   url: string
 ): Promise<{ platform: Platform; reason: string }> {
-  const result = await isWooCommerceStore(url);
-  return {
-    platform: result.detected ? "woocommerce" : "generic",
-    reason: result.reason,
-  };
+  // 1. WooCommerce
+  const wooResult = await isWooCommerceStore(url);
+  if (wooResult.detected) {
+    return { platform: "woocommerce", reason: wooResult.reason };
+  }
+
+  // 2. Shopify
+  const shopifyResult = await isShopifyStore(url);
+  if (shopifyResult.detected) {
+    return { platform: "shopify", reason: shopifyResult.reason };
+  }
+
+  // 3. Generic
+  return { platform: "generic", reason: "No platform-specific signals detected" };
 }
 
 export async function fetchProducts(
@@ -29,7 +39,6 @@ export async function fetchProducts(
       if (products.length > 0) {
         return { products, debug: ["WooCommerce Store API returned products"] };
       }
-      // WooCommerce API returned 0 products, try generic fallback
       const generic = await fetchGenericProducts(url);
       return {
         products: generic.products,
@@ -49,5 +58,32 @@ export async function fetchProducts(
       };
     }
   }
+
+  if (platform === "shopify") {
+    try {
+      const products = await fetchShopifyProducts(url);
+      if (products.length > 0) {
+        return { products, debug: ["Shopify /products.json returned products"] };
+      }
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          "Shopify /products.json returned 0 products",
+          ...generic.debug,
+        ],
+      };
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          `Shopify /products.json error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      };
+    }
+  }
+
   return fetchGenericProducts(url);
 }

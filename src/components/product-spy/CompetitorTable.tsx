@@ -130,11 +130,23 @@ export default function CompetitorTable() {
       dataIndex: "platform",
       key: "platform",
       width: 120,
-      render: (platform: string) => (
-        <Tag color={platform === "woocommerce" ? "green" : "blue"}>
-          {platform === "woocommerce" ? "WooCommerce" : "Generic"}
-        </Tag>
-      ),
+      render: (platform: string) => {
+        const colorMap: Record<string, string> = {
+          woocommerce: "green",
+          shopify: "purple",
+          generic: "blue",
+        };
+        const labelMap: Record<string, string> = {
+          woocommerce: "WooCommerce",
+          shopify: "Shopify",
+          generic: "Generic",
+        };
+        return (
+          <Tag color={colorMap[platform] || "blue"}>
+            {labelMap[platform] || platform}
+          </Tag>
+        );
+      },
     },
     {
       title: "Interval",
