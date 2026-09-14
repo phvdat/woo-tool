@@ -28,8 +28,10 @@ import dayjs, { Dayjs } from "dayjs";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   getProductKey,
-  loadSelected,
-  saveSelected,
+  loadSelectedKeys,
+  loadSelectedUrls,
+  saveToggle,
+  clearAllSelected,
 } from "./productSelectionHelper";
 
 const { RangePicker } = DatePicker;
@@ -51,23 +53,12 @@ export default function ProductList() {
   const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
-    setSelected(loadSelected());
+    setSelected(loadSelectedKeys());
   }, []);
 
   const toggleSelect = useCallback(
     (item: SpyProductItem) => {
-      const key = getProductKey(item);
-      if (!key) return;
-      setSelected((prev) => {
-        const next = new Set(prev);
-        if (next.has(key)) {
-          next.delete(key);
-        } else {
-          next.add(key);
-        }
-        saveSelected(next);
-        return next;
-      });
+      setSelected(saveToggle(item));
     },
     [],
   );
@@ -113,25 +104,17 @@ export default function ProductList() {
   const copyUrls = useCallback(() => {
     if (selected.size === 0) return;
 
-    const allProducts = grouped.flatMap((g) => g.products);
-    const urls: string[] = [];
-    for (const p of allProducts) {
-      const key = getProductKey(p);
-      if (selected.has(key) && p.url) {
-        urls.push(p.url);
-      }
-    }
-
+    const urls = loadSelectedUrls().filter((u) => u);
     if (urls.length === 0) return;
 
     navigator.clipboard.writeText(urls.join("\n")).then(() => {
       messageApi.success(`Copied ${urls.length} product URL${urls.length > 1 ? "s" : ""}`);
     });
-  }, [selected, grouped, messageApi]);
+  }, [selected, messageApi]);
 
   const clearSelection = useCallback(() => {
+    clearAllSelected();
     setSelected(new Set());
-    saveSelected(new Set());
   }, []);
 
   return (

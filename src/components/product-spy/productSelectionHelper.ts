@@ -2,6 +2,11 @@ import { SpyProductItem } from "@/app/hooks/useSpyProducts";
 
 const STORAGE_KEY = "product-spy-selected";
 
+export interface SelectedEntry {
+  key: string;
+  url: string;
+}
+
 export function getProductKey(item: SpyProductItem): string {
   if (item._id) return item._id;
   if (item.competitorId && item.externalId)
@@ -9,24 +14,87 @@ export function getProductKey(item: SpyProductItem): string {
   return item.url?.toLowerCase().replace(/\/+$/, "") || "";
 }
 
-export function loadSelected(): Set<string> {
+export function loadSelectedKeys(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return new Set();
     const arr = JSON.parse(raw);
-    if (Array.isArray(arr)) return new Set(arr);
+    if (Array.isArray(arr)) {
+      return new Set(
+        arr
+          .filter((e: any) => e && typeof e.key === "string")
+          .map((e: SelectedEntry) => e.key),
+      );
+    }
+    // Legacy format: plain string array
+    if (arr.length > 0 && typeof arr[0] === "string") {
+      return new Set(arr);
+    }
     return new Set();
   } catch {
     return new Set();
   }
 }
 
-export function saveSelected(selected: Set<string>): void {
+export function loadSelectedUrls(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) {
+      return arr
+        .filter((e: any) => e && typeof e.key === "string" && typeof e.url === "string")
+        .map((e: SelectedEntry) => e.url);
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSelected(entries: SelectedEntry[]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(selected)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   } catch {
     // ignore
+  }
+}
+
+export function saveToggle(item: SpyProductItem): Set<string> {
+  const key = getProductKey(item);
+  if (!key) return new Set();
+  const current = loadSelectedEntries();
+  const exists = current.findIndex((e) => e.key === key);
+  let next: SelectedEntry[];
+  if (exists >= 0) {
+    next = current.filter((e) => e.key !== key);
+  } else {
+    next = [...current, { key, url: item.url || "" }];
+  }
+  saveSelected(next);
+  return new Set(next.map((e) => e.key));
+}
+
+export function clearAllSelected(): void {
+  saveSelected([]);
+}
+
+function loadSelectedEntries(): SelectedEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) {
+      return arr.filter(
+        (e: any) => e && typeof e.key === "string" && typeof e.url === "string",
+      );
+    }
+    return [];
+  } catch {
+    return [];
   }
 }
