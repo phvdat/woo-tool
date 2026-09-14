@@ -267,6 +267,7 @@ const ProductItem = function ProductItem({
                           {styleEnabled && (
                             <Select
                               size="small"
+                              allowClear
                               value={selectedStyle}
                               options={styleOptions}
                               onChange={(val) =>
@@ -274,6 +275,13 @@ const ProductItem = function ProductItem({
                                   currentProduct.key,
                                   imageIndex,
                                   val === -1 ? null : val,
+                                )
+                              }
+                              onClear={() =>
+                                handleChooseStyleChange(
+                                  currentProduct.key,
+                                  imageIndex,
+                                  null,
                                 )
                               }
                               style={{ width: 80, marginTop: 2 }}
