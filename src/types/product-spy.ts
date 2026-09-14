@@ -2,7 +2,7 @@ export interface SpyCompetitor {
   _id?: string;
   name: string;
   url: string;
-  platform: "woocommerce" | "shopify" | "generic";
+  platform: "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "generic";
   enabled: boolean;
   checkIntervalMinutes: number;
   lastCheckAt?: string;

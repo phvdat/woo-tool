@@ -165,11 +165,21 @@ export default function CompetitorTable() {
         const colorMap: Record<string, string> = {
           woocommerce: "green",
           shopify: "purple",
+          shopbase: "cyan",
+          teechip: "orange",
+          merchize: "magenta",
+          merchking: "gold",
+          lattex: "lime",
           generic: "blue",
         };
         const labelMap: Record<string, string> = {
           woocommerce: "WooCommerce",
           shopify: "Shopify",
+          shopbase: "ShopBase",
+          teechip: "TeeChip",
+          merchize: "Merchize",
+          merchking: "MerchKing",
+          lattex: "Lattex",
           generic: "Generic",
         };
         return (
@@ -327,6 +337,11 @@ export default function CompetitorTable() {
             options={[
               { value: "woocommerce", label: "WooCommerce" },
               { value: "shopify", label: "Shopify" },
+              { value: "shopbase", label: "ShopBase" },
+              { value: "teechip", label: "TeeChip" },
+              { value: "merchize", label: "Merchize" },
+              { value: "merchking", label: "MerchKing" },
+              { value: "lattex", label: "Lattex" },
               { value: "generic", label: "Generic" },
             ]}
           />

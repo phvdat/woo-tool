@@ -1,9 +1,14 @@
 import { RawSpyProduct } from "@/types/product-spy";
 import { fetchWooCommerceProducts, isWooCommerceStore } from "./woocommerce";
 import { fetchShopifyProducts, isShopifyStore } from "./shopify";
+import { fetchShopBaseProducts, isShopBaseStore } from "./shopbase";
+import { fetchTeeChipProducts, isTeeChipStore } from "./teechip";
+import { fetchMerchizeProducts, isMerchizeStore } from "./merchize";
+import { fetchMerchKingProducts, isMerchKingStore } from "./merchking";
+import { fetchLattexProducts, isLattexStore } from "./lattex";
 import { fetchGenericProducts, GenericFetchResult } from "./generic";
 
-export type Platform = "woocommerce" | "shopify" | "generic";
+export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "generic";
 
 export interface FetchResult {
   products: RawSpyProduct[];
@@ -25,7 +30,37 @@ export async function detectPlatform(
     return { platform: "shopify", reason: shopifyResult.reason };
   }
 
-  // 3. Generic
+  // 3. ShopBase
+  const shopbaseResult = await isShopBaseStore(url);
+  if (shopbaseResult.detected) {
+    return { platform: "shopbase", reason: shopbaseResult.reason };
+  }
+
+  // 4. TeeChip
+  const teechipResult = await isTeeChipStore(url);
+  if (teechipResult.detected) {
+    return { platform: "teechip", reason: teechipResult.reason };
+  }
+
+  // 5. Merchize
+  const merchizeResult = await isMerchizeStore(url);
+  if (merchizeResult.detected) {
+    return { platform: "merchize", reason: merchizeResult.reason };
+  }
+
+  // 6. MerchKing
+  const merchkingResult = await isMerchKingStore(url);
+  if (merchkingResult.detected) {
+    return { platform: "merchking", reason: merchkingResult.reason };
+  }
+
+  // 7. Lattex
+  const lattexResult = await isLattexStore(url);
+  if (lattexResult.detected) {
+    return { platform: "lattex", reason: lattexResult.reason };
+  }
+
+  // 8. Generic
   return { platform: "generic", reason: "No platform-specific signals detected" };
 }
 
@@ -79,6 +114,136 @@ export async function fetchProducts(
         products: generic.products,
         debug: [
           `Shopify /products.json error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      };
+    }
+  }
+
+  if (platform === "shopbase") {
+    try {
+      const products = await fetchShopBaseProducts(url);
+      if (products.length > 0) {
+        return { products, debug: ["ShopBase API returned products"] };
+      }
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          "ShopBase API returned 0 products",
+          ...generic.debug,
+        ],
+      };
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          `ShopBase API error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      };
+    }
+  }
+
+  if (platform === "teechip") {
+    try {
+      const products = await fetchTeeChipProducts(url);
+      if (products.length > 0) {
+        return { products, debug: ["TeeChip page returned products"] };
+      }
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          "TeeChip page returned 0 products",
+          ...generic.debug,
+        ],
+      };
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          `TeeChip fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      };
+    }
+  }
+
+  if (platform === "merchize") {
+    try {
+      const products = await fetchMerchizeProducts(url);
+      if (products.length > 0) {
+        return { products, debug: ["Merchize page returned products"] };
+      }
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          "Merchize page returned 0 products",
+          ...generic.debug,
+        ],
+      };
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          `Merchize fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      };
+    }
+  }
+
+  if (platform === "merchking") {
+    try {
+      const products = await fetchMerchKingProducts(url);
+      if (products.length > 0) {
+        return { products, debug: ["MerchKing page returned products"] };
+      }
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          "MerchKing page returned 0 products",
+          ...generic.debug,
+        ],
+      };
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          `MerchKing fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      };
+    }
+  }
+
+  if (platform === "lattex") {
+    try {
+      const products = await fetchLattexProducts(url);
+      if (products.length > 0) {
+        return { products, debug: ["Lattex page returned products"] };
+      }
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          "Lattex page returned 0 products",
+          ...generic.debug,
+        ],
+      };
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return {
+        products: generic.products,
+        debug: [
+          `Lattex fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
       };
