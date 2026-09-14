@@ -2,7 +2,14 @@
 
 import { useSpyCompetitors } from "@/app/hooks/useSpyCompetitors";
 import { useSpyProducts, SpyProductItem } from "@/app/hooks/useSpyProducts";
-import { EyeOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+  CopyOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  LinkOutlined,
+  PlusOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -10,13 +17,20 @@ import {
   Empty,
   List,
   Pagination,
+  Popconfirm,
   Select,
   Space,
   Tag,
   Typography,
+  message,
 } from "antd";
 import dayjs, { Dayjs } from "dayjs";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import {
+  getProductKey,
+  loadSelected,
+  saveSelected,
+} from "./productSelectionHelper";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
@@ -33,6 +47,30 @@ interface GroupedProducts {
 
 export default function ProductList() {
   const { competitors } = useSpyCompetitors();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [messageApi, contextHolder] = message.useMessage();
+
+  useEffect(() => {
+    setSelected(loadSelected());
+  }, []);
+
+  const toggleSelect = useCallback(
+    (item: SpyProductItem) => {
+      const key = getProductKey(item);
+      if (!key) return;
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) {
+          next.delete(key);
+        } else {
+          next.add(key);
+        }
+        saveSelected(next);
+        return next;
+      });
+    },
+    [],
+  );
 
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
     dayjs().subtract(6, "day"),
@@ -72,17 +110,73 @@ export default function ProductList() {
       .map(([date, products]) => ({ date, products }));
   }, [response?.products]);
 
-  return (
-    <Card
-      title={
-        <Space>
-          <EyeOutlined />
-          <span>Detected Products</span>
-          {response && <Tag color="blue">{response.total} total</Tag>}
-        </Space>
+  const copyUrls = useCallback(() => {
+    if (selected.size === 0) return;
+
+    const allProducts = grouped.flatMap((g) => g.products);
+    const urls: string[] = [];
+    for (const p of allProducts) {
+      const key = getProductKey(p);
+      if (selected.has(key) && p.url) {
+        urls.push(p.url);
       }
-      size="small"
-    >
+    }
+
+    if (urls.length === 0) return;
+
+    navigator.clipboard.writeText(urls.join("\n")).then(() => {
+      messageApi.success(`Copied ${urls.length} product URL${urls.length > 1 ? "s" : ""}`);
+    });
+  }, [selected, grouped, messageApi]);
+
+  const clearSelection = useCallback(() => {
+    setSelected(new Set());
+    saveSelected(new Set());
+  }, []);
+
+  return (
+    <>
+      {contextHolder}
+      <Card
+        title={
+          <Space>
+            <EyeOutlined />
+            <span>Detected Products</span>
+            {response && <Tag color="blue">{response.total} total</Tag>}
+          </Space>
+        }
+        extra={
+          <Space>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Selected: {selected.size}
+            </Text>
+            <Button
+              size="small"
+              icon={<CopyOutlined />}
+              disabled={selected.size === 0}
+              onClick={copyUrls}
+            >
+              Copy
+            </Button>
+            <Popconfirm
+              title="Clear all selected products?"
+              onConfirm={clearSelection}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                disabled={selected.size === 0}
+              >
+                Clear
+              </Button>
+            </Popconfirm>
+          </Space>
+        }
+        size="small"
+      >
       <div style={{ marginBottom: 16 }}>
         <Space wrap size="middle">
           <Space>
@@ -196,6 +290,21 @@ export default function ProductList() {
                         >
                           <LinkOutlined /> View
                         </a>,
+                        <Button
+                          key="select"
+                          type="text"
+                          size="small"
+                          icon={
+                            selected.has(getProductKey(item)) ? (
+                              <CheckOutlined style={{ color: "#52c41a" }} />
+                            ) : (
+                              <PlusOutlined />
+                            )
+                          }
+                          onClick={() => toggleSelect(item)}
+                        >
+                          {selected.has(getProductKey(item)) ? "Added" : "Add"}
+                        </Button>,
                       ]}
                     >
                       <Card.Meta
@@ -263,5 +372,6 @@ export default function ProductList() {
         </div>
       )}
     </Card>
+    </>
   );
 }
