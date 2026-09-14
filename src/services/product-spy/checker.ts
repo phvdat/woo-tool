@@ -6,7 +6,10 @@ import {
 } from "@/constant/collections";
 import { SpyCompetitor } from "@/types/product-spy";
 import { fetchProducts } from "./detector";
-import { sendNewProductNotification } from "./telegram-notifier";
+import {
+  sendNewProductNotification,
+  shouldNotifyProduct,
+} from "./telegram-notifier";
 import { ObjectId } from "mongodb";
 
 export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> {
@@ -56,7 +59,12 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
       });
 
       if (existing) {
-        if (!existing.notifiedAt && !isFirstScan && telegramConfig?.chatId) {
+        if (
+          !existing.notifiedAt &&
+          !isFirstScan &&
+          telegramConfig?.chatId &&
+          shouldNotifyProduct(product.title)
+        ) {
           const sent = await sendNewProductNotification(
             telegramConfig.chatId,
             competitor,
@@ -99,7 +107,7 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
 
       const result = await productCol.insertOne(newProduct as any);
 
-      if (!isFirstScan && telegramConfig?.chatId) {
+      if (!isFirstScan && telegramConfig?.chatId && shouldNotifyProduct(product.title)) {
         const sent = await sendNewProductNotification(
           telegramConfig.chatId,
           competitor,

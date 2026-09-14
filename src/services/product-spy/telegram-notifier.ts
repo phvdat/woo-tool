@@ -1,6 +1,39 @@
 import { telegramBot } from "@/services/telegram/telegram";
 import { SpyCompetitor } from "@/types/product-spy";
 
+const APPAREL_KEYWORDS = [
+  "tshirt",
+  "t-shirt",
+  "t shirt",
+  "shirt",
+  "hoodie",
+  "sweatshirt",
+  "sneaker",
+  "sneakers",
+  "shoe",
+  "shoes",
+  "jersey",
+  "af1",
+  "air force",
+  "airforce",
+  "air max",
+  "jacket",
+  "jogger",
+  "shorts",
+  "pants",
+  "cap",
+  "hat",
+];
+
+export function shouldNotifyProduct(title: string): boolean {
+  const normalized = title
+    .toLowerCase()
+    .replace(/[\-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return APPAREL_KEYWORDS.some((kw) => normalized.includes(kw));
+}
+
 function formatPrice(price?: string): string {
   if (!price) return "N/A";
   const num = parseFloat(price);
