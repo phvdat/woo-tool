@@ -14,13 +14,6 @@ interface WCProduct {
   images: { src: string }[];
 }
 
-const WC_SIGNALS = [
-  /woocommerce/i,
-  /wc[-_]?store/i,
-  /wc[-_]?settings/i,
-  /wp-content\/plugins\/woocommerce/i,
-];
-
 export async function fetchWooCommerceProducts(
   baseUrl: string
 ): Promise<RawSpyProduct[]> {
@@ -51,7 +44,7 @@ export async function isWooCommerceStore(
 ): Promise<{ detected: boolean; reason: string }> {
   const baseUrl = url.replace(/\/+$/, "");
 
-  // 1. Try Store API with per_page=1
+  // 1. Try Store API — only accept 200 with array response
   try {
     const { status, data } = await axios.get(
       `${baseUrl}/wp-json/wc/store/v1/products`,
@@ -62,31 +55,13 @@ export async function isWooCommerceStore(
       }
     );
     if (status === 200 && Array.isArray(data)) {
-      return { detected: true, reason: "WooCommerce Store API responded with products" };
+      return { detected: true, reason: "WooCommerce Store API responded successfully" };
     }
   } catch {
     // continue to next check
   }
 
-  // 2. Try Store API endpoint exists but may return non-200
-  try {
-    const { status } = await axios.get(
-      `${baseUrl}/wp-json/wc/store/v1/products`,
-      {
-        params: { per_page: 1 },
-        timeout: 8000,
-        headers: { "User-Agent": UA },
-        validateStatus: () => true,
-      }
-    );
-    if (status >= 200 && status < 500) {
-      return { detected: true, reason: "WooCommerce Store API endpoint exists" };
-    }
-  } catch {
-    // continue
-  }
-
-  // 3. Check homepage HTML for WooCommerce signals
+  // 2. Check homepage HTML for strong WooCommerce signals only
   try {
     const { data: html } = await axios.get(baseUrl, {
       timeout: 10000,
@@ -95,29 +70,28 @@ export async function isWooCommerceStore(
 
     const dom = new JSDOM(html);
     const { document } = dom.window;
-    const htmlStr = html as string;
 
-    // Check meta tags
+    // Strong signal: generator meta tag explicitly mentions WooCommerce
     const generator = document.querySelector('meta[name="generator"]');
-    if (generator?.getAttribute("content")?.match(/woocommerce/i)) {
+    const genContent = generator?.getAttribute("content") || "";
+    if (/woocommerce/i.test(genContent)) {
       return { detected: true, reason: "WordPress generator meta tag mentions WooCommerce" };
     }
 
-    // Check for WooCommerce scripts/styles/links in HTML
-    for (const signal of WC_SIGNALS) {
-      if (signal.test(htmlStr)) {
-        return { detected: true, reason: `WooCommerce signal found in page HTML` };
-      }
+    // Strong signal: WooCommerce plugin path in asset URLs
+    if (/wp-content\/plugins\/woocommerce\//.test(html as string)) {
+      return { detected: true, reason: "WooCommerce plugin assets found in page HTML" };
     }
 
-    // Check body class for woocommerce
+    // Strong signal: WooCommerce body class (e.g. "woocommerce" or "woocommerce-page")
     const body = document.querySelector("body");
-    if (body?.className?.match(/woocommerce/i)) {
+    const bodyClass = body?.className || "";
+    if (/\bwoocommerce\b/.test(bodyClass)) {
       return { detected: true, reason: "Body class contains WooCommerce" };
     }
   } catch {
     // homepage fetch failed
   }
 
-  return { detected: false, reason: "No WooCommerce signals detected" };
+  return { detected: false, reason: "WooCommerce Store API unavailable" };
 }
