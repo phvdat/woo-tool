@@ -11,6 +11,7 @@ import {
   shouldNotifyProduct,
 } from "./telegram-notifier";
 import { ObjectId } from "mongodb";
+import { getErrorMessage } from "@/lib/error-utils";
 
 export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> {
   const { db } = await connectToDatabase();
@@ -141,10 +142,7 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
         }
       );
   } catch (err: any) {
-    console.error(
-      `[PRODUCT-SPY] Check failed for ${competitor.name}:`,
-      err?.message || err
-    );
+    console.error(`[PRODUCT-SPY] Check failed for ${competitor.name}: ${getErrorMessage(err)}`);
     await db
       .collection(SPY_COMPETITORS_COLLECTION)
       .updateOne(

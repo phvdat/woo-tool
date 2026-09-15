@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { SPY_COMPETITORS_COLLECTION } from "@/constant/collections";
 import { ObjectId } from "mongodb";
 import { checkCompetitor, checkAllEnabledCompetitors } from "@/services/product-spy/checker";
+import { getErrorMessage } from "@/lib/error-utils";
 
 export async function POST(request: Request) {
   try {
@@ -24,14 +25,14 @@ export async function POST(request: Request) {
       }
 
       checkCompetitor(competitor as any).catch((err) =>
-        console.error("[PRODUCT-SPY] Check failed:", err)
+        console.error(`[PRODUCT-SPY] Check failed: ${getErrorMessage(err)}`)
       );
 
       return NextResponse.json({ success: true, message: "Check started" });
     }
 
     checkAllEnabledCompetitors().catch((err) =>
-      console.error("[PRODUCT-SPY] Check all failed:", err)
+      console.error(`[PRODUCT-SPY] Check all failed: ${getErrorMessage(err)}`)
     );
 
     return NextResponse.json({

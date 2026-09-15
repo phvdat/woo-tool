@@ -1,5 +1,6 @@
 import { telegramBot } from "@/services/telegram/telegram";
 import { SpyCompetitor } from "@/types/product-spy";
+import { getTelegramError } from "@/lib/error-utils";
 
 const APPAREL_KEYWORDS = [
   "tshirt",
@@ -92,7 +93,7 @@ export async function sendNewProductNotification(
     }
     return true;
   } catch (err) {
-    console.error("[PRODUCT-SPY] Telegram notification failed:", err);
+    console.error(`[PRODUCT-SPY] Telegram notification failed: ${getTelegramError(err)}`);
     return false;
   }
 }
@@ -103,7 +104,7 @@ export async function sendTestMessage(chatId: string): Promise<boolean> {
     await telegramBot.sendMessage(chatId, text);
     return true;
   } catch (err) {
-    console.error("[PRODUCT-SPY] Test Telegram failed:", err);
+    console.error(`[PRODUCT-SPY] Test Telegram failed: ${getTelegramError(err)}`);
     return false;
   }
 }

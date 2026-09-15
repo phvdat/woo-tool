@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { SPY_COMPETITORS_COLLECTION } from "@/constant/collections";
 import { SpyCompetitor } from "@/types/product-spy";
 import { checkCompetitor } from "./checker";
+import { getErrorMessage } from "@/lib/error-utils";
 
 let mainJob: ScheduledTask | null = null;
 let isRunning = false;
@@ -76,7 +77,7 @@ async function tick() {
 
     await done;
   } catch (err) {
-    console.error("[PRODUCT-SPY] Tick error:", err);
+    console.error(`[PRODUCT-SPY] Tick error: ${getErrorMessage(err)}`);
   } finally {
     isRunning = false;
   }
