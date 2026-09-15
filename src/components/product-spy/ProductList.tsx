@@ -1,6 +1,5 @@
 "use client";
 
-import { useSpyCompetitors } from "@/app/hooks/useSpyCompetitors";
 import { useSpyProducts, SpyProductItem } from "@/app/hooks/useSpyProducts";
 import {
   CopyOutlined,
@@ -15,6 +14,7 @@ import {
   Card,
   DatePicker,
   Empty,
+  Image,
   List,
   Pagination,
   Popconfirm,
@@ -38,6 +38,17 @@ const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 const { Option } = Select;
 
+const PLATFORMS = [
+  { value: "shopify", label: "Shopify" },
+  { value: "woocommerce", label: "WooCommerce" },
+  { value: "shopbase", label: "ShopBase" },
+  { value: "teechip", label: "TeeChip" },
+  { value: "merchize", label: "Merchize" },
+  { value: "merchking", label: "MerchKing" },
+  { value: "lattex", label: "Lattex" },
+  { value: "generic", label: "Generic" },
+];
+
 function formatDateGroup(dateStr: string): string {
   return dayjs(dateStr).format("YYYY-MM-DD (ddd)");
 }
@@ -48,7 +59,6 @@ interface GroupedProducts {
 }
 
 export default function ProductList() {
-  const { competitors } = useSpyCompetitors();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -67,7 +77,7 @@ export default function ProductList() {
     dayjs().subtract(6, "day"),
     dayjs(),
   ]);
-  const [competitorFilter, setCompetitorFilter] = useState<string | undefined>(
+  const [platformFilter, setPlatformFilter] = useState<string | undefined>(
     undefined,
   );
   const [page, setPage] = useState(1);
@@ -83,7 +93,7 @@ export default function ProductList() {
   const { response, isLoading } = useSpyProducts({
     from,
     to,
-    competitorId: competitorFilter,
+    platform: platformFilter,
     page,
     pageSize,
   });
@@ -181,21 +191,21 @@ export default function ProductList() {
           </Space>
 
           <Space>
-            <Text type="secondary">Competitor:</Text>
+            <Text type="secondary">Platform:</Text>
             <Select
-              value={competitorFilter}
+              value={platformFilter}
               onChange={(v) => {
-                setCompetitorFilter(v);
+                setPlatformFilter(v);
                 setPage(1);
               }}
               allowClear
-              placeholder="All competitors"
+              placeholder="All Platforms"
               style={{ width: 200 }}
               size="small"
             >
-              {competitors?.map((c) => (
-                <Option key={c._id} value={c._id}>
-                  {c.name}
+              {PLATFORMS.map((p) => (
+                <Option key={p.value} value={p.value}>
+                  {p.label}
                 </Option>
               ))}
             </Select>
@@ -251,15 +261,16 @@ export default function ProductList() {
                               alignItems: "center",
                               justifyContent: "center",
                             }}
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <img
+                            <Image
                               src={item.image}
                               alt={item.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
+                              width="100%"
+                              height={160}
+                              style={{ objectFit: "cover" }}
+                              preview
+                              fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
                             />
                           </div>
                         ) : null

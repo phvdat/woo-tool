@@ -5,6 +5,7 @@ import useSWR from "swr";
 
 export interface SpyProductItem extends SpyProduct {
   competitorName?: string;
+  platform?: string;
 }
 
 export interface SpyProductsResponse {
@@ -18,7 +19,7 @@ export interface SpyProductsResponse {
 interface UseSpyProductsParams {
   from?: string;
   to?: string;
-  competitorId?: string;
+  platform?: string;
   page?: number;
   pageSize?: number;
 }
@@ -27,7 +28,7 @@ function buildUrl(params: UseSpyProductsParams): string {
   const parts: string[] = [];
   if (params.from) parts.push(`from=${encodeURIComponent(params.from)}`);
   if (params.to) parts.push(`to=${encodeURIComponent(params.to)}`);
-  if (params.competitorId) parts.push(`competitorId=${encodeURIComponent(params.competitorId)}`);
+  if (params.platform) parts.push(`platform=${encodeURIComponent(params.platform)}`);
   if (params.page) parts.push(`page=${params.page}`);
   if (params.pageSize) parts.push(`pageSize=${params.pageSize}`);
   const qs = parts.length > 0 ? `?${parts.join("&")}` : "";

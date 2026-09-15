@@ -7,16 +7,32 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from");
     const to = searchParams.get("to");
-    const competitorId = searchParams.get("competitorId");
+    const platform = searchParams.get("platform");
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
 
     const { db } = await connectToDatabase();
 
+    const competitors = await db
+      .collection(SPY_COMPETITORS_COLLECTION)
+      .find({})
+      .toArray();
+
+    const competitorMap: Record<string, string> = {};
+    const competitorPlatformMap: Record<string, string> = {};
+    for (const c of competitors) {
+      const id = c._id.toString();
+      competitorMap[id] = c.name;
+      competitorPlatformMap[id] = c.platform;
+    }
+
     const match: Record<string, any> = {};
 
-    if (competitorId) {
-      match.competitorId = competitorId;
+    if (platform) {
+      const matchingIds = competitors
+        .filter((c) => c.platform === platform)
+        .map((c) => c._id.toString());
+      match.competitorId = { $in: matchingIds };
     }
 
     if (from || to) {
@@ -37,20 +53,11 @@ export async function GET(request: Request) {
       .limit(pageSize)
       .toArray();
 
-    const competitors = await db
-      .collection(SPY_COMPETITORS_COLLECTION)
-      .find({})
-      .toArray();
-
-    const competitorMap: Record<string, string> = {};
-    for (const c of competitors) {
-      competitorMap[c._id.toString()] = c.name;
-    }
-
     const enriched = products.map((p) => ({
       ...p,
       _id: p._id?.toString(),
       competitorName: competitorMap[p.competitorId] || "Unknown",
+      platform: competitorPlatformMap[p.competitorId] || "unknown",
     }));
 
     return NextResponse.json({
