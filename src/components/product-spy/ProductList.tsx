@@ -71,7 +71,7 @@ export default function ProductList() {
   }, []);
 
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
-    dayjs().subtract(6, "day"),
+    dayjs(),
     dayjs(),
   ]);
   const [platformFilter, setPlatformFilter] = useState<string | undefined>(
