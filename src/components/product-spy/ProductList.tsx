@@ -66,12 +66,9 @@ export default function ProductList() {
     setSelected(loadSelectedKeys());
   }, []);
 
-  const toggleSelect = useCallback(
-    (item: SpyProductItem) => {
-      setSelected(saveToggle(item));
-    },
-    [],
-  );
+  const toggleSelect = useCallback((item: SpyProductItem) => {
+    setSelected(saveToggle(item));
+  }, []);
 
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
     dayjs().subtract(6, "day"),
@@ -118,7 +115,9 @@ export default function ProductList() {
     if (urls.length === 0) return;
 
     navigator.clipboard.writeText(urls.join("\n")).then(() => {
-      messageApi.success(`Copied ${urls.length} product URL${urls.length > 1 ? "s" : ""}`);
+      messageApi.success(
+        `Copied ${urls.length} product URL${urls.length > 1 ? "s" : ""}`,
+      );
     });
   }, [selected, messageApi]);
 
@@ -170,88 +169,100 @@ export default function ProductList() {
         }
         size="small"
       >
-      <div style={{ marginBottom: 16 }}>
-        <Space wrap size="middle">
-          <Space>
-            <Text type="secondary">Range:</Text>
-            <RangePicker
-              value={range}
-              onChange={(dates) => {
-                setRange(dates as [Dayjs | null, Dayjs | null]);
-                setPage(1);
-              }}
-              presets={[
-                { label: "Today", value: [dayjs(), dayjs()] },
-                { label: "Yesterday", value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")] },
-                { label: "Last 7 days", value: [dayjs().subtract(6, "day"), dayjs()] },
-                { label: "Last 30 days", value: [dayjs().subtract(29, "day"), dayjs()] },
-              ]}
-              size="small"
-            />
-          </Space>
-
-          <Space>
-            <Text type="secondary">Platform:</Text>
-            <Select
-              value={platformFilter}
-              onChange={(v) => {
-                setPlatformFilter(v);
-                setPage(1);
-              }}
-              allowClear
-              placeholder="All Platforms"
-              style={{ width: 200 }}
-              size="small"
-            >
-              {PLATFORMS.map((p) => (
-                <Option key={p.value} value={p.value}>
-                  {p.label}
-                </Option>
-              ))}
-            </Select>
-          </Space>
-        </Space>
-      </div>
-
-      {isLoading ? (
-        <List loading />
-      ) : grouped.length === 0 ? (
-        <Empty description="No products found for this period" />
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {grouped.map((group) => (
-            <div key={group.date}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 8,
+        <div style={{ marginBottom: 16 }}>
+          <Space wrap size="middle">
+            <Space>
+              <Text type="secondary">Range:</Text>
+              <RangePicker
+                value={range}
+                onChange={(dates) => {
+                  setRange(dates as [Dayjs | null, Dayjs | null]);
+                  setPage(1);
                 }}
+                presets={[
+                  { label: "Today", value: [dayjs(), dayjs()] },
+                  {
+                    label: "Yesterday",
+                    value: [
+                      dayjs().subtract(1, "day"),
+                      dayjs().subtract(1, "day"),
+                    ],
+                  },
+                  {
+                    label: "Last 7 days",
+                    value: [dayjs().subtract(6, "day"), dayjs()],
+                  },
+                  {
+                    label: "Last 30 days",
+                    value: [dayjs().subtract(29, "day"), dayjs()],
+                  },
+                ]}
+                size="small"
+              />
+            </Space>
+
+            <Space>
+              <Text type="secondary">Platform:</Text>
+              <Select
+                value={platformFilter}
+                onChange={(v) => {
+                  setPlatformFilter(v);
+                  setPage(1);
+                }}
+                allowClear
+                placeholder="All Platforms"
+                style={{ width: 200 }}
+                size="small"
               >
-                <Title level={5} style={{ margin: 0 }}>
-                  {formatDateGroup(group.date)}
-                </Title>
-                <Tag>{group.products.length} products</Tag>
-              </div>
+                {PLATFORMS.map((p) => (
+                  <Option key={p.value} value={p.value}>
+                    {p.label}
+                  </Option>
+                ))}
+              </Select>
+            </Space>
+          </Space>
+        </div>
 
-              <List
-                grid={{
-                  gutter: 12,
-                  xs: 1,
-                  sm: 2,
-                  md: 2,
-                  lg: 3,
-                  xl: 4,
-                }}
-                dataSource={group.products}
-                renderItem={(item) => (
-                  <List.Item style={{ height: "100%" }}>
-                    <Card
-                      size="small"
-                      hoverable
-                      cover={
-                        item.image ? (
+        {isLoading ? (
+          <List loading />
+        ) : grouped.length === 0 ? (
+          <Empty description="No products found for this period" />
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {grouped.map((group) => (
+              <div key={group.date}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Title level={5} style={{ margin: 0 }}>
+                    {formatDateGroup(group.date)}
+                  </Title>
+                  <Tag>{group.products.length} products</Tag>
+                </div>
+
+                <List
+                  grid={{
+                    gutter: 12,
+                    xs: 1,
+                    sm: 2,
+                    md: 2,
+                    lg: 3,
+                    xl: 4,
+                    xxl: 6,
+                  }}
+                  dataSource={group.products}
+                  renderItem={(item) => (
+                    <List.Item style={{ height: "100%" }}>
+                      <Card
+                        size="small"
+                        hoverable
+                        cover={
                           <div
                             style={{
                               height: 160,
@@ -264,7 +275,7 @@ export default function ProductList() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Image
-                              src={item.image}
+                              src={item?.image}
                               alt={item.title}
                               width="100%"
                               height={160}
@@ -273,99 +284,100 @@ export default function ProductList() {
                               fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
                             />
                           </div>
-                        ) : null
-                      }
-                      actions={[
-                        <a
-                          key="link"
-                          href={item.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <LinkOutlined /> View
-                        </a>,
-                        <Button
-                          key="select"
-                          type="text"
-                          size="small"
-                          icon={
-                            selected.has(getProductKey(item)) ? (
-                              <CheckOutlined style={{ color: "#52c41a" }} />
-                            ) : (
-                              <PlusOutlined />
-                            )
-                          }
-                          onClick={() => toggleSelect(item)}
-                        >
-                          {selected.has(getProductKey(item)) ? "Added" : "Add"}
-                        </Button>,
-                      ]}
-                    >
-                      <Card.Meta
-                        // title={
-                        //   <Text
-                        //     ellipsis={{ tooltip: item.title }}
-                        //     style={{ fontSize: 13 }}
-                        //   >
-                        //     {item.title}
-                        //   </Text>
-                        // }
-                        description={
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 4,
-                            }}
-                          >
-                            {item.price && (
-                              <Text
-                                strong
-                                style={{ color: "#52c41a", fontSize: 14 }}
-                              >
-                                ${parseFloat(item.price).toFixed(2)}
-                              </Text>
-                            )}
-
-                            <Text type="secondary" style={{ fontSize: 12 }}>
-                              {item.competitorName}
-                            </Text>
-
-                            <Text type="secondary" style={{ fontSize: 11 }}>
-                              {dayjs(item.firstSeenAt).format("HH:mm")}
-                            </Text>
-                          </div>
                         }
-                      />
-                    </Card>
-                  </List.Item>
-                )}
-              />
-            </div>
-          ))}
+                        actions={[
+                          <a
+                            key="link"
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <LinkOutlined /> View
+                          </a>,
+                          <Button
+                            key="select"
+                            type="text"
+                            size="small"
+                            icon={
+                              selected.has(getProductKey(item)) ? (
+                                <CheckOutlined style={{ color: "#52c41a" }} />
+                              ) : (
+                                <PlusOutlined />
+                              )
+                            }
+                            onClick={() => toggleSelect(item)}
+                          >
+                            {selected.has(getProductKey(item))
+                              ? "Added"
+                              : "Add"}
+                          </Button>,
+                        ]}
+                      >
+                        <Card.Meta
+                          title={
+                            <Text
+                              ellipsis={{ tooltip: item.title }}
+                              style={{ fontSize: 13 }}
+                            >
+                              {item.title}
+                            </Text>
+                          }
+                          description={
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 4,
+                              }}
+                            >
+                              {item.price && (
+                                <Text
+                                  strong
+                                  style={{ color: "#52c41a", fontSize: 14 }}
+                                >
+                                  ${parseFloat(item.price).toFixed(2)}
+                                </Text>
+                              )}
 
-          {response && response.totalPages > 1 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginTop: 8,
-              }}
-            >
-              <Pagination
-                current={response.page}
-                total={response.total}
-                pageSize={response.pageSize}
-                onChange={setPage}
-                showSizeChanger={false}
-                showTotal={(total) => `${total} products`}
-                size="small"
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </Card>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {item.competitorName}
+                              </Text>
+
+                              <Text type="secondary" style={{ fontSize: 11 }}>
+                                {dayjs(item.firstSeenAt).format("HH:mm")}
+                              </Text>
+                            </div>
+                          }
+                        />
+                      </Card>
+                    </List.Item>
+                  )}
+                />
+              </div>
+            ))}
+
+            {response && response.totalPages > 1 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: 8,
+                }}
+              >
+                <Pagination
+                  current={response.page}
+                  total={response.total}
+                  pageSize={response.pageSize}
+                  onChange={setPage}
+                  showSizeChanger={false}
+                  showTotal={(total) => `${total} products`}
+                  size="small"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
     </>
   );
 }

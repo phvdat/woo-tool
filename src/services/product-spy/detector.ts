@@ -7,12 +7,34 @@ import { fetchMerchizeProducts, isMerchizeStore } from "./merchize";
 import { fetchMerchKingProducts, isMerchKingStore } from "./merchking";
 import { fetchLattexProducts, isLattexStore } from "./lattex";
 import { fetchGenericProducts, GenericFetchResult } from "./generic";
+import { fetchFacebookAdsProducts } from "./facebook-ads";
 
 export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "generic";
 
 export interface FetchResult {
   products: RawSpyProduct[];
   debug: string[];
+}
+
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+async function withFacebookFallback(
+  url: string,
+  result: FetchResult
+): Promise<FetchResult> {
+  if (result.products.length > 0) return result;
+  const domain = extractDomain(url);
+  const fb = await fetchFacebookAdsProducts(domain);
+  return {
+    products: fb.products,
+    debug: [...result.debug, ...fb.debug],
+  };
 }
 
 export async function detectPlatform(
@@ -75,22 +97,22 @@ export async function fetchProducts(
         return { products, debug: ["WooCommerce Store API returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "WooCommerce Store API returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `WooCommerce Store API error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
@@ -101,22 +123,22 @@ export async function fetchProducts(
         return { products, debug: ["Shopify /products.json returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "Shopify /products.json returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `Shopify /products.json error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
@@ -127,22 +149,22 @@ export async function fetchProducts(
         return { products, debug: ["ShopBase API returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "ShopBase API returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `ShopBase API error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
@@ -153,22 +175,22 @@ export async function fetchProducts(
         return { products, debug: ["TeeChip page returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "TeeChip page returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `TeeChip fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
@@ -179,22 +201,22 @@ export async function fetchProducts(
         return { products, debug: ["Merchize page returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "Merchize page returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `Merchize fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
@@ -205,22 +227,22 @@ export async function fetchProducts(
         return { products, debug: ["MerchKing page returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "MerchKing page returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `MerchKing fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
@@ -231,24 +253,26 @@ export async function fetchProducts(
         return { products, debug: ["Lattex page returned products"] };
       }
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           "Lattex page returned 0 products",
           ...generic.debug,
         ],
-      };
+      });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);
-      return {
+      return withFacebookFallback(url, {
         products: generic.products,
         debug: [
           `Lattex fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
-      };
+      });
     }
   }
 
-  return fetchGenericProducts(url);
+  // Generic platform: generic → facebook-ads
+  const generic = await fetchGenericProducts(url);
+  return withFacebookFallback(url, generic);
 }
