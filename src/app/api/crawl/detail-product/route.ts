@@ -72,8 +72,8 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     await browser.close();
-    console.log('Error in API call', error);
-    return Response.json(error, {
+    console.error(`[CRAWL] ${error instanceof Error ? error.message : 'API call failed'}`);
+    return Response.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, {
       status: _get(error, 'response.status', 500),
     });
   } finally {

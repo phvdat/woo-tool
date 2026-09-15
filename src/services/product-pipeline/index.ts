@@ -76,7 +76,7 @@ export async function runProductPipeline(context: ProductPipelineContext) {
                 website,
             });
         } catch (error: any) {
-            console.error('[PIPELINE] Failed to create video jobs:', error);
+            console.error(`[PIPELINE] Failed to create video jobs: ${error instanceof Error ? error.message : 'Unknown error'}`);
             if (user.telegramId) {
                 await sendTelegramMessage({
                     telegramId: user.telegramId,

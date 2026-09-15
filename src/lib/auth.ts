@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
           return false;
         }
       } catch (error) {
-        console.log('get user list', error);
+        console.error(`[AUTH] ${error instanceof Error ? error.message : 'Failed to get user list'}`);
         return false;
       }
     },

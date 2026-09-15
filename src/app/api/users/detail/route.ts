@@ -21,9 +21,8 @@ export async function PUT(request: Request) {
       .collection(USERS_COLLECTION)
       .updateOne({ email }, { $set: rest });
     return Response.json(response, { status: 200 });
-  } catch (error) {
-    console.log(error);
-
-    return Response.json(error, { status: 500 });
+  } catch (error: any) {
+    console.error(`[USERS] ${error?.message || 'Update failed'}`);
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }

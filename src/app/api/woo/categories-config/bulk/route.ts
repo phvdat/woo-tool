@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     return Response.json(response, { status: 200 });
   } catch (error) {
-    console.error('InsertMany error:', error);
+    console.error(`[CATEGORIES BULK] ${error instanceof Error ? error.message : 'InsertMany failed'}`);
     return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

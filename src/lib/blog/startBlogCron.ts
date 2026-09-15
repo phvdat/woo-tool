@@ -38,8 +38,7 @@ function createWebsiteJob(website: WebsiteConfig) {
                 );
             } catch (error) {
                 console.error(
-                    `[CRON] ${website.shopName} failed`,
-                    error
+                    `[CRON] ${website.shopName} failed: ${error instanceof Error ? error.message : 'Unknown error'}`
                 );
             }
         },

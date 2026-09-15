@@ -54,9 +54,8 @@ export async function POST(request: Request) {
       .collection(PRODUCT_DATA_COLLECTION)
       .insertMany(payload);
     return Response.json(response, { status: 200 });
-  } catch (error) {
-    console.log(error);
-
-    return Response.json(error, { status: 500 });
+  } catch (error: any) {
+    console.error(`[PRODUCT DATA] ${error?.message || 'Insert failed'}`);
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }

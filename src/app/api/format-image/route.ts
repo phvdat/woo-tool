@@ -37,9 +37,8 @@ export async function POST(request: Request) {
       link: result.downloadLink,
       images: result.images,
     });
-  } catch (error) {
-    console.log(error);
-
+  } catch (error: any) {
+    console.error(`[FORMAT IMAGE] ${error?.message || 'Unknown error'}`);
     return NextResponse.json(
       {
         success: false,

@@ -29,10 +29,9 @@ export async function POST(request: Request) {
     let { db } = await connectToDatabase();
     const response = await db.collection(CATEGORIES_COLLECTION).insertOne(rest);
     return Response.json(response, { status: 200 });
-  } catch (error) {
-    console.log(error);
-
-    return Response.json(error, { status: 500 });
+  } catch (error: any) {
+    console.error(`[CATEGORIES] ${error?.message || 'Insert failed'}`);
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 

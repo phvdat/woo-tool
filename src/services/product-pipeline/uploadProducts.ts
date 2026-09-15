@@ -48,10 +48,7 @@ export async function uploadProducts({
         error?.message ||
         "Unknown error";
 
-      console.error(
-        `[UPLOAD ERROR] Product "${product.Name}":`,
-        error
-      );
+      console.error(`[UPLOAD ERROR] Product "${product.Name}": ${errorMessage}`);
 
       emitPipelineError(
         socketId,

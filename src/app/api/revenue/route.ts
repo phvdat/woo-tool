@@ -16,8 +16,8 @@ export async function POST(request: Request) {
     });
 
     return Response.json(result);
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    console.error(`[REVENUE] ${error?.message || 'Load revenue failed'}`);
     return Response.json(
       {
         message: _get(

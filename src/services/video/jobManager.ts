@@ -110,11 +110,11 @@ async function processJob(job: VideoJob) {
     emitVideoCompleted(jobId);
 
     publishToYoutube(jobId, job.websiteId).catch((err) => {
-      console.error(`[YOUTUBE AUTO-PUBLISH] Job ${jobId} failed:`, err?.message || err);
+      console.error(`[YOUTUBE AUTO-PUBLISH] Job ${jobId} failed: ${err?.message || 'Unknown error'}`);
     });
   } catch (error: any) {
     const message = error?.message || 'Unknown error';
-    console.error(`[VIDEO JOB] Job ${jobId} failed:`, message);
+    console.error(`[VIDEO JOB] Job ${jobId} failed: ${message}`);
     await updateJobStatus(jobId, 'failed', { error: message });
     emitVideoError(jobId, message);
 

@@ -24,9 +24,9 @@ export async function POST(request: Request) {
       .collection(SELECTOR_COLLECTION)
       .insertOne(payload as any);
     return Response.json(response, { status: 200 });
-  } catch (error) {
-    console.log(error);
-    return Response.json(error, { status: 500 });
+  } catch (error: any) {
+    console.error(`[SELECTOR] ${error?.message || 'Insert failed'}`);
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -34,15 +34,14 @@ export async function DELETE(request: Request) {
   try {
     const searchParams = new URL(request.url).searchParams;
     const _id = searchParams.get('_id') || '';
-    console.log('Deleting selector with ID:', _id);
 
     let { db } = await connectToDatabase();
     const response = await db
       .collection(SELECTOR_COLLECTION)
       .findOneAndDelete({ _id: new ObjectId(_id) });
     return Response.json(response, { status: 200 });
-  } catch (error) {
-    console.log(error);
-    return Response.json(error, { status: 500 });
+  } catch (error: any) {
+    console.error(`[SELECTOR] ${error?.message || 'Delete failed'}`);
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }

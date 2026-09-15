@@ -317,7 +317,7 @@ export async function publishToYoutube(
       errorMessage = 'YouTube authentication expired. Reconnect the channel in website settings.';
     }
 
-    console.error(`[YOUTUBE PUBLISH] Job ${jobId} failed:`, errorMessage);
+    console.error(`[YOUTUBE PUBLISH] Job ${jobId} failed: ${errorMessage}`);
 
     const retryCount = (job.youtubeRetryCount || 0) + 1;
     const retryable = !isRevokedToken && retryCount < MAX_YOUTUBE_RETRIES;
@@ -425,7 +425,7 @@ export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
         console.log(`[YOUTUBE RETRY] Retried ${count} failed publish(es)`);
       }
     } catch (err: any) {
-      console.error('[YOUTUBE RETRY] Cron error:', err?.message);
+      console.error(`[YOUTUBE RETRY] Cron error: ${err?.message || 'Unknown error'}`);
     }
   }, intervalMs);
 }

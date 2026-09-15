@@ -122,8 +122,7 @@ export async function runAutoBlog(website: WebsiteConfig) {
         );
       } catch (err) {
         console.error(
-          `[AUTO BLOG] ${website.shopName}: Failed keyword ${keyword}`,
-          err
+          `[AUTO BLOG] ${website.shopName}: Failed keyword ${keyword}: ${err instanceof Error ? err.message : 'Unknown error'}`
         );
       }
     }

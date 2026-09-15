@@ -133,7 +133,7 @@ export async function POST(request: Request) {
           socketId,
         });
       } catch (error) {
-        console.error(`❌ Error while crawling ${url}:`, error);
+        console.error(`[CRAWL] Error crawling ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         result.push({ error: url });
         socket.emit('crawl-error', {
           error: {
@@ -175,8 +175,8 @@ export async function POST(request: Request) {
     return Response.json(result, { status: 200 });
   } catch (error) {
     await browser.close();
-    console.error('Error in API call', error);
-    return Response.json(error, {
+    console.error(`[CRAWL] ${error instanceof Error ? error.message : 'API call failed'}`);
+    return Response.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, {
       status: _get(error, 'response.status', 500),
     });
   }

@@ -112,7 +112,7 @@ export async function createVideoJobsFromPipeline({
       await enqueueJob(insertedJob._id!);
       created++;
     } catch (error: any) {
-      console.error(`[VIDEO PIPELINE] Failed for product ${productId}:`, error?.message);
+      console.error(`[VIDEO PIPELINE] Failed for product ${productId}: ${error?.message || 'Unknown error'}`);
       errors++;
     }
   }

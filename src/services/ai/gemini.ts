@@ -104,10 +104,7 @@ async function gemini(prompt: string): Promise<string> {
                 continue;
             }
 
-            console.error(`Gemini failed: ${modelName}`, {
-                status: error?.status,
-                message: error?.message,
-            });
+            console.error(`Gemini failed: ${modelName} (${error?.status || 'unknown'}): ${error?.message || 'Unknown error'}`);
 
             throw error;
         }

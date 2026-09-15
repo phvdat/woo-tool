@@ -11,13 +11,12 @@ export async function getGoogleTrends() {
     );
 
     if (stderr) {
-      console.error(stderr);
+      console.error(`[TRENDS] ${stderr}`);
     }
 
     return JSON.parse(stdout);
   } catch (err: any) {
-    console.error("Python stdout:", err.stdout);
-    console.error("Python stderr:", err.stderr);
+    console.error(`[TRENDS] Python error: ${err.stderr || err.stdout || err.message || 'Unknown error'}`);
     throw err;
   }
 }

@@ -16,15 +16,7 @@ export async function askAI(
 
   const usage = res.usage;
 
-  console.log(`
-================================
-Model       : ${res.model}
-Time        : ${Date.now() - start} ms
-Input       : ${usage?.input_tokens ?? 0}
-Output      : ${usage?.output_tokens ?? 0}
-Total       : ${usage?.total_tokens ?? 0}
-================================
-`);
+  console.log(`[AI] ${res.model} | ${Date.now() - start}ms | tokens: ${usage?.total_tokens ?? 0}`);
 
   return res.output_text.replaceAll("**", "");
 }

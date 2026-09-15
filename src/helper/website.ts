@@ -125,13 +125,13 @@ export async function addWatermark({
 
         list.push(finalUrl);
       } catch (error) {
-        console.error('Image error:', error);
+        console.error(`[WATERMARK] Image error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         throw error;
       }
     }
     return list;
   } catch (error) {
-    console.log('create website', error);
+    console.error(`[WATERMARK] Failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return images;
   } finally {
     deleteFolderRecursive(tempFolder);

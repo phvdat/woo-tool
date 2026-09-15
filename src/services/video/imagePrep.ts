@@ -45,7 +45,7 @@ export async function prepImages(
       writeFileSync(framePath, buffer);
       frameIndex++;
     } catch (error) {
-      console.error(`[VIDEO PREP] Failed to download image ${imageUrl}:`, error);
+      console.error(`[VIDEO PREP] Failed to download image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -56,6 +56,6 @@ export function cleanupTempDir(dirPath: string): void {
   try {
     rmSync(dirPath, { recursive: true, force: true });
   } catch (error) {
-    console.error(`[VIDEO PREP] Failed to cleanup temp dir ${dirPath}:`, error);
+    console.error(`[VIDEO PREP] Failed to cleanup temp dir: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

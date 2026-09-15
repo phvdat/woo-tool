@@ -26,11 +26,11 @@ export async function POST(request: Request) {
 
         return Response.json(products);
     } catch (error: any) {
-        console.log("error", error);
         const message =
             error?.response?.data?.message ||
             error?.message ||
             'Unknown error';
+        console.error(`[PIPELINE] ${message}`);
         emitPipelineError(socketId, message);
         return Response.json(
             {

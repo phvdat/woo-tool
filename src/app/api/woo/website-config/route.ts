@@ -38,10 +38,9 @@ export async function POST(request: Request) {
     let { db } = await connectToDatabase();
     const response = await db.collection(WEBSITES_COLLECTION).insertOne(rest);
     return Response.json(response, { status: 200 });
-  } catch (error) {
-    console.log(error);
-
-    return Response.json(error, { status: 500 });
+  } catch (error: any) {
+    console.error(`[WEBSITE CONFIG] ${error?.message || 'Create failed'}`);
+    return Response.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 

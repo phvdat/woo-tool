@@ -29,8 +29,8 @@ export async function GET(request: Request) {
     return new Response(JSON.stringify(productLinks), { status: 200 });
   } catch (error) {
     await browser.close();
-    console.log('Error fetching data', error);
-    return new Response(JSON.stringify(error), {
+    console.error(`[CRAWL] ${error instanceof Error ? error.message : 'Fetch failed'}`);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal Server Error' }), {
       status: _get(error, 'response.status', 500),
     });
   } finally {
