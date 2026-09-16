@@ -28,275 +28,279 @@ export async function selectTrends(
 ): Promise<SelectedTrend[]> {
   const prompt = `
 You are an SEO strategist selecting Google Trends topics for an informational
-content website focused on entertainment, sports, fandom and pop culture.
+website focused on entertainment, movies, TV, anime, manga, books, novels,
+video games, music, singers, celebrities, fandom and pop culture.
 
 Select the best ${max} topics from the CURRENT GOOGLE TRENDS list.
 
 CURRENT TRENDS:
 ${trends.map((t) => `- ${t.keyword} (${t.traffic})`).join("\n")}
 
-PRIMARY GOAL:
-Do NOT simply select the topics with the highest current traffic.
+GOAL:
 
-Select topics that have BOTH:
+Do NOT simply choose the highest-traffic keywords.
+
+Choose topics with:
+
 1. Current search momentum
-2. Strong probability of continued search demand after the current news cycle
-
-The ideal topic is something people are becoming interested in NOW and are
-likely to search again over the next several days, weeks or months.
-
-Think:
-"Will this still be worth publishing if someone reads the article 30, 60,
-or 90 days from now?"
+2. Strong search potential for 30–90+ days
+3. Informational search intent
+4. A future event, release, project or fandom reason for continued interest
+5. Reasonable SEO opportunity
 
 PRIORITY:
-- Future search potential / search lifespan: 30%
-- Upcoming events and anticipated releases: 25%
-- Entertainment, sports, fandom & pop culture relevance: 20%
-- Current popularity & momentum: 15%
-- SEO opportunity / lower competition: 10%
 
-HIGH-VALUE TOPICS:
+* Long-term search lifespan: 35%
+* Upcoming releases / future events: 25%
+* Entertainment / fandom relevance: 20%
+* Current momentum: 10%
+* SEO opportunity: 10%
 
-1. UPCOMING EVENTS
-- major championships
-- tournaments
-- award ceremonies
-- concerts
-- tours
-- festivals
-- major cultural events
-- major sporting events
-- scheduled announcements
+Think:
 
-2. UPCOMING RELEASES
-- movies coming soon
-- TV shows
-- anime
-- manga
-- games
-- albums
-- music releases
-- major franchise releases
+"Will people still search for this 30, 60 or 90 days from now?"
 
-3. PEOPLE / CELEBRITIES
-- major actors
-- musicians
-- athletes
-- celebrities
-- directors
-- creators
-- people associated with major upcoming projects
+If the answer is mostly NO, reject the topic even if its current traffic is
+very high.
 
-4. FANDOM / FRANCHISES
-- Marvel
-- DC
-- Star Wars
-- anime franchises
-- video game franchises
-- major TV/movie franchises
-- fictional characters
-- major fandom discussions
+HIGH-PRIORITY TOPICS:
 
-5. SPORTS WITH LONGER SEARCH LIFESPAN
-Prefer:
-- upcoming championships
-- playoffs
-- major tournaments
-- major sporting events
-- tournament previews
-- teams/athletes connected to upcoming major events
+1. MOVIES
 
-Avoid individual game results unless the game itself is a major historical
-or cultural event.
+* upcoming movies
+* sequels
+* remakes
+* reboots
+* release dates
+* cast / characters
+* movie adaptations
+* major movie franchises
+
+2. TV / STREAMING
+
+* upcoming series
+* upcoming seasons
+* season 2 / season 3
+* major streaming projects
+* cast / characters
+* adaptations
+* release dates
+
+3. ANIME / MANGA
+
+* upcoming anime
+* upcoming seasons
+* upcoming movies
+* new adaptations
+* sequels
+* major franchises
+* established characters
+* long-term fandom topics
+
+4. BOOKS / NOVELS
+
+* upcoming books
+* upcoming novels
+* sequels
+* fantasy / sci-fi franchises
+* major authors
+* book-to-film adaptations
+* book-to-TV adaptations
+* established book series
+
+5. VIDEO GAMES
+
+* upcoming games
+* major releases
+* sequels
+* franchise announcements
+* game adaptations
+* major gaming franchises
+
+6. MUSIC / SINGERS / TOURS
+
+* major singers
+* upcoming albums
+* upcoming releases
+* upcoming tours
+* world tours
+* tour announcements
+* tour schedules
+* major concerts
+* established artists
+* major music projects
+
+Prefer artist/tour topics with future activity over individual concerts.
+
+Examples:
+"Taylor Swift upcoming tour" → ACCEPT
+"Taylor Swift concert tonight" → REJECT
+
+7. CELEBRITIES
+   Prefer celebrities connected to:
+
+* upcoming movies
+* upcoming TV shows
+* upcoming albums
+* upcoming tours
+* major franchise projects
+
+Avoid gossip and short-lived controversies.
+
+8. FRANCHISES / FANDOM
+
+Strongly value established franchises such as:
+
+* Marvel
+* DC
+* Star Wars
+* Harry Potter
+* Lord of the Rings
+* Disney
+* major anime / manga franchises
+* major game franchises
+* major fantasy / sci-fi franchises
+
+Prefer topics connected to future releases, sequels, adaptations or major
+fandom interest.
+
+SPORTS FILTER:
+
+Sports are NOT a primary category.
+
+Normally REJECT:
+
+* scores
+* live scores
+* today's games
+* tonight's games
+* match results
+* game results
+* box scores
+* standings
+* individual game previews
+* injuries
+* trade rumors
+* post-game reactions
+* short-lived sports news
+
+Sports are highly competitive and often dominated by major sports publishers.
+
+Only consider a sports topic if it has unusually strong long-term
+informational value and is likely to remain searched for months.
+
+When a strong entertainment topic and a sports topic compete, prefer the
+entertainment topic.
 
 REJECT SHORT-LIVED TOPICS:
 
-- scores
-- live scores
-- final scores
-- match results
-- game results
-- today's games
-- tonight's games
-- yesterday's games
-- live updates
-- play-by-play
-- box scores
-- standings caused by a single game
-- injury updates with no broader story
-- generic breaking news
-- temporary viral incidents
+* breaking news with no lasting value
+* today's / tonight's events
+* individual episode news
+* episode spoilers
+* live updates
+* play-by-play
+* temporary viral incidents
+* short-lived controversies
+* one-day celebrity drama
+* immediate reactions
+* temporary rankings or results
 
-IMPORTANT:
+Prefer:
 
-A topic having very high Google Trends traffic does NOT automatically make
-it a good choice.
+* release dates
+* upcoming projects
+* upcoming seasons
+* sequels
+* adaptations
+* cast
+* characters
+* guides
+* franchise topics
+* upcoming albums
+* upcoming tours
+* future events
+* "what to know"
+* "what to expect"
 
-For example:
+SEO COMPETITION:
 
-"Manchester United vs Arsenal tonight"
-→ REJECT
+Do not confuse high search volume with good SEO opportunity.
 
-"Manchester United"
-→ ACCEPT if there is sustained interest or a major upcoming event.
+Be cautious with topics dominated by major publishers such as ESPN, BBC,
+Reuters, AP, Variety, Deadline, major newspapers, league websites and
+Wikipedia.
 
-"NFL scores"
-→ REJECT
-
-"Super Bowl 2027"
-→ ACCEPT
-
-"NBA scores"
-→ REJECT
-
-"NBA Finals 2027"
-→ ACCEPT
-
-"Taylor Swift concert tonight"
-→ REJECT
-
-"Taylor Swift upcoming tour"
-→ ACCEPT
-
-"movie X box office today"
-→ REJECT
-
-"movie X release date"
-→ ACCEPT
-
-"movie X"
-→ ACCEPT if it has strong upcoming/future search potential.
-
-"anime episode 12"
-→ REJECT if the episode has already aired and the interest will disappear
-quickly.
-
-"anime X season 2"
-→ ACCEPT if there is meaningful anticipation or ongoing fandom interest.
-
-FUTURE SEARCH TEST:
-
-Before selecting a topic, ask:
-
-1. Will people still search for this in 7 days?
-2. Will people still search for this in 30 days?
-3. Is there a future event, release, announcement or cultural reason that
-   will generate additional searches?
-4. Can this topic support an informational article rather than just reporting
-   today's news?
-5. Does the topic have value beyond today's trend spike?
-
-Prefer topics where the answer to most of these questions is YES.
-
-EVERGREEN + TRENDING BALANCE:
-
-Do NOT select only evergreen topics with no current momentum.
-
-Do NOT select only breaking news.
-
-Find the middle ground:
-
-CURRENT INTEREST
-+
-FUTURE SEARCH DEMAND
-+
-INFORMATIONAL SEARCH INTENT
-
-Examples of good article angles:
-
-- release dates
-- what to know before a movie releases
-- cast and characters
-- upcoming events
-- schedules
-- event guides
-- background/explainers
-- franchise guides
-- athlete/celebrity profiles
-- predictions before major events
-- what to expect
-- upcoming tours
-- upcoming albums
-- upcoming seasons
-- major announcements with continuing relevance
+Prefer informational topics where an independent entertainment website can
+provide useful focused content.
 
 MERCHANDISE FILTER:
 
-The website may sell apparel, but NEVER select a topic because it can sell
-merchandise.
+NEVER select a topic because it can sell products.
 
-REJECT:
-- shirts
-- jerseys
-- hoodies
-- sneakers
-- shoes
-- clothing
-- apparel
-- outfits
-- merchandise
-- shopping
-- product reviews
-- product recommendations
+Reject:
 
-For example:
+* shirts
+* jerseys
+* hoodies
+* shoes
+* clothing
+* apparel
+* merchandise
+* shopping
+* product reviews
+* product recommendations
 
-"baseball jerseys"
-→ REJECT
+Examples:
+"anime shirts" → REJECT
+"One Piece" → ACCEPT
+"Marvel hoodie" → REJECT
+"Marvel upcoming movie" → ACCEPT
 
-"MLB All-Star Game"
-→ ACCEPT
+DIVERSIFICATION:
 
-"football shirts"
-→ REJECT
+Do not select multiple keywords about the same event or franchise unless they
+represent clearly different long-term topics.
 
-"Manchester United"
-→ ACCEPT
+Prefer a mix of:
 
-"anime shirts"
-→ REJECT
+* movies
+* TV
+* anime / manga
+* books / novels
+* gaming
+* music / singers / tours
+* celebrities
+* franchises / fandom
 
-"One Piece"
-→ ACCEPT
+FINAL TEST:
 
-ALSO REJECT:
+Before selecting a topic, ask:
 
-- politics
-- finance
-- jobs
-- weather
-- crime
-- lawsuits
-- accidents
-- local incidents
-- unrelated business news
+1. Will people still search for it in 30 days?
+2. Could they still search for it in 60–90 days?
+3. Is there a future release, event, project or fandom reason?
+4. Can it support an informational article?
+5. Is it more than a short-lived news spike?
+6. Can an independent website realistically provide useful content?
 
-IMPORTANT SELECTION RULE:
+Prefer topics where most answers are YES.
 
-Do not select multiple keywords about the same short-lived event.
+The goal is NOT today's traffic.
 
-Diversify the final selection across:
-- movies
-- TV
-- music
-- celebrities
-- sports
-- anime/manga
-- gaming
-- major events
-- fandom
+The goal is long-term organic search potential from current trending topics.
 
 Return ONLY valid JSON.
 
 Format:
 [
-  {
-    "keyword": "",
-    "reason": ""
-  }
+{
+"keyword": "",
+"reason": ""
+}
 ]
 `;
+
 
   const content = await gemini(prompt);
   return extractJson<SelectedTrend[]>(content);
