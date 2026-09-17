@@ -249,10 +249,10 @@ export default function ProductList() {
                 <List
                   grid={{
                     gutter: 12,
-                    xs: 1,
+                    xs: 2,
                     sm: 2,
-                    md: 2,
-                    lg: 3,
+                    md: 3,
+                    lg: 4,
                     xl: 4,
                     xxl: 6,
                   }}
