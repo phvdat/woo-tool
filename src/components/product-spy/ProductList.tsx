@@ -20,6 +20,7 @@ import {
   Popconfirm,
   Select,
   Space,
+  Switch,
   Tag,
   Typography,
   message,
@@ -37,6 +38,77 @@ import {
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 const { Option } = Select;
+
+const APPAREL_KEYWORDS = [
+  // General apparel
+  "apparel",
+  "clothing",
+  "clothes",
+  "tee",
+  "tees",
+  "tshirt",
+  "t-shirt",
+  "shirt",
+  "tank",
+  "tank top",
+  "jersey",
+  "hoodie",
+  "sweatshirt",
+  "sweater",
+  "crewneck",
+  "pullover",
+  "jacket",
+  "vest",
+  "windbreaker",
+  "varsity",
+  "cardigan",
+  "long sleeve",
+  "crop top",
+  "polo",
+
+  // Sports / fan apparel
+  "baseball",
+  "football",
+  "basketball",
+  "hockey",
+  "soccer",
+  "softball",
+  "jersey",
+  "uniform",
+  "fanwear",
+  "sportswear",
+
+  // League / sports abbreviations
+  "mlb",
+  "nfl",
+  "nhl",
+  "nba",
+  "wnba",
+  "ncaa",
+  "nascar",
+  "mls",
+  "nrl",
+  "afl",
+
+  // Sneakers / shoes
+  "sneaker",
+  "sneakers",
+  "shoe",
+  "shoes",
+  "footwear",
+  "af1",
+  "air force",
+  "air jordan",
+  "aj1",
+  "aj",
+  "jordan",
+  "dunk",
+  "air max",
+  "air max plus",
+  "tn",
+  "trainer",
+  "trainers",
+];
 
 const PLATFORMS = [
   { value: "shopify", label: "Shopify" },
@@ -77,6 +149,7 @@ export default function ProductList() {
   const [platformFilter, setPlatformFilter] = useState<string | undefined>(
     undefined,
   );
+  const [apparelOnly, setApparelOnly] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
@@ -97,8 +170,16 @@ export default function ProductList() {
 
   const grouped = useMemo<GroupedProducts[]>(() => {
     if (!response?.products) return [];
+    let products = response.products;
+    if (apparelOnly) {
+      products = products.filter((p) =>
+        APPAREL_KEYWORDS.some((kw) =>
+          p.title.toLowerCase().includes(kw.toLowerCase()),
+        ),
+      );
+    }
     const map = new Map<string, SpyProductItem[]>();
-    for (const p of response.products) {
+    for (const p of products) {
       const day = dayjs(p.firstSeenAt).format("YYYY-MM-DD");
       if (!map.has(day)) map.set(day, []);
       map.get(day)!.push(p);
@@ -106,7 +187,17 @@ export default function ProductList() {
     return Array.from(map.entries())
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([date, products]) => ({ date, products }));
-  }, [response?.products]);
+  }, [response?.products, apparelOnly]);
+
+  const filteredTotal = useMemo(() => {
+    if (!response?.products) return 0;
+    if (!apparelOnly) return response.total;
+    return response.products.filter((p) =>
+      APPAREL_KEYWORDS.some((kw) =>
+        p.title.toLowerCase().includes(kw.toLowerCase()),
+      ),
+    ).length;
+  }, [response, apparelOnly]);
 
   const copyUrls = useCallback(() => {
     if (selected.size === 0) return;
@@ -134,7 +225,11 @@ export default function ProductList() {
           <Space>
             <EyeOutlined />
             <span>Detected Products</span>
-            {response && <Tag color="blue">{response.total} total</Tag>}
+            {response && (
+              <Tag color={apparelOnly ? "orange" : "blue"}>
+                {apparelOnly ? filteredTotal : response.total} total
+              </Tag>
+            )}
           </Space>
         }
         extra={
@@ -220,6 +315,18 @@ export default function ProductList() {
                   </Option>
                 ))}
               </Select>
+            </Space>
+
+            <Space>
+              <Text type="secondary">Apparel Only:</Text>
+              <Switch
+                size="small"
+                checked={apparelOnly}
+                onChange={(checked) => {
+                  setApparelOnly(checked);
+                  setPage(1);
+                }}
+              />
             </Space>
           </Space>
         </div>
