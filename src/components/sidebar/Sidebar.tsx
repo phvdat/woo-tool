@@ -18,7 +18,6 @@ import {
   ShoppingOutlined,
   TeamOutlined,
   ToolOutlined,
-  VideoCameraOutlined,
 } from "@ant-design/icons";
 import {
   Avatar,
@@ -333,11 +332,7 @@ const Sidebar = () => {
   const selectedKey = findSelectedKey(menuItems, pathname);
 
   const sidebarContent = (
-    <div
-      style={{ width: 256 }}
-      onMouseEnter={() => setCollapsed(false)}
-      onMouseLeave={() => setCollapsed(true)}
-    >
+    <div style={{ width: 256 }}>
       <div
         style={{
           height: 64,
@@ -365,7 +360,7 @@ const Sidebar = () => {
         >
           W
         </div>
-        {!isMobile && !collapsed && (
+        {isMobile && (
           <span
             style={{
               marginLeft: 12,
@@ -384,7 +379,7 @@ const Sidebar = () => {
         mode="inline"
         selectedKeys={[selectedKey]}
         items={menuItems}
-        inlineCollapsed={collapsed}
+        inlineCollapsed={!isMobile}
         style={{
           borderRight: "none",
           padding: "8px 0",
@@ -404,6 +399,7 @@ const Sidebar = () => {
           menu={{ items: userMenuItems }}
           trigger={["click"]}
           placement="topRight"
+          overlayStyle={{ minWidth: "1px" }}
         >
           <div
             style={{
@@ -427,7 +423,7 @@ const Sidebar = () => {
               size={32}
               style={{ flexShrink: 0 }}
             />
-            {!collapsed && (
+            {isMobile && (
               <div style={{ overflow: "hidden" }}>
                 <div
                   style={{

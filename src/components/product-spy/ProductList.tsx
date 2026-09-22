@@ -213,6 +213,7 @@ export default function ProductList() {
   }, [selected, messageApi]);
 
   const clearSelection = useCallback(() => {
+    copyUrls();
     clearAllSelected();
     setSelected(new Set());
   }, []);
@@ -237,27 +238,19 @@ export default function ProductList() {
             <Text type="secondary" style={{ fontSize: 12 }}>
               Selected: {selected.size}
             </Text>
-            <Button
-              size="small"
-              icon={<CopyOutlined />}
-              disabled={selected.size === 0}
-              onClick={copyUrls}
-            >
-              Copy
-            </Button>
             <Popconfirm
               title="Clear all selected products?"
               onConfirm={clearSelection}
+              onCancel={copyUrls}
               okText="Yes"
               cancelText="No"
             >
               <Button
                 size="small"
-                danger
-                icon={<DeleteOutlined />}
+                icon={<CopyOutlined />}
                 disabled={selected.size === 0}
               >
-                Clear
+                Copy
               </Button>
             </Popconfirm>
           </Space>
