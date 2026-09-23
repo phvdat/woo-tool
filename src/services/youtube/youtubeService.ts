@@ -285,7 +285,7 @@ export async function publishToYoutube(
       productShortDescription,
       youtubeCommentTemplate
     );
-    await addYoutubeComment(videoId, siteId, commentText).catch(() => {});
+    await addYoutubeComment(videoId, siteId, commentText).catch(() => { });
 
     await db
       .collection(VIDEO_JOBS_COLLECTION)
@@ -343,7 +343,7 @@ export async function publishToYoutube(
       await sendTelegramMessage({
         telegramId: user.telegramId,
         message: `<b>YouTube Upload Failed</b>\n\nProduct: ${job.productName || 'Unknown'}\nError: ${errorMessage}\nRetry: ${retryCount}/${MAX_YOUTUBE_RETRIES}\nTime: ${time}`,
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     return { error: errorMessage, retryable };
@@ -431,7 +431,7 @@ export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
 }
 
 function buildTitle(productName: string, siteDisplayName: string): string {
-  const title = `${productName} | ${siteDisplayName}`;
+  const title = `${siteDisplayName} | ${productName}`;
   if (title.length <= 70) return title;
   return `${productName.substring(0, 65)} | ${siteDisplayName}`;
 }

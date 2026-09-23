@@ -53,12 +53,15 @@ export interface AutoBlogConfig {
   postsPerRun: number
 }
 
+export type AIProvider = "gemini" | "chatgpt";
+
 export interface ProductConfig {
   promptDescriptionProduct: string;
   promptTagsProduct: string;
   publicTime: string | Date;
   gapFrom: number;
   gapTo: number;
+  aiProvider?: AIProvider;
 }
 
 export enum CanvasPosition {

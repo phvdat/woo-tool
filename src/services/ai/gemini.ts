@@ -1,9 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-});
-
 const MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
@@ -53,7 +49,11 @@ function isRateLimitError(error: any): boolean {
     );
 }
 
-async function gemini(prompt: string): Promise<string> {
+async function gemini(prompt: string, apiKey?: string): Promise<string> {
+    const ai = new GoogleGenAI({
+        apiKey: apiKey || process.env.GEMINI_API_KEY,
+    });
+
     let attemptedModel = false;
     for (const modelName of MODELS) {
         if (!isModelAvailable(modelName)) {

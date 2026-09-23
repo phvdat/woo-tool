@@ -1,11 +1,24 @@
 "use client";
 
-import { Card, Col, Form, Input, InputNumber, Row } from "antd";
+import { Card, Col, Form, Input, InputNumber, Row, Select } from "antd";
 import TextArea from "antd/es/input/TextArea";
 
 export default function ProductConfigForm() {
   return (
     <Card title="Product Settings">
+      <Form.Item
+        name={["product", "aiProvider"]}
+        label="AI Provider"
+        initialValue="gemini"
+      >
+        <Select
+          options={[
+            { label: "Gemini", value: "gemini" },
+            { label: "ChatGPT", value: "chatgpt" },
+          ]}
+          placeholder="Select AI Provider"
+        />
+      </Form.Item>
       <label style={{ fontWeight: 500 }}>Schedule Published</label>
       <Row gutter={[12, 12]}>
         <Col span={8}>

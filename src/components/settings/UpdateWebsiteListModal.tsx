@@ -50,6 +50,7 @@ const defaultFormValue: WebsiteFormValue = {
     publicTime: "",
     gapFrom: 0,
     gapTo: 0,
+    aiProvider: "gemini",
   },
   autoVideo: {
     enabled: false,

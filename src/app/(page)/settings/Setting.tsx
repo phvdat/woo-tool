@@ -119,6 +119,18 @@ const Setting = ({ isAdmin }: SettingProps) => {
                 <Input.Password placeholder="Enter your API key" size="large" />
               </Form.Item>
 
+              <Form.Item<UsersFormValues>
+                name="geminiApiKey"
+                label={
+                  <span>
+                    <KeyOutlined style={{ marginRight: 8 }} />
+                    API Key (Gemini)
+                  </span>
+                }
+              >
+                <Input.Password placeholder="Enter your Gemini API key" size="large" />
+              </Form.Item>
+
               <Form.Item>
                 <Button type="primary" htmlType="submit" block size="large" loading={loading}>
                   Save Changes

@@ -38,8 +38,10 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         products,
         website: website.shopName,
         apiKey: user.apiKey,
+        geminiApiKey: user.geminiApiKey,
         socketId: context.socketId,
         mixed: user.mixed === true,
+        aiProvider: website.product?.aiProvider,
         promptDescriptionProduct: website.product.promptDescriptionProduct,
         promptTagsProduct: website.product.promptTagsProduct,
     });

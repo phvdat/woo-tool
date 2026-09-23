@@ -7,6 +7,7 @@ export interface UsersPayload {
   email: string;
   telegramId: string;
   apiKey: string;
+  geminiApiKey?: string;
 }
 
 const fetcher = async (url: string) => {

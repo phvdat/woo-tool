@@ -1,13 +1,12 @@
 "use client";
 
-import { useSpyProducts, SpyProductItem } from "@/app/hooks/useSpyProducts";
+import { SpyProductItem, useSpyProducts } from "@/app/hooks/useSpyProducts";
 import {
+  CheckOutlined,
   CopyOutlined,
-  DeleteOutlined,
   EyeOutlined,
   LinkOutlined,
   PlusOutlined,
-  CheckOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -26,13 +25,13 @@ import {
   message,
 } from "antd";
 import dayjs, { Dayjs } from "dayjs";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  clearAllSelected,
   getProductKey,
   loadSelectedKeys,
   loadSelectedUrls,
   saveToggle,
-  clearAllSelected,
 } from "./productSelectionHelper";
 
 const { RangePicker } = DatePicker;
@@ -111,8 +110,8 @@ const APPAREL_KEYWORDS = [
 ];
 
 const PLATFORMS = [
-  { value: "shopify", label: "Shopify" },
   { value: "woocommerce", label: "WooCommerce" },
+  { value: "shopify", label: "Shopify" },
   { value: "shopbase", label: "ShopBase" },
   { value: "teechip", label: "TeeChip" },
   { value: "merchize", label: "Merchize" },
@@ -294,6 +293,7 @@ export default function ProductList() {
             <Space>
               <Text type="secondary">Platform:</Text>
               <Select
+                defaultValue={PLATFORMS[0].value}
                 value={platformFilter}
                 onChange={(v) => {
                   setPlatformFilter(v);

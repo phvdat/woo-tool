@@ -1,6 +1,6 @@
 import { DEFAULT_PROMPT_DESCRIPTION, DEFAULT_PROMPT_TAGS } from "@/constant/commons";
 import chatgpt from "@/services/ai/chatgpt";
-import { WooCommerce } from "@/types/woo";
+import { AIProvider, WooCommerce } from "@/types/woo";
 import { shuffle } from "lodash";
 import { emitPipelineProgress, PipelineStep } from "./socket";
 import gemini from "../ai/gemini";
@@ -9,8 +9,10 @@ interface EnrichProductsParams {
   products: WooCommerce[];
   website: string;
   apiKey: string;
+  geminiApiKey?: string;
   socketId: string;
   mixed: boolean;
+  aiProvider?: AIProvider;
   promptDescriptionProduct?: string;
   promptTagsProduct?: string;
 }
@@ -19,12 +21,17 @@ export async function enrichProducts({
   products,
   website,
   apiKey,
+  geminiApiKey,
   socketId,
   mixed,
+  aiProvider = "gemini",
   promptDescriptionProduct = DEFAULT_PROMPT_DESCRIPTION,
   promptTagsProduct = DEFAULT_PROMPT_TAGS,
 }: EnrichProductsParams): Promise<WooCommerce[]> {
   const result: WooCommerce[] = [];
+
+  const ask = async (prompt: string) =>
+    aiProvider === "chatgpt" ? chatgpt(prompt, apiKey) : gemini(prompt, geminiApiKey);
 
   for (let index = 0; index < products.length; index++) {
     const product = products[index];
@@ -37,12 +44,12 @@ export async function enrichProducts({
       .replaceAll("{category}", category)
       .replaceAll("{website}", website);
 
-    const aiContent = await gemini(question);
+    const aiContent = await ask(question);
     const description = product.Description.replace(
       "(content)",
       `<p>${aiContent}</p>`,
     )
-    const shortDescription = await gemini(SHORT_DESCRIPTION_PROMPT.replaceAll("{{description}}", description.replace(/<[^>]*>/g, " "))) || ""
+    const shortDescription = await ask(SHORT_DESCRIPTION_PROMPT.replaceAll("{{description}}", description.replace(/<[^>]*>/g, " "))) || ""
 
     result.push({
       ...product,
@@ -73,7 +80,7 @@ Remember:
 - Separate each product with "|"
 `;
 
-  const tagsRaw = await gemini(tagPrompt);
+  const tagsRaw = await ask(tagPrompt);
 
   const cleanText =
     tagsRaw
