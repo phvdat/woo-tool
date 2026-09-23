@@ -213,7 +213,6 @@ export default function ProductList() {
   }, [selected, messageApi]);
 
   const clearSelection = useCallback(() => {
-    copyUrls();
     clearAllSelected();
     setSelected(new Set());
   }, []);
@@ -240,7 +239,10 @@ export default function ProductList() {
             </Text>
             <Popconfirm
               title="Clear all selected products?"
-              onConfirm={clearSelection}
+              onConfirm={() => {
+                copyUrls();
+                clearSelection();
+              }}
               onCancel={copyUrls}
               okText="Yes"
               cancelText="No"
