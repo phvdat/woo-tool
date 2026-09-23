@@ -385,6 +385,7 @@ const Sidebar = () => {
           padding: "8px 0",
           flex: 1,
           overflow: "auto",
+          maxHeight: "calc(100vh - 136px)",
         }}
       />
 
@@ -393,6 +394,7 @@ const Sidebar = () => {
           padding: "12px",
           borderTop: "1px solid #F3F4F6",
           flexShrink: 0,
+          width: isMobile ? "100%" : "82px",
         }}
       >
         <Dropdown
@@ -405,6 +407,7 @@ const Sidebar = () => {
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: 10,
               padding: "8px",
               borderRadius: 8,

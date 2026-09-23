@@ -37,41 +37,45 @@ export async function loadOrders({
   const orders: any[] = [];
 
   for (const website of websites) {
-    const woo = axios.create({
-      baseURL: `${website.url}/wp-json/wc/v3`,
-      auth: {
-        username: website.wpUsername,
-        password: website.wpAppPassword,
-      },
-      timeout: 60_000,
-    });
-
-    let page = 1;
-
-    while (true) {
-      const { data } = await woo.get("/orders", {
-        params: {
-          after: from,
-          before: to,
-          per_page: 100,
-          page,
-          orderby: "date",
-          order: "asc",
+    try {
+      const woo = axios.create({
+        baseURL: `${website.url}/wp-json/wc/v3`,
+        auth: {
+          username: website.wpUsername,
+          password: website.wpAppPassword,
         },
+        timeout: 60_000,
       });
 
-      if (!data.length) break;
+      let page = 1;
 
-      orders.push(
-        ...data.map((order: any) => ({
-          ...order,
-          websiteId: website._id,
-          websiteName: website.shopName,
-          websiteUrl: website.url,
-        }))
-      );
-      if (data.length < 100) break;
-      page++;
+      while (true) {
+        const { data } = await woo.get("/orders", {
+          params: {
+            after: from,
+            before: to,
+            per_page: 100,
+            page,
+            orderby: "date",
+            order: "asc",
+          },
+        });
+
+        if (!data.length) break;
+
+        orders.push(
+          ...data.map((order: any) => ({
+            ...order,
+            websiteId: website._id,
+            websiteName: website.shopName,
+            websiteUrl: website.url,
+          }))
+        );
+        if (data.length < 100) break;
+        page++;
+      }
+    } catch (err: any) {
+      console.error(`Failed to fetch orders from ${website.shopName} (${website.url}):`, err.message);
     }
   }
 
