@@ -422,6 +422,11 @@ export default function ProductList() {
                       <Card
                         size="small"
                         hoverable
+                        bordered={selected.has(getProductKey(item))}
+                        style={{
+                          borderColor: "#52c41a",
+                          borderWidth: 2,
+                        }}
                         cover={
                           <div
                             style={{
@@ -458,9 +463,14 @@ export default function ProductList() {
                             key="select"
                             type="text"
                             size="small"
+                            style={
+                              selected.has(getProductKey(item))
+                                ? { color: "#52c41a" }
+                                : undefined
+                            }
                             icon={
                               selected.has(getProductKey(item)) ? (
-                                <CheckOutlined style={{ color: "#52c41a" }} />
+                                <CheckOutlined />
                               ) : (
                                 <PlusOutlined />
                               )
