@@ -2,14 +2,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import {
   SPY_COMPETITORS_COLLECTION,
   SPY_PRODUCTS_COLLECTION,
-  SPY_TELEGRAM_CONFIG_COLLECTION,
 } from "@/constant/collections";
 import { SpyCompetitor } from "@/types/product-spy";
 import { fetchProducts } from "./detector";
-import {
-  sendNewProductNotification,
-  shouldNotifyProduct,
-} from "./telegram-notifier";
 import { ObjectId } from "mongodb";
 import { getErrorMessage } from "@/lib/error-utils";
 
@@ -40,12 +35,6 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
 
     const productCol = db.collection(SPY_PRODUCTS_COLLECTION);
 
-    const telegramConfig = await db
-      .collection(SPY_TELEGRAM_CONFIG_COLLECTION)
-      .findOne({});
-
-    const isFirstScan = !competitor.lastCheckAt;
-
     for (const product of products) {
       const existing = await productCol.findOne({
         competitorId: compId,
@@ -60,30 +49,6 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
       });
 
       if (existing) {
-        if (
-          !existing.notifiedAt &&
-          !isFirstScan &&
-          telegramConfig?.chatId &&
-          shouldNotifyProduct(product.title)
-        ) {
-          const sent = await sendNewProductNotification(
-            telegramConfig.chatId,
-            competitor,
-            {
-              title: product.title,
-              price: product.price,
-              url: product.url,
-              image: product.image,
-              firstSeenAt: existing.firstSeenAt || new Date().toISOString(),
-            }
-          );
-          if (sent) {
-            await productCol.updateOne(
-              { _id: existing._id },
-              { $set: { notifiedAt: new Date().toISOString() } }
-            );
-          }
-        }
         continue;
       }
 
@@ -103,30 +68,9 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
         dateCreated: product.dateCreated,
         source: product.source,
         firstSeenAt: now,
-        notifiedAt: null,
       };
 
-      const result = await productCol.insertOne(newProduct as any);
-
-      if (!isFirstScan && telegramConfig?.chatId && shouldNotifyProduct(product.title)) {
-        const sent = await sendNewProductNotification(
-          telegramConfig.chatId,
-          competitor,
-          {
-            title: product.title,
-            price: product.price,
-            url: product.url,
-            image: product.image,
-            firstSeenAt: now,
-          }
-        );
-        if (sent) {
-          await productCol.updateOne(
-            { _id: result.insertedId },
-            { $set: { notifiedAt: new Date().toISOString() } }
-          );
-        }
-      }
+      await productCol.insertOne(newProduct as any);
     }
 
     await db

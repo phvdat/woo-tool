@@ -1,10 +1,9 @@
 "use client";
 
 import Container from "@/components/commons/Container";
+import { Tabs } from "antd";
 import CompetitorTable from "./CompetitorTable";
 import ProductList from "./ProductList";
-import TelegramConfig from "./TelegramConfig";
-import { Tabs } from "antd";
 
 export default function ProductSpyPage() {
   return (
@@ -14,7 +13,6 @@ export default function ProductSpyPage() {
       size="lg"
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <TelegramConfig />
         <Tabs
           defaultActiveKey="products"
           items={[

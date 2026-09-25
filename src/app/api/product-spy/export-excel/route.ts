@@ -1,16 +1,20 @@
-import { SPY_TELEGRAM_CONFIG_COLLECTION } from "@/constant/collections";
+import { USERS_COLLECTION } from "@/constant/collections";
+import { authOptions } from "@/lib/auth";
 import { connectToDatabase } from "@/lib/mongodb";
 import { sendTelegram } from "@/services/telegram/sendTelegram";
 import { mkdtemp, rm, writeFile } from "fs/promises";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 import { tmpdir } from "os";
 import path from "path";
-import { NextResponse } from "next/server";
+
 
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
   let tempDirectory: string | undefined;
 
   try {
@@ -46,11 +50,11 @@ export async function POST(request: Request) {
     }
 
     const { db } = await connectToDatabase();
-    const config = await db
-      .collection(SPY_TELEGRAM_CONFIG_COLLECTION)
-      .findOne({});
+    const user = await db
+      .collection(USERS_COLLECTION)
+      .findOne({ email: session?.user?.email });
 
-    if (!config?.chatId) {
+    if (!user?.telegramId) {
       return NextResponse.json(
         { error: "Telegram Chat ID not configured" },
         { status: 400 }
@@ -69,7 +73,7 @@ export async function POST(request: Request) {
     await writeFile(filePath, Buffer.from(await file.arrayBuffer()));
 
     await sendTelegram({
-      telegramId: String(config.chatId),
+      telegramId: String(user?.telegramId),
       fileName,
       filePath,
     });

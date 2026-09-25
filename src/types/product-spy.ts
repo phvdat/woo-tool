@@ -25,7 +25,6 @@ export interface SpyProduct {
   dateCreated?: string;
   source: string;
   firstSeenAt: string;
-  notifiedAt?: string | null;
 }
 
 export interface SpyTelegramConfig {

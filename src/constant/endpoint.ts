@@ -35,9 +35,7 @@ export const endpoint = {
   youtubeOauthConfig: '/api/youtube/oauth-config',
 
   spyCompetitors: '/api/product-spy/competitors',
-  spyTelegramConfig: '/api/product-spy/telegram-config',
   spyCheckNow: '/api/product-spy/check-now',
-  spyTestTelegram: '/api/product-spy/test-telegram',
   spyProducts: '/api/product-spy/products',
   spyExportExcel: '/api/product-spy/export-excel',
 };

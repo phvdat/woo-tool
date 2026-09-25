@@ -334,10 +334,11 @@ export default function ProductList() {
             <Popconfirm
               title="Clear all selected products?"
               onConfirm={async () => {
+                copyUrls();
                 const sent = await downloadExcel();
                 if (sent) clearSelection();
               }}
-              onCancel={copyUrls}
+              onCancel={downloadExcel}
               okText="Yes"
               cancelText="No"
             >

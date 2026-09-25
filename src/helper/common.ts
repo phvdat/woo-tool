@@ -83,6 +83,9 @@ export function getMatchedWordsForBestMatch(
 }
 
 export function upscaleImage(url: string) {
+  if (url.includes("cdn.shopify.com")) {
+    return url;
+  }
   return url.replace(/\/(\d+)\/(\d+)\//, (match, w, h) => {
     if (Number(w) < 1000 && Number(h) < 1000) {
       return "/2000/2000/";
