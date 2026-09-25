@@ -5,6 +5,7 @@ import {
   CheckOutlined,
   CopyOutlined,
   EyeOutlined,
+  FileExcelOutlined,
   LinkOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
@@ -26,13 +27,17 @@ import {
 } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import {
   clearAllSelected,
   getProductKey,
+  loadSelectedEntries,
   loadSelectedKeys,
   loadSelectedUrls,
+  resolveImages,
   saveToggle,
 } from "./productSelectionHelper";
+import { upscaleImage } from "@/helper/common";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
@@ -146,8 +151,9 @@ export default function ProductList() {
     dayjs(),
   ]);
   const [platformFilter, setPlatformFilter] = useState<string | undefined>(
-    undefined,
+    PLATFORMS[0].value,
   );
+
   const [apparelOnly, setApparelOnly] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 50;
@@ -198,6 +204,14 @@ export default function ProductList() {
     ).length;
   }, [response, apparelOnly]);
 
+  const productsByKey = useMemo(() => {
+    const map = new Map<string, SpyProductItem>();
+    for (const product of response?.products || []) {
+      map.set(getProductKey(product), product);
+    }
+    return map;
+  }, [response?.products]);
+
   const copyUrls = useCallback(() => {
     if (selected.size === 0) return;
 
@@ -215,6 +229,50 @@ export default function ProductList() {
     clearAllSelected();
     setSelected(new Set());
   }, []);
+
+  const downloadExcel = useCallback(() => {
+    if (selected.size === 0) return;
+
+    const entries = loadSelectedEntries();
+    if (entries.length === 0) {
+      messageApi.warning("No selected product data to export");
+      return;
+    }
+
+    const rows = entries.map((entry) => {
+      const product = productsByKey.get(entry.key);
+      const images = resolveImages(
+        product?.image ?? entry.image,
+        product?.images ?? entry.images,
+      );
+
+      return {
+        Name: product?.title || entry.title || "",
+        Images: images.map(upscaleImage).join(","),
+        Link: product?.url || entry.url || "",
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(
+      wb,
+      `product-spy-${dayjs().format("YYYY-MM-DD-HH-mm-ss")}.xlsx`,
+    );
+
+    const withoutImages = rows.filter((row) => !row.Images).length;
+    if (withoutImages > 0) {
+      messageApi.warning(
+        `Exported ${rows.length} product${rows.length > 1 ? "s" : ""}, but ${withoutImages} row${withoutImages > 1 ? "s" : ""} have no image data. Re-select them to refresh.`,
+      );
+      return;
+    }
+
+    messageApi.success(
+      `Exported ${rows.length} product${rows.length > 1 ? "s" : ""}`,
+    );
+  }, [selected, messageApi, productsByKey]);
 
   return (
     <>
@@ -239,7 +297,7 @@ export default function ProductList() {
             <Popconfirm
               title="Clear all selected products?"
               onConfirm={() => {
-                copyUrls();
+                downloadExcel();
                 clearSelection();
               }}
               onCancel={copyUrls}
@@ -248,10 +306,10 @@ export default function ProductList() {
             >
               <Button
                 size="small"
-                icon={<CopyOutlined />}
+                icon={<FileExcelOutlined />}
                 disabled={selected.size === 0}
               >
-                Copy
+                Download Excel
               </Button>
             </Popconfirm>
           </Space>
@@ -355,7 +413,7 @@ export default function ProductList() {
                     sm: 2,
                     md: 3,
                     lg: 4,
-                    xl: 4,
+                    xl: 6,
                     xxl: 6,
                   }}
                   dataSource={group.products}

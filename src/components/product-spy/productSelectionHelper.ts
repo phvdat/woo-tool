@@ -5,6 +5,18 @@ const STORAGE_KEY = "product-spy-selected";
 export interface SelectedEntry {
   key: string;
   url: string;
+  title?: string;
+  price?: string;
+  image?: string;
+  images?: string[];
+  competitorName?: string;
+  platform?: string;
+  firstSeenAt?: string;
+}
+
+export function resolveImages(image?: string, images?: string[]): string[] {
+  if (images && images.length > 0) return images;
+  return image ? [image] : [];
 }
 
 export function getProductKey(item: SpyProductItem): string {
@@ -72,7 +84,20 @@ export function saveToggle(item: SpyProductItem): Set<string> {
   if (exists >= 0) {
     next = current.filter((e) => e.key !== key);
   } else {
-    next = [...current, { key, url: item.url || "" }];
+    next = [
+      ...current,
+      {
+        key,
+        url: item.url || "",
+        title: item.title,
+        price: item.price,
+        image: item.image,
+        images: item.images,
+        competitorName: item.competitorName,
+        platform: item.platform,
+        firstSeenAt: item.firstSeenAt,
+      },
+    ];
   }
   saveSelected(next);
   return new Set(next.map((e) => e.key));
@@ -82,7 +107,7 @@ export function clearAllSelected(): void {
   saveSelected([]);
 }
 
-function loadSelectedEntries(): SelectedEntry[] {
+export function loadSelectedEntries(): SelectedEntry[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

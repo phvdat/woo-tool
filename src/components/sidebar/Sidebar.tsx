@@ -14,6 +14,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PlayCircleOutlined,
+  SearchOutlined,
   SettingOutlined,
   ShoppingOutlined,
   TeamOutlined,
@@ -115,7 +116,7 @@ const Sidebar = () => {
         },
         {
           key: navigation.originalProduct,
-          icon: <HomeOutlined />,
+          icon: <SearchOutlined />,
           label: (
             <Link
               href={navigation.originalProduct}
