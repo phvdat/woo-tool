@@ -1,6 +1,7 @@
 "use client";
 
 import { SpyProductItem, useSpyProducts } from "@/app/hooks/useSpyProducts";
+import { endpoint } from "@/constant/endpoint";
 import {
   CheckOutlined,
   CopyOutlined,
@@ -25,7 +26,9 @@ import {
   Typography,
   message,
 } from "antd";
+import axios from "axios";
 import dayjs, { Dayjs } from "dayjs";
+import { saveAs } from "file-saver";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -136,6 +139,7 @@ interface GroupedProducts {
 
 export default function ProductList() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
@@ -230,48 +234,81 @@ export default function ProductList() {
     setSelected(new Set());
   }, []);
 
-  const downloadExcel = useCallback(() => {
-    if (selected.size === 0) return;
+  const downloadExcel = useCallback(async (): Promise<boolean> => {
+    if (selected.size === 0) return false;
 
     const entries = loadSelectedEntries();
     if (entries.length === 0) {
       messageApi.warning("No selected product data to export");
-      return;
+      return false;
     }
 
-    const rows = entries.map((entry) => {
-      const product = productsByKey.get(entry.key);
-      const images = resolveImages(
-        product?.image ?? entry.image,
-        product?.images ?? entry.images,
-      );
+    setExporting(true);
+    let downloaded = false;
 
-      return {
-        Name: product?.title || entry.title || "",
-        Images: images.map(upscaleImage).join(","),
-        Link: product?.url || entry.url || "",
-      };
-    });
+    try {
+      const rows = entries.map((entry) => {
+        const product = productsByKey.get(entry.key);
+        const images = resolveImages(
+          product?.image ?? entry.image,
+          product?.images ?? entry.images,
+        );
 
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Products");
-    XLSX.writeFile(
-      wb,
-      `product-spy-${dayjs().format("YYYY-MM-DD-HH-mm-ss")}.xlsx`,
-    );
+        return {
+          Name: product?.title || entry.title || "",
+          Images: images.join(","),
+          Link: product?.url || entry.url || "",
+        };
+      });
 
-    const withoutImages = rows.filter((row) => !row.Images).length;
-    if (withoutImages > 0) {
-      messageApi.warning(
-        `Exported ${rows.length} product${rows.length > 1 ? "s" : ""}, but ${withoutImages} row${withoutImages > 1 ? "s" : ""} have no image data. Re-select them to refresh.`,
-      );
-      return;
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Products");
+
+      const fileName = `product-spy-${dayjs().format(
+        "YYYY-MM-DD-HH-mm-ss",
+      )}.xlsx`;
+      const data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const file = new Blob([data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(file, fileName);
+      downloaded = true;
+
+      const formData = new FormData();
+      formData.append("file", file, fileName);
+      await axios.post(endpoint.spyExportExcel, formData);
+
+      const productLabel = `${rows.length} product${
+        rows.length > 1 ? "s" : ""
+      }`;
+      const withoutImages = rows.filter((row) => !row.Images).length;
+      if (withoutImages > 0) {
+        messageApi.warning(
+          `Exported ${productLabel} and sent the file to Telegram, but ${withoutImages} row${withoutImages > 1 ? "s" : ""} have no image data. Re-select them to refresh.`,
+        );
+      } else {
+        messageApi.success(
+          `Exported ${productLabel} and sent the file to Telegram`,
+        );
+      }
+
+      return true;
+    } catch (error: any) {
+      const telegramError = error?.response?.data?.error || "Please try again.";
+
+      if (downloaded) {
+        messageApi.warning(
+          `Excel downloaded, but sending it to Telegram failed: ${telegramError}`,
+        );
+      } else {
+        messageApi.error(`Failed to create Excel: ${telegramError}`);
+      }
+
+      return false;
+    } finally {
+      setExporting(false);
     }
-
-    messageApi.success(
-      `Exported ${rows.length} product${rows.length > 1 ? "s" : ""}`,
-    );
   }, [selected, messageApi, productsByKey]);
 
   return (
@@ -296,9 +333,9 @@ export default function ProductList() {
             </Text>
             <Popconfirm
               title="Clear all selected products?"
-              onConfirm={() => {
-                downloadExcel();
-                clearSelection();
+              onConfirm={async () => {
+                const sent = await downloadExcel();
+                if (sent) clearSelection();
               }}
               onCancel={copyUrls}
               okText="Yes"
@@ -307,7 +344,8 @@ export default function ProductList() {
               <Button
                 size="small"
                 icon={<FileExcelOutlined />}
-                disabled={selected.size === 0}
+                loading={exporting}
+                disabled={selected.size === 0 || exporting}
               >
                 Download Excel
               </Button>

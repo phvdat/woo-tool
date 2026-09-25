@@ -39,4 +39,5 @@ export const endpoint = {
   spyCheckNow: '/api/product-spy/check-now',
   spyTestTelegram: '/api/product-spy/test-telegram',
   spyProducts: '/api/product-spy/products',
+  spyExportExcel: '/api/product-spy/export-excel',
 };
