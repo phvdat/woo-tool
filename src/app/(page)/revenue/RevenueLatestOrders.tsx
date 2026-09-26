@@ -10,6 +10,7 @@ type PaymentMethod = "stripe" | "paypal";
 
 interface RevenueLatestOrder {
   id: number;
+  websiteId: string;
   website: string;
   customer: string;
   total: number;
@@ -87,7 +88,7 @@ export default function RevenueLatestOrders({
 
   return (
     <Table
-      rowKey="id"
+      rowKey={(record) => `${record.websiteId}-${record.id}`}
       loading={loading}
       pagination={false}
       dataSource={data}

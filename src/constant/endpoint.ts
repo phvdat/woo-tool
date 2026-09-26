@@ -23,6 +23,7 @@ export const endpoint = {
   productPipeline: '/api/product-pipeline',
 
   revenue: "/api/revenue",
+  revenueRefresh: "/api/revenue/refresh",
 
   videoProducts: '/api/video/products',
   videoGenerate: '/api/video/generate',

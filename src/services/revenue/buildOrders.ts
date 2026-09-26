@@ -23,6 +23,8 @@ export function buildOrders(orders: any[]) {
 
       return {
         id: order.id,
+        websiteId: order.websiteId ? order.websiteId.toString() : "",
+        ownerEmail: order.ownerEmail || "",
         website: order.websiteName,
         customer: `${order.billing.first_name} ${order.billing.last_name}`.trim(),
         total: Number(order.total),

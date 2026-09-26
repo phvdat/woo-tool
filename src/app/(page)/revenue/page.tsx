@@ -3,7 +3,8 @@
 import { useConfigWebsite } from "@/app/hooks/useConfigWebsite";
 import Container from "@/components/commons/Container";
 import { endpoint } from "@/constant/endpoint";
-import { Card, Flex, Spin } from "antd";
+import { Button, Card, Flex, message, Spin } from "antd";
+import { SyncOutlined } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -13,9 +14,20 @@ import RevenueLatestOrders from "./RevenueLatestOrders";
 import RevenueSummary from "./RevenueSummary";
 import RevenueWebsiteTable from "./RevenueWebsiteTable";
 
+const DEFAULT_FILTER: RevenueFilterValue = {
+  groupBy: "day",
+  range: [dayjs().subtract(7, "day"), dayjs()],
+  websiteId: "all",
+};
+
 export default function RevenuePage() {
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
   const { websiteConfigList, isLoading } = useConfigWebsite();
+  const [filterValues, setFilterValues] = useState<RevenueFilterValue>(
+    DEFAULT_FILTER
+  );
 
   const [data, setData] = useState({
     summary: {
@@ -32,15 +44,13 @@ export default function RevenuePage() {
   });
 
   useEffect(() => {
-    handleSearch({
-      groupBy: "day",
-      range: [dayjs().subtract(7, "day"), dayjs()],
-      websiteId: "all",
-    });
+    handleSearch(DEFAULT_FILTER);
   }, []);
 
+  // Reads persisted Revenue History only — never calls WooCommerce.
   async function handleSearch(values: RevenueFilterValue) {
     setLoading(true);
+    setFilterValues(values);
 
     try {
       const { data } = await axios.post(endpoint.revenue, {
@@ -56,12 +66,41 @@ export default function RevenuePage() {
     }
   }
 
+  // Fetches WooCommerce, upserts into Revenue History, then reloads the history.
+  async function handleRefresh() {
+    setRefreshing(true);
+
+    try {
+      const { data: result } = await axios.post(endpoint.revenueRefresh);
+
+      messageApi.success(
+        `Refreshed ${result.upserted + result.modified} order(s) from WooCommerce`
+      );
+
+      await handleSearch(filterValues);
+    } catch (error: any) {
+      messageApi.error(error?.response?.data?.message || "Refresh failed");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   return (
     <Container
       title="Revenue Dashboard"
       subtitle="Track your sales and revenue analytics"
       size="lg"
+      extra={
+        <Button
+          icon={<SyncOutlined />}
+          onClick={handleRefresh}
+          loading={refreshing}
+        >
+          Refresh
+        </Button>
+      }
     >
+      {contextHolder}
       <Spin spinning={isLoading}>
         <Flex vertical gap={16}>
           <Card>

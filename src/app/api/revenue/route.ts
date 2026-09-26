@@ -1,4 +1,4 @@
-import { loadRevenue } from "@/services/revenue";
+import { loadRevenueHistory } from "@/services/revenue";
 import _get from "lodash/get";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return Response.json({}, { status: 401 });
     }
     const body = await request.json();
-    const result = await loadRevenue({
+    const result = await loadRevenueHistory({
       ...body,
       userEmail: session.user.email,
     });

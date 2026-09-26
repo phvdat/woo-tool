@@ -11,3 +11,4 @@ export const YOUTUBE_CHANNELS_COLLECTION = 'youtubeChannels';
 export const AUDIO_FILES_COLLECTION = 'audioFiles';
 export const SPY_COMPETITORS_COLLECTION = 'spy_competitors';
 export const SPY_PRODUCTS_COLLECTION = 'spy_products';
+export const REVENUE_HISTORY_COLLECTION = 'revenue_history';
