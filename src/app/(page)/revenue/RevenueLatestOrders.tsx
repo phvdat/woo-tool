@@ -1,8 +1,10 @@
 "use client";
 
-import { Table, Tag, Grid, Descriptions } from "antd";
+import { Table, Tag, Grid, Descriptions, Typography } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+
+const { Text } = Typography;
 
 type PaymentMethod = "stripe" | "paypal";
 
@@ -11,11 +13,44 @@ interface RevenueLatestOrder {
   website: string;
   customer: string;
   total: number;
+  refunded: number;
+  revenue: number;
   fee: number;
   net: number;
   status: string;
   date: string;
   paymentMethod: PaymentMethod;
+}
+
+const statusColors: Record<string, string> = {
+  pending: "default",
+  processing: "processing",
+  "on-hold": "warning",
+  completed: "success",
+  refunded: "volcano",
+  cancelled: "error",
+  failed: "error",
+  "checkout-draft": "default",
+};
+
+const statusLabels: Record<string, string> = {
+  pending: "Pending",
+  processing: "Processing",
+  "on-hold": "On Hold",
+  completed: "Completed",
+  refunded: "Refunded",
+  cancelled: "Cancelled",
+  failed: "Failed",
+  "checkout-draft": "Checkout Draft",
+};
+
+const statusFilters = Object.keys(statusLabels).map((value) => ({
+  text: statusLabels[value],
+  value,
+}));
+
+function formatAmount(value: number) {
+  return `$${Number(value || 0).toFixed(2)}`;
 }
 
 interface RevenueLatestOrdersProps {
@@ -34,7 +69,7 @@ export default function RevenueLatestOrders({
   }, [data]);
 
   const total = filteredData.reduce(
-    (sum, item) => sum + Number(item.total ?? 0),
+    (sum, item) => sum + Number(item.revenue ?? item.total ?? 0),
     0,
   );
 
@@ -73,11 +108,15 @@ export default function RevenueLatestOrders({
                   </Descriptions.Item>
 
                   <Descriptions.Item label="Total">
-                    ${Number(record.total).toFixed(2)}
+                    {formatAmount(record.total)}
                   </Descriptions.Item>
 
                   <Descriptions.Item label="Fee">
-                    ${Number(record.fee).toFixed(2)}
+                    {formatAmount(record.fee)}
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Net">
+                    {formatAmount(record.net)}
                   </Descriptions.Item>
 
                   <Descriptions.Item label="Created">
@@ -131,28 +170,40 @@ export default function RevenueLatestOrders({
           dataIndex: "total",
           align: "right",
           responsive: ["md"],
-          render: (value: number) => `$${Number(value).toFixed(2)}`,
+          render: (value: number, record: RevenueLatestOrder) =>
+            record.refunded > 0 ? (
+              <span>
+                <Text delete type="secondary">
+                  {formatAmount(value)}
+                </Text>{" "}
+                {formatAmount(record.revenue ?? 0)}
+              </span>
+            ) : (
+              formatAmount(value)
+            ),
         },
         {
           title: "Fee",
           dataIndex: "fee",
           align: "right",
           responsive: ["md"],
-          render: (value: number) => `$${Number(value).toFixed(2)}`,
+          render: (value: number) => formatAmount(value),
         },
         {
           title: "Net",
           dataIndex: "net",
           align: "right",
-          render: (value: number) => `$${Number(value ?? 0).toFixed(2)}`,
+          render: (value: number) => formatAmount(value),
         },
         {
           title: "Status",
           dataIndex: "status",
           responsive: ["md"],
+          filters: statusFilters,
+          onFilter: (value, record) => record.status === value,
           render: (status: string) => (
-            <Tag color={status === "paid" ? "success" : "default"}>
-              {status}
+            <Tag color={statusColors[status] ?? "default"}>
+              {statusLabels[status] ?? status}
             </Tag>
           ),
         },

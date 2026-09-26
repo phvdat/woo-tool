@@ -10,12 +10,8 @@ export function groupWebsiteRevenue(orders: any[]) {
   >();
 
   for (const order of orders) {
-    if (order.status === "cancelled" || order.status === "failed") {
-      continue;
-    }
-
-    const key = order.websiteName;
-    const revenue = Number(order.total || 0);
+    const key = order.website ?? order.websiteName;
+    const revenue = Number(order.revenue ?? order.total ?? 0);
 
     if (!map.has(key)) {
       map.set(key, {

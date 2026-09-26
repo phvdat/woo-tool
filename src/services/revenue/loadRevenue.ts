@@ -28,8 +28,8 @@ export async function loadRevenue({
   const formatOrder = buildOrders(orders)
   return {
     summary: calculateSummary(formatOrder),
-    chart: groupRevenue(orders, groupBy),
-    websiteStats: groupWebsiteRevenue(orders),
+    chart: groupRevenue(formatOrder, groupBy),
+    websiteStats: groupWebsiteRevenue(formatOrder),
     latestOrders: formatOrder,
   };
 }

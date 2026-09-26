@@ -9,11 +9,7 @@ export function groupRevenue(
   const map = new Map<string, number>();
 
   for (const order of orders) {
-    if (order.status === "cancelled" || order.status === "failed") {
-      continue;
-    }
-
-    const date = dayjs(order.date_created);
+    const date = dayjs(order.date ?? order.date_created);
 
     let key = "";
 
@@ -30,7 +26,7 @@ export function groupRevenue(
 
     map.set(
       key,
-      (map.get(key) || 0) + Number(order.total || 0)
+      (map.get(key) || 0) + Number(order.revenue ?? order.total ?? 0)
     );
   }
 

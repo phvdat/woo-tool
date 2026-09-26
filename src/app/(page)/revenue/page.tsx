@@ -22,6 +22,7 @@ export default function RevenuePage() {
       totalRevenue: 0,
       totalNet: 0,
       totalFees: 0,
+      totalRefunded: 0,
       totalOrders: 0,
       averageOrderValue: 0,
     },
