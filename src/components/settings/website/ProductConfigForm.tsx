@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Col, Form, Input, InputNumber, Row, Select } from "antd";
+import { Card, Col, Form, Input, InputNumber, Row, Select, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
 
 export default function ProductConfigForm() {
@@ -43,6 +43,10 @@ export default function ProductConfigForm() {
           </Form.Item>
         </Col>
       </Row>
+      <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 16 }}>
+        YouTube: videos publish at the same time as the product. If the product publishes
+        immediately, the video publishes immediately too.
+      </Typography.Paragraph>
       <Form.Item
         name={["product", "promptDescriptionProduct"]}
         label="Prompt Description Product"

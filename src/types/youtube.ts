@@ -11,11 +11,17 @@ export interface YoutubeChannel {
   updatedAt: Date;
 }
 
-export type YoutubePublishStatus = 'not_published' | 'publishing' | 'published' | 'failed';
+export type YoutubePublishStatus =
+  | 'not_published'
+  | 'publishing'
+  | 'scheduled'
+  | 'published'
+  | 'failed';
 
 export interface YoutubePublishJobFields {
   youtubeStatus?: YoutubePublishStatus;
   youtubeVideoId?: string;
+  youtubePublishAt?: Date | string | null;
   youtubeError?: string;
   youtubePublishedAt?: Date;
 }

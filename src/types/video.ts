@@ -8,7 +8,12 @@ export interface VideoJobConfig {
 }
 
 export type VideoJobStatus = 'pending' | 'preparing' | 'rendering' | 'completed' | 'failed';
-export type YoutubePublishStatus = 'not_published' | 'publishing' | 'published' | 'failed';
+export type YoutubePublishStatus =
+  | 'not_published'
+  | 'publishing'
+  | 'scheduled'
+  | 'published'
+  | 'failed';
 
 export interface VideoJob {
   _id?: string;
@@ -28,6 +33,7 @@ export interface VideoJob {
   completedAt: Date | null;
   youtubeStatus?: YoutubePublishStatus;
   youtubeVideoId?: string;
+  youtubePublishAt?: Date | string | null;
   youtubeError?: string;
   youtubePublishedAt?: Date;
   youtubeRetryCount?: number;

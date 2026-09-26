@@ -33,9 +33,17 @@ const statusColors: Record<VideoJobStatus, string> = {
 const youtubeStatusColors: Record<YoutubePublishStatus, string> = {
   not_published: "default",
   publishing: "processing",
+  scheduled: "warning",
   published: "success",
   failed: "error",
 };
+
+function formatScheduleTime(value?: Date | string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+}
 
 interface JobListProps {
   jobs: VideoJob[];
@@ -130,28 +138,61 @@ export default function JobList({
       ),
     },
     {
+      title: "Schedule",
+      dataIndex: "youtubePublishAt",
+      key: "youtubePublishAt",
+      width: 150,
+      render: (youtubePublishAt: Date | string | null, record: VideoJob) => {
+        const scheduledFor = formatScheduleTime(youtubePublishAt);
+        if (!scheduledFor) return <Tag>-</Tag>;
+        if (record.youtubeStatus === "published") {
+          return <span style={{ fontSize: 12 }}>{scheduledFor}</span>;
+        }
+        return (
+          <Tooltip title="YouTube publishes at the same time as the product">
+            <Tag color={record.youtubeStatus === "failed" ? "error" : "warning"}>
+              {scheduledFor}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: "YouTube",
       dataIndex: "youtubeStatus",
       key: "youtubeStatus",
-      width: 100,
+      width: 110,
       render: (youtubeStatus: YoutubePublishStatus | undefined, record: VideoJob) => {
         if (record.status !== "completed") return null;
         if (!youtubeStatus || youtubeStatus === "not_published") return <Tag>-</Tag>;
-        return (
-          <Tag color={youtubeStatusColors[youtubeStatus]}>
-            {youtubeStatus === "published" && record.youtubeVideoId ? (
-              <a
-                href={`https://www.youtube.com/watch?v=${record.youtubeVideoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                VIEW
-              </a>
-            ) : (
-              youtubeStatus.toUpperCase()
-            )}
-          </Tag>
+
+        const scheduledFor = formatScheduleTime(record.youtubePublishAt);
+        const label =
+          youtubeStatus === "published" && record.youtubeVideoId ? (
+            <a
+              href={`https://www.youtube.com/watch?v=${record.youtubeVideoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              VIEW
+            </a>
+          ) : (
+            youtubeStatus.toUpperCase()
+          );
+
+        const tooltip =
+          youtubeStatus === "scheduled"
+            ? `Publishes at ${scheduledFor ?? "an unknown time"} (same time as the product)`
+            : youtubeStatus === "failed"
+              ? record.youtubeError
+              : null;
+
+        const tag = (
+          <Tag color={youtubeStatusColors[youtubeStatus]}>{label}</Tag>
         );
+
+        if (!tooltip) return tag;
+        return <Tooltip title={tooltip}>{tag}</Tooltip>;
       },
     },
     {
@@ -210,7 +251,7 @@ export default function JobList({
         loading={loading}
         pagination={{ pageSize: 10, showSizeChanger: false }}
         size="small"
-        scroll={{ x: 700 }}
+        scroll={{ x: 820 }}
         locale={{ emptyText: "No video jobs yet" }}
       />
     </Card>

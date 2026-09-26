@@ -2,6 +2,7 @@ import { VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, AUDIO_FILES_COLLECTION } fr
 import { authOptions } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobConfig } from '@/types/video';
+import { parseWooGmtDate } from '@/helper/common';
 import { VIDEO_CONFIG } from '@/services/video/config';
 import { enqueueJob } from '@/services/video/jobManager';
 import axios from 'axios';
@@ -107,6 +108,7 @@ export async function POST(request: Request) {
           outputPath: null,
           error: null,
           productUrl: product.permalink || null,
+          youtubePublishAt: parseWooGmtDate(product.date_created_gmt),
           config: {
             ...jobConfig,
             backgroundMusicPath: selectedMusic,

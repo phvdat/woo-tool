@@ -2,6 +2,7 @@ import { VIDEO_JOBS_COLLECTION, AUDIO_FILES_COLLECTION } from '@/constant/collec
 import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobConfig } from '@/types/video';
 import { WooWebsitePayload } from '@/types/woo';
+import { parseWooGmtDate } from '@/helper/common';
 import { VIDEO_CONFIG } from './config';
 import { enqueueJob } from './jobManager';
 import axios from 'axios';
@@ -92,6 +93,7 @@ export async function createVideoJobsFromPipeline({
         outputPath: null,
         error: null,
         productUrl: product.permalink || null,
+        youtubePublishAt: parseWooGmtDate(product.date_created_gmt),
         config: {
           ...jobConfig,
           backgroundMusicPath: selectedMusic,

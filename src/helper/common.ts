@@ -54,6 +54,19 @@ export function publishedTimeHelper({ products, publicTime, gapFrom, gapTo }: Sc
   return result;
 }
 
+const WOO_DATE_OFFSET_SUFFIX = /(Z|[+-]\d{2}:?\d{2})$/;
+
+export function parseWooGmtDate(value: unknown): Date | null {
+  if (typeof value !== 'string' || !value.trim()) {
+    return null;
+  }
+  const raw = value.trim();
+  const parsed = new Date(
+    WOO_DATE_OFFSET_SUFFIX.test(raw) ? raw : `${raw}Z`,
+  );
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function convertToAcronym(input: string) {
   return input
     .split(/[-\s]+/) // Tách chuỗi thành mảng phân cách bởi khoang cách hoặc -
