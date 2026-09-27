@@ -14,6 +14,7 @@ export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "mer
 export interface FetchResult {
   products: RawSpyProduct[];
   debug: string[];
+  hasProducts?: boolean;
 }
 
 function extractDomain(url: string): string {
@@ -34,6 +35,7 @@ async function withFacebookFallback(
   return {
     products: fb.products,
     debug: [...result.debug, ...fb.debug],
+    hasProducts: fb.products.length > 0,
   };
 }
 
@@ -88,13 +90,20 @@ export async function detectPlatform(
 
 export async function fetchProducts(
   url: string,
-  platform: Platform
+  platform: Platform,
+  isKnown?: (externalId: string) => boolean | Promise<boolean>
 ): Promise<FetchResult> {
   if (platform === "woocommerce") {
     try {
-      const products = await fetchWooCommerceProducts(url);
-      if (products.length > 0) {
-        return { products, debug: ["WooCommerce Store API returned products"] };
+      const { products, hasProducts } = await fetchWooCommerceProducts(url, {
+        isKnown,
+      });
+      if (hasProducts) {
+        return {
+          products,
+          debug: ["WooCommerce Store API returned products"],
+          hasProducts: true,
+        };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -103,6 +112,7 @@ export async function fetchProducts(
           "WooCommerce Store API returned 0 products",
           ...generic.debug,
         ],
+        hasProducts: false,
       });
     } catch (err: any) {
       const generic = await fetchGenericProducts(url);

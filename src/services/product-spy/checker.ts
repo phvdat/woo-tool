@@ -13,9 +13,27 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
   const compId = competitor._id!;
 
   try {
-    const { products, debug } = await fetchProducts(competitor.url, competitor.platform);
+    const productCol = db.collection(SPY_PRODUCTS_COLLECTION);
 
-    if (products.length === 0) {
+    let isKnown: ((externalId: string) => boolean) | undefined;
+    if (competitor.platform === "woocommerce") {
+      const knownExternalIds = new Set(
+        (
+          await productCol
+            .find({ competitorId: compId }, { projection: { externalId: 1 } })
+            .toArray()
+        ).map((d) => d.externalId as string)
+      );
+      isKnown = (id: string) => knownExternalIds.has(id);
+    }
+
+    const { products, debug, hasProducts } = await fetchProducts(
+      competitor.url,
+      competitor.platform,
+      isKnown
+    );
+
+    if (products.length === 0 && !hasProducts) {
       const now = new Date().toISOString();
       const debugInfo = debug.length > 0 ? `\nDebug: ${debug.join("; ")}` : "";
       await db
@@ -32,8 +50,6 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
         );
       return;
     }
-
-    const productCol = db.collection(SPY_PRODUCTS_COLLECTION);
 
     for (const product of products) {
       const existing = await productCol.findOne({

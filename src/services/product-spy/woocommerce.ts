@@ -3,6 +3,17 @@ import { JSDOM } from "jsdom";
 import { RawSpyProduct } from "@/types/product-spy";
 
 const UA = "WooTool-ProductSpy/1.0";
+const WC_PAGE_SIZE = 100;
+const WC_MAX_PAGES = 5;
+
+export interface WooFetchOptions {
+  isKnown?: (externalId: string) => boolean | Promise<boolean>;
+}
+
+export interface WooFetchResult {
+  products: RawSpyProduct[];
+  hasProducts: boolean;
+}
 
 interface WCProduct {
   id: number;
@@ -10,33 +21,72 @@ interface WCProduct {
   slug: string;
   permalink: string;
   price: string;
-  date_created: string;
   images: { src: string }[];
 }
 
 export async function fetchWooCommerceProducts(
-  baseUrl: string
-): Promise<RawSpyProduct[]> {
+  baseUrl: string,
+  options: WooFetchOptions = {}
+): Promise<WooFetchResult> {
   const url = baseUrl.replace(/\/+$/, "");
   const apiUrl = `${url}/wp-json/wc/store/v1/products`;
+  const isKnown = options.isKnown;
 
-  const { data } = await axios.get<WCProduct[]>(apiUrl, {
-    params: { orderby: "date", order: "desc", per_page: 20 },
-    timeout: 15000,
-    headers: { "User-Agent": UA },
-  });
+  const products: RawSpyProduct[] = [];
+  let hasProducts = false;
 
-  return data.map((p) => ({
-    externalId: String(p.id),
-    title: p.name || "",
-    url: p.permalink || "",
-    slug: p.slug || "",
-    price: p.price || undefined,
-    image: p.images?.[0]?.src || undefined,
-    images: p.images?.map((img) => img.src) || [],
-    dateCreated: p.date_created || undefined,
-    source: "woocommerce",
-  }));
+  for (let page = 1; page <= WC_MAX_PAGES; page++) {
+    let batch: WCProduct[];
+
+    try {
+      const { data } = await axios.get<WCProduct[]>(apiUrl, {
+        params: {
+          orderby: "date",
+          order: "desc",
+          per_page: WC_PAGE_SIZE,
+          page,
+        },
+        timeout: 15000,
+        headers: { "User-Agent": UA },
+      });
+      batch = Array.isArray(data) ? data : [];
+    } catch (err) {
+      // A failed first page means the store could not be read at all, so the
+      // caller still has to see the error and fall back to the generic crawler.
+      if (page === 1) throw err;
+      break;
+    }
+
+    if (batch.length === 0) break;
+
+    hasProducts = true;
+
+    let unknownInPage = 0;
+
+    for (const p of batch) {
+      const externalId = String(p.id);
+      if (isKnown && (await isKnown(externalId))) continue;
+      unknownInPage += 1;
+      products.push({
+        externalId,
+        title: p.name || "",
+        url: p.permalink || "",
+        slug: p.slug || "",
+        price: p.price || undefined,
+        image: p.images?.[0]?.src || undefined,
+        images: p.images?.map((img) => img.src) || [],
+        source: "woocommerce",
+      });
+    }
+
+    // A short page is the last page. A full page with nothing new on it means
+    // the date-desc ordering has carried us past everything not yet seen, so
+    // everything below is already known as well.
+    if (batch.length < WC_PAGE_SIZE) break;
+    if (unknownInPage === 0) break;
+  }
+
+  return { products, hasProducts };
 }
 
 export async function isWooCommerceStore(
