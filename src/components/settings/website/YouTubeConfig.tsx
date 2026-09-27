@@ -132,14 +132,19 @@ export default function YouTubeConfig({ siteId, onRefresh }: YouTubeConfigProps)
               </Typography.Text>
             </div>
           </Flex>
-          <Popconfirm
-            title="Disconnect this YouTube channel?"
-            onConfirm={handleDisconnect}
-          >
-            <Button danger size="small" icon={<DisconnectOutlined />} loading={disconnecting}>
-              Disconnect
+          <Flex gap={8}>
+            <Button size="small" icon={<YoutubeOutlined />} onClick={handleConnect}>
+              Reauthorize
             </Button>
-          </Popconfirm>
+            <Popconfirm
+              title="Disconnect this YouTube channel?"
+              onConfirm={handleDisconnect}
+            >
+              <Button danger size="small" icon={<DisconnectOutlined />} loading={disconnecting}>
+                Disconnect
+              </Button>
+            </Popconfirm>
+          </Flex>
         </Flex>
       ) : (
         <>

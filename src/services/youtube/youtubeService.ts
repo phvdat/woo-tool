@@ -208,11 +208,16 @@ function isInvalidPublishAt(error: any): boolean {
   return Boolean(error?.errors?.some((item: any) => item?.reason === 'invalidPublishAt'));
 }
 
+const YOUTUBE_COMMENT_SCOPE_ERROR =
+  'The YouTube channel is not authorized to post comments. Reauthorize it in website settings (YouTube Channel > Reauthorize) to grant the youtube.force-ssl permission.';
+
 const YOUTUBE_COMMENT_ERROR_MESSAGES: Record<string, string> = {
   commentTextRequired: 'The comment text was empty or rejected by YouTube.',
   commentTextTooLong: 'The comment text exceeds the YouTube comment length limit.',
   commentsDisabled: 'Comments are disabled on this video.',
   forbidden: 'The authenticated account does not have permission to insert comments on this video.',
+  insufficientAuthenticationScopes: YOUTUBE_COMMENT_SCOPE_ERROR,
+  insufficientPermissions: YOUTUBE_COMMENT_SCOPE_ERROR,
   ineligibleAccount: 'The YouTube account used to authorize the request must be linked to a Google account.',
   quotaExceeded: 'YouTube API quota exceeded.',
   videoNotFound: 'YouTube could not find the uploaded video, so the comment was not added.',
@@ -231,6 +236,10 @@ function describeYoutubeCommentError(error: any): string {
 
   if (code === 401 || String(error?.message || '').includes('invalid_grant')) {
     return 'YouTube authentication expired. Reconnect the channel in website settings. (authError)';
+  }
+
+  if (String(error?.message || '').includes('insufficient authentication scopes')) {
+    return code ? `${YOUTUBE_COMMENT_SCOPE_ERROR} (${code})` : YOUTUBE_COMMENT_SCOPE_ERROR;
   }
 
   const message = error?.message || 'Unknown error while adding the YouTube comment';

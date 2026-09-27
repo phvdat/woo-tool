@@ -41,14 +41,22 @@ export async function GET(request: Request) {
     const tokens = await exchangeCode(code, siteId);
     if (!tokens.refresh_token) {
       const existingChannel = await getChannelBySiteId(siteId);
-      if (existingChannel?.refreshTokenEncrypted) {
-        return htmlResponse(`
-          <html><body><script>window.close();</script></body></html>
-        `);
-      }
-      return htmlResponse(
-        '<html><body><p>No refresh token received. Please disconnect and reconnect the channel.</p></body></html>'
-      );
+      const message = existingChannel?.refreshTokenEncrypted
+        ? 'Google did not return a new refresh token, so the previous credentials are still in use. Disconnect the channel and reconnect to reauthorize it.'
+        : 'No refresh token received. Please disconnect and reconnect the channel.';
+
+      console.error(`[YOUTUBE CALLBACK] ${message}`);
+
+      const safeMessage = message.replace(/'/g, "\\'");
+      return htmlResponse(`
+        <html><body>
+          <script>
+            window.opener?.postMessage({ type: 'youtube-error', error: '${safeMessage}' }, '*');
+            window.close();
+          </script>
+          <p>${message} You can close this window.</p>
+        </body></html>
+      `);
     }
 
     const channelInfo = await getChannelInfo(
