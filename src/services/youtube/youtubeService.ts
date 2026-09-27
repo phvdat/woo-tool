@@ -208,6 +208,35 @@ function isInvalidPublishAt(error: any): boolean {
   return Boolean(error?.errors?.some((item: any) => item?.reason === 'invalidPublishAt'));
 }
 
+const YOUTUBE_COMMENT_ERROR_MESSAGES: Record<string, string> = {
+  commentTextRequired: 'The comment text was empty or rejected by YouTube.',
+  commentTextTooLong: 'The comment text exceeds the YouTube comment length limit.',
+  commentsDisabled: 'Comments are disabled on this video.',
+  forbidden: 'The authenticated account does not have permission to insert comments on this video.',
+  ineligibleAccount: 'The YouTube account used to authorize the request must be linked to a Google account.',
+  quotaExceeded: 'YouTube API quota exceeded.',
+  videoNotFound: 'YouTube could not find the uploaded video, so the comment was not added.',
+  channelNotFound: 'YouTube could not resolve the channel for the comment.',
+  processingFailure: 'YouTube failed to process the comment request.',
+};
+
+function describeYoutubeCommentError(error: any): string {
+  const reason = error?.errors?.[0]?.reason as string | undefined;
+  const code = error?.code as number | undefined;
+  const base = reason ? YOUTUBE_COMMENT_ERROR_MESSAGES[reason] : undefined;
+
+  if (base) {
+    return code ? `${base} (${code}/${reason})` : `${base} (${reason})`;
+  }
+
+  if (code === 401 || String(error?.message || '').includes('invalid_grant')) {
+    return 'YouTube authentication expired. Reconnect the channel in website settings. (authError)';
+  }
+
+  const message = error?.message || 'Unknown error while adding the YouTube comment';
+  return code ? `${message} (${code}${reason ? `/${reason}` : ''})` : message;
+}
+
 function buildVideoStatus(publishAt: Date | null): youtube_v3.Schema$VideoStatus {
   if (publishAt) {
     return {
@@ -360,6 +389,7 @@ export async function publishToYoutube(
     );
 
     let videoId = existingVideoId;
+    let isNewUpload = false;
 
     if (videoId) {
       await applyScheduleToVideo(youtube, videoId, publishAt);
@@ -370,7 +400,7 @@ export async function publishToYoutube(
         { title, description, tags },
         publishAt,
       );
-      await addYoutubeComment(videoId, siteId, commentText).catch(() => { });
+      isNewUpload = true;
     }
 
     const fields: Record<string, any> = {
@@ -391,6 +421,20 @@ export async function publishToYoutube(
         { _id: new ObjectId(jobId) },
         { $set: fields }
       );
+
+    if (isNewUpload) {
+      await addYoutubeComment(videoId, siteId, commentText).catch(async (err: any) => {
+        const commentError = describeYoutubeCommentError(err);
+        console.error(`[YOUTUBE COMMENT] Job ${jobId} (video ${videoId}): ${commentError}`);
+        await db
+          .collection(VIDEO_JOBS_COLLECTION)
+          .updateOne(
+            { _id: new ObjectId(jobId) },
+            { $set: { youtubeCommentError: commentError } }
+          )
+          .catch(() => { });
+      });
+    }
 
     if (publishAt) {
       console.log(
@@ -465,7 +509,7 @@ export async function addYoutubeComment(
         videoId,
         topLevelComment: {
           snippet: {
-            textDisplay: commentText,
+            textOriginal: commentText,
           },
         },
       },

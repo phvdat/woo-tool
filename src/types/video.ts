@@ -35,6 +35,7 @@ export interface VideoJob {
   youtubeVideoId?: string;
   youtubePublishAt?: Date | string | null;
   youtubeError?: string;
+  youtubeCommentError?: string;
   youtubePublishedAt?: Date;
   youtubeRetryCount?: number;
 }

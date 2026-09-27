@@ -23,6 +23,7 @@ export interface YoutubePublishJobFields {
   youtubeVideoId?: string;
   youtubePublishAt?: Date | string | null;
   youtubeError?: string;
+  youtubeCommentError?: string;
   youtubePublishedAt?: Date;
 }
 
