@@ -15,6 +15,9 @@ const YOUTUBE_SCOPES = [
 
 const MAX_YOUTUBE_RETRIES = 3;
 
+const MAX_YOUTUBE_COMMENT_ATTEMPTS = 3;
+const YOUTUBE_COMMENT_RETRY_DELAY_MS = 3_000;
+
 export async function getOAuth2ClientForSite(siteId: string) {
   const { db } = await connectToDatabase();
   const channel = await db
@@ -431,18 +434,43 @@ export async function publishToYoutube(
         { $set: fields }
       );
 
-    if (isNewUpload) {
-      await addYoutubeComment(videoId, siteId, commentText).catch(async (err: any) => {
-        const commentError = describeYoutubeCommentError(err);
-        console.error(`[YOUTUBE COMMENT] Job ${jobId} (video ${videoId}): ${commentError}`);
-        await db
-          .collection(VIDEO_JOBS_COLLECTION)
-          .updateOne(
-            { _id: new ObjectId(jobId) },
-            { $set: { youtubeCommentError: commentError } }
-          )
-          .catch(() => { });
-      });
+    // YouTube rejects commentThreads.insert (403 forbidden) while a video is still
+    // private/scheduled, so a scheduled upload is commented once
+    // releaseScheduledPublishes flips the existing video to public instead.
+    const isScheduleRelease =
+      !isNewUpload &&
+      job.youtubeStatus === 'scheduled' &&
+      !publishAt;
+
+    const shouldAddComment =
+      !publishAt &&
+      !job.youtubeCommentedAt &&
+      (isNewUpload || isScheduleRelease);
+
+    const attempts = isScheduleRelease ? MAX_YOUTUBE_COMMENT_ATTEMPTS : 1;
+
+    if (shouldAddComment) {
+      await insertYoutubeCommentWithRetry(videoId, siteId, commentText, attempts)
+        .then(() =>
+          db
+            .collection(VIDEO_JOBS_COLLECTION)
+            .updateOne(
+              { _id: new ObjectId(jobId) },
+              { $set: { youtubeCommentedAt: new Date(), youtubeCommentError: undefined } }
+            )
+            .catch(() => { })
+        )
+        .catch(async (err: any) => {
+          const commentError = describeYoutubeCommentError(err);
+          console.error(`[YOUTUBE COMMENT] Job ${jobId} (video ${videoId}): ${commentError}`);
+          await db
+            .collection(VIDEO_JOBS_COLLECTION)
+            .updateOne(
+              { _id: new ObjectId(jobId) },
+              { $set: { youtubeCommentError: commentError } }
+            )
+            .catch(() => { });
+        });
     }
 
     if (publishAt) {
@@ -524,6 +552,29 @@ export async function addYoutubeComment(
       },
     },
   });
+}
+
+async function insertYoutubeCommentWithRetry(
+  videoId: string,
+  siteId: string,
+  commentText: string,
+  attempts: number
+): Promise<void> {
+  let lastError: any;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      await addYoutubeComment(videoId, siteId, commentText);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, YOUTUBE_COMMENT_RETRY_DELAY_MS));
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 export async function retryFailedPublishes(): Promise<number> {
