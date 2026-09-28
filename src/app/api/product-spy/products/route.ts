@@ -4,6 +4,7 @@ import {
   SPY_PRODUCTS_COLLECTION,
   SPY_COMPETITORS_COLLECTION,
 } from "@/constant/collections";
+import { APPAREL_TITLE_REGEX } from "@/constant/apparel";
 
 export async function GET(request: Request) {
   try {
@@ -12,6 +13,9 @@ export async function GET(request: Request) {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
     const platform = searchParams.get("platform");
+    const apparelOnly = ["1", "true"].includes(
+      (searchParams.get("apparelOnly") || "").toLowerCase(),
+    );
 
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "50", 10);
@@ -47,6 +51,11 @@ export async function GET(request: Request) {
       if (to) {
         match.firstSeenAt.$lte = `${to}T23:59:59.999Z`;
       }
+    }
+
+    // Apparel
+    if (apparelOnly) {
+      match.title = APPAREL_TITLE_REGEX;
     }
 
     const collection = db.collection(SPY_PRODUCTS_COLLECTION);

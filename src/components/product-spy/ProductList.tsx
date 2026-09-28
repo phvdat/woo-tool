@@ -46,77 +46,6 @@ const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 const { Option } = Select;
 
-const APPAREL_KEYWORDS = [
-  // General apparel
-  "apparel",
-  "clothing",
-  "clothes",
-  "tee",
-  "tees",
-  "tshirt",
-  "t-shirt",
-  "shirt",
-  "tank",
-  "tank top",
-  "jersey",
-  "hoodie",
-  "sweatshirt",
-  "sweater",
-  "crewneck",
-  "pullover",
-  "jacket",
-  "vest",
-  "windbreaker",
-  "varsity",
-  "cardigan",
-  "long sleeve",
-  "crop top",
-  "polo",
-
-  // Sports / fan apparel
-  "baseball",
-  "football",
-  "basketball",
-  "hockey",
-  "soccer",
-  "softball",
-  "jersey",
-  "uniform",
-  "fanwear",
-  "sportswear",
-
-  // League / sports abbreviations
-  "mlb",
-  "nfl",
-  "nhl",
-  "nba",
-  "wnba",
-  "ncaa",
-  "nascar",
-  "mls",
-  "nrl",
-  "afl",
-
-  // Sneakers / shoes
-  "sneaker",
-  "sneakers",
-  "shoe",
-  "shoes",
-  "footwear",
-  "af1",
-  "air force",
-  "air jordan",
-  "aj1",
-  "aj",
-  "jordan",
-  "dunk",
-  "air max",
-  "air max plus",
-  "tn",
-  "trainer",
-  "trainers",
-];
-
 const PLATFORMS = [
   { value: "woocommerce", label: "WooCommerce" },
   { value: "shopify", label: "Shopify" },
@@ -173,22 +102,15 @@ export default function ProductList() {
     from,
     to,
     platform: platformFilter,
+    apparelOnly,
     page,
     pageSize,
   });
 
   const grouped = useMemo<GroupedProducts[]>(() => {
     if (!response?.products) return [];
-    let products = response.products;
-    if (apparelOnly) {
-      products = products.filter((p) =>
-        APPAREL_KEYWORDS.some((kw) =>
-          p.title.toLowerCase().includes(kw.toLowerCase()),
-        ),
-      );
-    }
     const map = new Map<string, SpyProductItem[]>();
-    for (const p of products) {
+    for (const p of response.products) {
       const day = dayjs(p.firstSeenAt).format("YYYY-MM-DD");
       if (!map.has(day)) map.set(day, []);
       map.get(day)!.push(p);
@@ -196,17 +118,7 @@ export default function ProductList() {
     return Array.from(map.entries())
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([date, products]) => ({ date, products }));
-  }, [response?.products, apparelOnly]);
-
-  const filteredTotal = useMemo(() => {
-    if (!response?.products) return 0;
-    if (!apparelOnly) return response.total;
-    return response.products.filter((p) =>
-      APPAREL_KEYWORDS.some((kw) =>
-        p.title.toLowerCase().includes(kw.toLowerCase()),
-      ),
-    ).length;
-  }, [response, apparelOnly]);
+  }, [response?.products]);
 
   const productsByKey = useMemo(() => {
     const map = new Map<string, SpyProductItem>();
@@ -321,7 +233,7 @@ export default function ProductList() {
             <span>Detected Products</span>
             {response && (
               <Tag color={apparelOnly ? "orange" : "blue"}>
-                {apparelOnly ? filteredTotal : response.total} total
+                {response.total} total
               </Tag>
             )}
           </Space>

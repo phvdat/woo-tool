@@ -20,6 +20,7 @@ interface UseSpyProductsParams {
   from?: string;
   to?: string;
   platform?: string;
+  apparelOnly?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -29,6 +30,7 @@ function buildUrl(params: UseSpyProductsParams): string {
   if (params.from) parts.push(`from=${encodeURIComponent(params.from)}`);
   if (params.to) parts.push(`to=${encodeURIComponent(params.to)}`);
   if (params.platform) parts.push(`platform=${encodeURIComponent(params.platform)}`);
+  if (params.apparelOnly) parts.push("apparelOnly=1");
   if (params.page) parts.push(`page=${params.page}`);
   if (params.pageSize) parts.push(`pageSize=${params.pageSize}`);
   const qs = parts.length > 0 ? `?${parts.join("&")}` : "";
