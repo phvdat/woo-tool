@@ -44,6 +44,7 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         aiProvider: website.product?.aiProvider,
         promptDescriptionProduct: website.product.promptDescriptionProduct,
         promptTagsProduct: website.product.promptTagsProduct,
+        researchEnabled: website.product?.researchEnabled === true,
     });
 
     const scheduledProducts = publishedTimeHelper({

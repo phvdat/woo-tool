@@ -14,6 +14,7 @@ For schemas, `DATA.md`. For traps, `GOTCHAS.md`.
 | Task keyword | Section |
 |---|---|
 | "pipeline", "Excel to Woo", "upload products", "AI description", "AI tags" | [§3 Product Pipeline](#3-product-pipeline) |
+| "research", "research a product title", "grounded search", "verified facts", "story brief", "sources" | [§3.1 Product Research](#31-product-research-opt-in-sub-pipeline) |
 | "spy", "competitor", "crawl a store", "add a platform adapter", "TeeChip/Shopify/ShopBase" | [§4 Product Spy](#4-product-spy) |
 | "video", "render", "Ken Burns", "ffmpeg", "video job" | [§5 Video Generator](#5-video-generator) |
 | "YouTube", "channel connect", "OAuth", "publish video", "comment template" | [§6 YouTube](#6-youtube) |
@@ -36,6 +37,7 @@ For schemas, `DATA.md`. For traps, `GOTCHAS.md`.
 | Feature | Route | Page entry | Main service dir | API routes | Hooks |
 |---|---|---|---|---|---|
 | Product Pipeline | `/product-pipeline` | `src/app/(page)/product-pipeline/ProductPipeline.tsx` | `src/services/product-pipeline/` | `api/product-pipeline` | — |
+| ↳ Product Research | *(panel on `/product-pipeline`)* | `src/components/product-pipeline/ResearchPanel.tsx` | `src/services/research/` | `api/research/preview`, `api/research/topics` | `useResearchPreview` |
 | Product Spy | `/product-spy` | `src/components/product-spy/ProductSpyPage.tsx` | `src/services/product-spy/` | `api/product-spy/*` (4) | `useSpyProducts`, `useSpyCompetitors` |
 | Video | `/video-generator` | `src/components/video-generator/VideoGeneratorPage.tsx` | `src/services/video/` | `api/video/*` (8) | `useVideoJobs` |
 | YouTube | — | `src/components/settings/website/YouTubeConfig.tsx` | `src/services/youtube/` | `api/youtube/*` (5) | `useYouTubeChannel` |
@@ -69,7 +71,9 @@ selected site — with an optional auto-video step afterwards.
 3. `src/services/product-pipeline/buildProducts.ts` — XLSX parse, `Choose Your
    Style` index parsing, watermarking, `createWooRecord` per row.
 4. `src/services/product-pipeline/enrichProducts.ts` — long description, SEO meta,
-   batched tags. Sequential per product; `mixed` shuffles output order.
+   batched tags. Sequential per product; `mixed` shuffles output order. When
+   `website.product.researchEnabled` is true it first calls `researchBatch()` and
+   hands the result to `buildDescriptionPrompt()` — see §3.1.
 5. `src/services/product-pipeline/uploadProducts.ts` — Woo client, per-product
    error isolation, progress emit.
 6. `src/services/product-pipeline/createProduct.ts` — simple vs variable,
@@ -80,8 +84,8 @@ selected site — with an optional auto-video step afterwards.
 
 **UI:** `src/app/(page)/product-pipeline/page.tsx` (wrapper) →
 `ProductPipeline.tsx` → `src/components/product-pipeline/ProductPipelineForm.tsx`
-(the only file in that component dir; subscribes to socket, filters by `socketId`
-which is set to the `websiteId`).
+(socket subscription, filters by `socketId` which is set to the `websiteId`),
+plus `ResearchPanel.tsx` — an admin-only debug card, not part of the run.
 
 **API:** `src/app/api/product-pipeline/route.ts` — `POST` multipart
 `{ file, websiteId }`, session-guarded.
@@ -89,6 +93,75 @@ which is set to the `websiteId`).
 **Shared:** `src/helper/woo.ts` (`createWooRecord`), `src/helper/website.ts`
 (`addWatermark`), `src/helper/common.ts` (`publishedTimeHelper`, `upscaleImage`),
 `src/constant/commons.ts` (default prompts), `src/types/woo.ts`.
+
+### 3.1 Product Research (opt-in sub-pipeline)
+
+**What it does:** before a description is written, finds out what the product
+title actually *references*, verifies it against independent web sources, and
+passes only corroborated facts to the writer. Purely a description input — it
+changes nothing else about the product.
+
+**Opt-in:** `website.product.researchEnabled` (Switch in
+`ProductConfigForm.tsx`, default `false`). Absent on every existing document, so
+leaving it off reproduces the previous behaviour exactly.
+
+**Read in this order:**
+
+1. `src/services/research/index.ts` — `researchProduct()` / `researchBatch()`.
+   Entity extraction runs per product (cheap, no search); everything after runs
+   once per distinct provisional topic key, so a whole batch of merch for one
+   event costs one grounded search. An in-process `Set` guards re-entry, mirroring
+   `lib/blog/runAutoBlog.ts`.
+2. `extractEntities.ts` → `generateQueries.ts` — plain Gemini, no search. A
+   generic title (`searchWorthy: false`) short-circuits to `insufficient` and
+   **never searches**, which is why most rows cost nothing.
+3. `searchSources.ts` — `geminiGrounded()` (in `services/ai/gemini.ts`). Uses
+   `ai.models.generateContent()` with a Google Search tool because
+   `interactions.create()` returns no real `groundingMetadata`; only that call
+   path yields real source URLs.
+4. `sourceTiers.ts` — Tier 1 official / Tier 2 news / Tier 3 community+social,
+   resolved **from the domain** and re-resolved after the real trend type is
+   known. `independentConfirmations()` implements the corroboration rule: distinct
+   registrable domains only, syndication detected by normalized title, Tier 3 and
+   snippet-only carry zero weight.
+5. `extractClaims.ts` → `verifyClaims.ts` → `buildStoryBrief.ts` — claims are
+   typed (`fact` / `interpretation` / `social_signal`) on the way in so the writer
+   cannot blur them.
+6. `assessQuality.ts` — deterministic score from observable evidence.
+   `llmConfidence` is stored but never scored.
+7. `buildDescriptionPrompt.ts` — three paths: research off (prompt untouched),
+   research unusable (short "do not guess" header), research usable (verified
+   block prepended and `{product-story}` filled). A store prompt with no
+   placeholder still gets the block as a header, so no prompt needs editing.
+8. `validateDescription.ts` — cheap gate before write-back: title restatement,
+   leaked research internals, URLs, fabricated fabric/fit/shipping claims.
+9. `repository.ts` — the `research_topics` cache (see `DATA.md` §2.12).
+
+**Prompt constants:** `src/constant/researchPrompts.ts`, limits and outlet lists
+in `src/constant/research.ts`.
+
+**Tests** (`npm test`): topic keys, query generation, source
+tiers/corroboration, quality scoring, prompt assembly and description validation in
+`src/services/research/__tests__/`, plus `enrichProducts` in
+`src/services/product-pipeline/__tests__/` with AI and socket mocked — the latter
+pins the rule that a store with research off keeps its existing description.
+
+**Debug:** `ResearchPanel.tsx` on `/product-pipeline` →
+`api/research/preview` (runs one pass) and `api/research/topics` (reads the
+cache). Both session-guarded, admin-facing, and write no product data.
+
+**Known limits:** topic keys can collide between two events that share a title
+year, which reuses a stale-but-fresh record until `expiresAt`; grounding quality
+depends on Gemini's search index, so a topic that reads as `insufficient` is
+usually worth one manual re-research via the panel before assuming a bug.
+
+**Operational prerequisites:** research always runs on the user's `geminiApiKey`
+regardless of `aiProvider`, and the grounded call consumes **web-search** quota,
+which is metered separately from plain generation. A key that is fine for
+`gemini()` can return `429` on `geminiGrounded()`, and because all five models
+share one cooldown map the whole batch then falls back to the conservative
+description. A Mongo outage also degrades to "no cache" rather than failing the
+run (`resolveTopic` swallows lookup errors), so research is never load-bearing.
 
 ---
 

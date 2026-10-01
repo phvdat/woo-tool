@@ -195,9 +195,11 @@ rejects comments on private videos.
 
 ## 6. Verification reality
 
-- **There is no test suite, no test runner, no test config.** Never claim
-  "tests pass". Use `npx tsc --noEmit` + `npm run lint` (+ `npm run build` for
-  routing/auth changes). See skill `woo-tool-verify`.
+- **Tests are Vitest and cover pure logic only** (`npm test`): the research
+  helpers and `enrichProducts`, with the AI and socket modules mocked. Nothing that
+  calls an external API, Mongo, a socket, or renders UI is covered, so a green run
+  says nothing about those. Everywhere else, use `npx tsc --noEmit` + `npm run lint`
+  (+ `npm run build` for routing/auth changes). See skill `woo-tool-verify`.
 - `npm run lint` is `next lint` with `react-hooks/exhaustive-deps` **off**, so
   stale hook dependencies are not caught — reason about them manually.
 - Features that depend on crons, sockets, Woo, YouTube, Puppeteer, or ffmpeg

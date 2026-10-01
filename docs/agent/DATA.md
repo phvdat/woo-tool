@@ -41,6 +41,7 @@ wart, not a pattern to copy.
 | `SPY_COMPETITORS_COLLECTION` | `spy_competitors` | `SpyCompetitor` | `api/product-spy/competitors`, `checker` | spy UI, scheduler |
 | `SPY_PRODUCTS_COLLECTION` | `spy_products` | `SpyProduct` | `checker` only | `api/product-spy/products` |
 | `REVENUE_HISTORY_COLLECTION` | `revenue_history` | `RevenueHistoryRecord` | `revenueHistory.save*` | revenue UI |
+| `RESEARCH_TOPICS_COLLECTION` | `research_topics` | `ResearchTopic` | `services/research/repository.saveTopic` | `findFreshTopic` (product pipeline), `api/research/topics`, `ResearchPanel` |
 
 ### 2.1 `websites` — the hub
 
@@ -50,7 +51,7 @@ Every other feature keys off this. Shape is `WebsiteConfig` in
 - Woo creds: `wpUsername`, `wpAppPassword` (plaintext at rest).
 - Branding: `logoUrl`, `logoWidth`, `logoHeight`, `logoPosition` (a
   `CanvasPosition`), `imageWidth`, `imageHeight`, `quality`.
-- `product`: `{ aiProvider, publicTime, gapFrom, gapTo, promptDescriptionProduct, promptTagsProduct }`.
+- `product`: `{ aiProvider, publicTime, gapFrom, gapTo, promptDescriptionProduct, promptTagsProduct, researchEnabled }`. `researchEnabled` is opt-in and absent/false on every pre-existing document, which is why turning it off is a no-op for stored stores.
 - `autoBlog`: `{ enabled, cron, status, postsPerRun }`.
 - `autoVideo`: `{ enabled }`.
 - `backgroundMusicUrl`, `youtubeDescriptionTemplate`, `youtubeCommentTemplate`.
@@ -136,6 +137,29 @@ mirrors `buildOrders` output so `calculateSummary` / `groupRevenue` /
 - **Access control is not here** — it's resolved against `websites` first, then
   the caller passes `websiteIds` in. The `ownerEmail` field exists so rows stay
   readable after a website is deleted.
+
+### 2.12 `research_topics` — the research cache
+
+One document per *topic*, not per product, so a tee/hoodie/sweatshirt about the
+same subject share a single grounded search. Type is `ResearchTopic` in
+`src/types/research.ts`; written only by `services/research/repository.ts`.
+
+- Two keys: `provisionalTopicKey` (entities + stated year, known before
+  searching) and `topicKey` (adds the verified event/season). Provisional keys
+  that later resolve are kept in `aliases`, and `findFreshTopic()` matches
+  `$or: [{topicKey}, {aliases}]`. A topic whose event never resolves stays
+  provisional — that is the intended terminal state, not a bug.
+- All dates are **ISO strings** (`createdAt`, `updatedAt`, `researchedAt`,
+  `expiresAt`). `expiresAt` drives freshness: a stale record is treated as a
+  miss and re-researched in place by the unique `{topicKey: 1}` index.
+- `quality.score` / `quality.band` are computed by `assessQuality()` from
+  observable evidence only. `llmConfidence` is stored for debugging but is
+  deliberately **not** a scoring input.
+- Not user-scoped: research is about public subjects, so any authenticated user
+  can read any cached topic. The debug UI is the only reader.
+- `aliases` is indexed but **not** unique, so two topics can in principle claim
+  the same provisional key; the last write wins on lookup. Acceptable because a
+  collision means both products describe the same subject anyway.
 
 ## 3. Environment variables
 

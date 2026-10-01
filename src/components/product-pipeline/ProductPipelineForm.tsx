@@ -20,6 +20,7 @@ import {
 import axios from "axios";
 import _get from "lodash/get";
 import { useEffect, useMemo, useState } from "react";
+import ResearchPanel from "./ResearchPanel";
 
 const { Link } = Typography;
 
@@ -214,6 +215,10 @@ export default function ProductPipelineForm() {
           </Button>
         </Card>
       </Form>
+
+      <div style={{ marginTop: 16 }}>
+        <ResearchPanel />
+      </div>
     </Spin>
   );
 }

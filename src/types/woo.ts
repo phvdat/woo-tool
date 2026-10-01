@@ -62,6 +62,11 @@ export interface ProductConfig {
   gapFrom: number;
   gapTo: number;
   aiProvider?: AIProvider;
+  /**
+   * Opt-in: research each product's real-world subject before writing its
+   * description. Off by default so existing stores keep their current output.
+   */
+  researchEnabled?: boolean;
 }
 
 export enum CanvasPosition {

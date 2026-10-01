@@ -1,13 +1,12 @@
 ---
 name: woo-tool-verify
-description: Verify a change in the woo-tool repo before claiming it works. Use before finishing any code task, when asked "does this work", "is it done", or "run the checks". Triggers - "verify", "typecheck", "lint", "build", "did it work", "check my change", "ready to commit", "tests". Note this repo has NO test suite.
+description: Verify a change in the woo-tool repo before claiming it works. Use before finishing any code task, when asked "does this work", "is it done", or "run the checks". Triggers - "verify", "typecheck", "lint", "build", "did it work", "check my change", "ready to commit", "tests". Vitest covers pure helpers only; everything else relies on typecheck/lint/build.
 ---
 
 # Verifying changes in WooTool
 
-**There is no test suite, no test runner, and no test config in this repo.**
-Do not write "tests pass" — there are no tests to run. The gate is typecheck,
-then lint, then a scoped build.
+Typecheck first, then lint, then a scoped build. A green `npm test` says nothing
+about anything that calls an external API, Mongo, a socket, or renders UI.
 
 ## The ladder
 
@@ -21,7 +20,11 @@ npx tsc --noEmit
 #    hook deps are NOT caught here. Reason about them yourself.
 npm run lint
 
-# 3. Build — ONLY when you touched app/ routing, auth, or API surface.
+# 3. Tests — pure logic only (research helpers, enrichProducts). Anything
+#    calling an external API, Mongo, a socket, or rendering UI is uncovered.
+npm test
+
+# 4. Build — ONLY when you touched app/ routing, auth, or API surface.
 #    This is the slow one (~1-2 min). Skip for pure service/helper/constant edits.
 npm run build
 ```
@@ -36,6 +39,7 @@ npm run build
 | A new/changed API route, page, or component | yes | yes | yes |
 | `authOptions`, `middleware.ts`, `next.config.mjs`, `server.ts` | yes | yes | yes |
 | A new `endpoint.*` entry, collection constant, or type | yes | yes | no |
+| `src/services/research/**`, `enrichProducts` | yes | yes | no (add `npm test`) |
 | Doc-only change (this is what a docs task does) | no | no | no |
 
 If `npm run build` is needed, it must succeed — the app is deployed via
@@ -99,6 +103,7 @@ import if missing) and a `users` document containing your email to sign in.
 - Say what you ran and what it output.
 - If you could not run something (no DB, no ffmpeg, no Chrome), say so rather
   than implying it passed.
-- Never claim "tests pass" in this repo — there is no test command.
+- Quote test scope when you cite it: the suite covers pure logic only, so say so
+  rather than implying the feature is verified end to end.
 - If you changed only documentation/config (no `src/` edits), say the change is
   docs-only and that no runtime verification was needed.

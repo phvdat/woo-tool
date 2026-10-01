@@ -10,6 +10,23 @@ const MODELS = [
 
 const modelCooldown = new Map<string, number>();
 
+export interface GroundedSource {
+    url: string;
+    title: string;
+    domain: string;
+}
+
+export interface GroundedResult {
+    text: string;
+    sources: GroundedSource[];
+    queries: string[];
+}
+
+export interface GroundedOptions {
+    prompt: string;
+    apiKey?: string;
+}
+
 function isModelAvailable(model: string): boolean {
     const cooldownUntil = modelCooldown.get(model);
     if (!cooldownUntil) {
@@ -42,18 +59,30 @@ function cooldownModel(model: string, seconds: number): void {
     );
 }
 
-function isRateLimitError(error: any): boolean {
-    return (
-        error?.status === 429 ||
-        String(error?.message ?? "").includes("429")
-    );
+function classifyError(error: any): "rate_limit" | "overload" | "fatal" {
+    const status = error?.status;
+    const message = String(error?.message ?? "");
+
+    if (status === 429 || message.includes("429")) {
+        return "rate_limit";
+    }
+
+    if (
+        status === 500 ||
+        status === 503 ||
+        /currently experiencing high demand|spikes in demand|try again later/i.test(message)
+    ) {
+        return "overload";
+    }
+
+    return "fatal";
 }
 
-async function gemini(prompt: string, apiKey?: string): Promise<string> {
-    const ai = new GoogleGenAI({
-        apiKey: apiKey || process.env.GEMINI_API_KEY,
-    });
-
+/**
+ * Single retry/cooldown policy shared by every Gemini call shape. Each invoke
+ * builds its own client so per-user keys keep working.
+ */
+async function runAcrossModels<T>(invoke: (model: string) => Promise<T>): Promise<T> {
     let attemptedModel = false;
     for (const modelName of MODELS) {
         if (!isModelAvailable(modelName)) {
@@ -61,26 +90,11 @@ async function gemini(prompt: string, apiKey?: string): Promise<string> {
         }
         attemptedModel = true;
         try {
-            const interaction = await ai.interactions.create({
-                model: modelName,
-                input: prompt,
-            });
-            return interaction.output_text?.replaceAll("**", "") || "";
+            return await invoke(modelName);
         } catch (error: any) {
-            const status = error?.status;
+            const kind = classifyError(error);
 
-            const isRateLimit =
-                status === 429 ||
-                String(error?.message ?? "").includes("429");
-
-            const isTemporaryOverload =
-                status === 500 ||
-                status === 503 ||
-                /currently experiencing high demand|spikes in demand|try again later/i.test(
-                    String(error?.message ?? ""),
-                );
-
-            if (isRateLimit) {
+            if (kind === "rate_limit") {
                 const retryAfter = getRetryAfterSeconds(error);
 
                 cooldownModel(modelName, retryAfter);
@@ -92,7 +106,7 @@ async function gemini(prompt: string, apiKey?: string): Promise<string> {
                 continue;
             }
 
-            if (isTemporaryOverload) {
+            if (kind === "overload") {
                 const cooldownSeconds = 20;
 
                 cooldownModel(modelName, cooldownSeconds);
@@ -121,4 +135,76 @@ async function gemini(prompt: string, apiKey?: string): Promise<string> {
     );
 }
 
+function hostOf(url: string): string {
+    try {
+        return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+        return "";
+    }
+}
+
+async function gemini(prompt: string, apiKey?: string): Promise<string> {
+    return runAcrossModels(async (modelName) => {
+        const ai = new GoogleGenAI({
+            apiKey: apiKey || process.env.GEMINI_API_KEY,
+        });
+
+        const interaction = await ai.interactions.create({
+            model: modelName,
+            input: prompt,
+        });
+
+        return interaction.output_text?.replaceAll("**", "") || "";
+    });
+}
+
+/**
+ * Google-Search-grounded completion.
+ *
+ * `interactions.create` never returns `groundingMetadata`, so research uses the
+ * `models.generateContent` surface instead: it yields the real result URLs and
+ * the queries Google actually executed, which is what makes source tiers and
+ * independent-domain counting auditable rather than model-reported.
+ */
+async function geminiGrounded({ prompt, apiKey }: GroundedOptions): Promise<GroundedResult> {
+    return runAcrossModels(async (modelName) => {
+        const ai = new GoogleGenAI({
+            apiKey: apiKey || process.env.GEMINI_API_KEY,
+        });
+
+        const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
+
+        const grounding = response.candidates?.[0]?.groundingMetadata;
+
+        const seen = new Set<string>();
+        const sources: GroundedSource[] = [];
+
+        for (const chunk of grounding?.groundingChunks || []) {
+            const web = chunk.web;
+            if (!web?.uri || seen.has(web.uri)) {
+                continue;
+            }
+            seen.add(web.uri);
+            sources.push({
+                url: web.uri,
+                title: web.title || web.uri,
+                domain: web.domain || hostOf(web.uri),
+            });
+        }
+
+        return {
+            text: (response.text || "").replaceAll("**", ""),
+            sources,
+            queries: grounding?.webSearchQueries || [],
+        };
+    });
+}
+
 export default gemini;
+export { geminiGrounded };

@@ -44,7 +44,7 @@ Boot sequence lives in `server.ts` (51 lines) — read it once, it is worth it.
 | Mongo collections, env vars, external APIs, filesystem paths | `docs/agent/DATA.md` |
 | Anything that looks broken/duplicated/inconsistent before you "fix" it | `docs/agent/GOTCHAS.md` |
 | Where to find files for a task; search recipes | skill `woo-tool-scout` |
-| How to verify a change (there are **no tests**) | skill `woo-tool-verify` |
+| How to verify a change (tests cover pure helpers only) | skill `woo-tool-verify` |
 
 `docs/agent/FEATURES.md` is the highest-value file: it maps a task keyword to the
 **exact ordered list of files** to open. Use it before any search.
@@ -112,16 +112,18 @@ python/google_trends.py       the only Python file; called via child_process
 
 ## 5. Verify before you claim done
 
-There is **no test suite, no test runner, and no test config** in this repo.
-Do not claim "tests pass". Run:
+Run:
 
 ```bash
 npx tsc --noEmit        # typecheck — the real gate
 npm run lint            # next lint
+npm test                # Vitest — pure helpers + enrichProducts only
 npm run build           # only when you touched app/ routing, auth, or API shape
 ```
 
-Typecheck first; it is the fastest signal. See skill `woo-tool-verify`.
+Typecheck first; it is the fastest signal. A green `npm test` says nothing about
+UI, routes, crons, sockets, or anything calling an external API. See skill
+`woo-tool-verify`.
 
 ## 6. Keeping this memory honest
 

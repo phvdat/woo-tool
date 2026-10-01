@@ -249,7 +249,10 @@ write XLSX into CWD then `unlinkSync`.
   you must reason about them yourself).
 - `tsconfig.server.json` + `nodemon.json` exist for a `ts-node server.ts` path
   that is not the default; the default dev script uses `tsx watch`.
-- No test runner, no test files, no test config.
+- Vitest is the only test runner (`npm test`, `vitest.config.ts`). Tests live in
+  `__tests__/` next to the code and are limited to pure logic: the research helpers
+  and `enrichProducts` (with mocked AI/socket). Nothing touching the network, Mongo,
+  sockets, crons, or UI is covered.
 
 ## 11. The one "read once" file
 

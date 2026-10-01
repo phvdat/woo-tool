@@ -51,6 +51,7 @@ const defaultFormValue: WebsiteFormValue = {
     gapFrom: 0,
     gapTo: 0,
     aiProvider: "gemini",
+    researchEnabled: false,
   },
   autoVideo: {
     enabled: false,

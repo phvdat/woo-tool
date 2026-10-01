@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Col, Form, Input, InputNumber, Row, Select, Typography } from "antd";
+import { Card, Col, Form, Input, InputNumber, Row, Select, Switch, Tooltip, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
 
 export default function ProductConfigForm() {
@@ -46,6 +46,20 @@ export default function ProductConfigForm() {
       <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 16 }}>
         YouTube: videos publish at the same time as the product. If the product publishes
         immediately, the video publishes immediately too.
+      </Typography.Paragraph>
+      <Form.Item
+        name={["product", "researchEnabled"]}
+        label="Product Research"
+        valuePropName="checked"
+        initialValue={false}
+        tooltip="Researches what each product title actually references before writing its description. Only verified facts are passed to the writer; unverified subjects fall back to a plain product description. Adds a few seconds and some AI usage per new topic."
+      >
+        <Switch />
+      </Form.Item>
+      <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 16 }}>
+        Research is always prepended to the prompt below, so it works with any saved
+        prompt. Add {"{product-story}"} to place the research block inside your own prompt
+        instead.
       </Typography.Paragraph>
       <Form.Item
         name={["product", "promptDescriptionProduct"]}
