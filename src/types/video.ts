@@ -26,6 +26,7 @@ export interface VideoJob {
   status: VideoJobStatus;
   progress: number;
   outputPath: string | null;
+  thumbnailPath?: string | null;
   error: string | null;
   productUrl: string | null;
   config: VideoJobConfig;
@@ -48,6 +49,15 @@ export interface AudioFile {
   url: string;
   size: number;
   createdAt: Date;
+}
+
+export interface BackgroundImage {
+  _id?: string;
+  filename: string;
+  originalName: string;
+  url: string;
+  size: number;
+  createdAt: string;
 }
 
 export interface VideoProduct {

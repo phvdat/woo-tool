@@ -39,7 +39,7 @@ For schemas, `DATA.md`. For traps, `GOTCHAS.md`.
 | Product Pipeline | `/product-pipeline` | `src/app/(page)/product-pipeline/ProductPipeline.tsx` | `src/services/product-pipeline/` | `api/product-pipeline` | — |
 | ↳ Product Research | *(panel on `/product-pipeline`)* | `src/components/product-pipeline/ResearchPanel.tsx` | `src/services/research/` | `api/research/preview`, `api/research/topics` | `useResearchPreview` |
 | Product Spy | `/product-spy` | `src/components/product-spy/ProductSpyPage.tsx` | `src/services/product-spy/` | `api/product-spy/*` (4) | `useSpyProducts`, `useSpyCompetitors` |
-| Video | `/video-generator` | `src/components/video-generator/VideoGeneratorPage.tsx` | `src/services/video/` | `api/video/*` (8) | `useVideoJobs` |
+| Video | `/video-generator` | `src/components/video-generator/VideoGeneratorPage.tsx` | `src/services/video/` | `api/video/*` (10) | `useVideoJobs` |
 | YouTube | — | `src/components/settings/website/YouTubeConfig.tsx` | `src/services/youtube/` | `api/youtube/*` (5) | `useYouTubeChannel` |
 | Revenue | `/revenue` | `src/app/(page)/revenue/page.tsx` | `src/services/revenue/` | `api/revenue`, `api/revenue/refresh` | — |
 | Auto Blog | *(no page — `src/app/(page)/auto-post/` is an empty, untracked dir; absent in a fresh clone)* | *(none: cron/ops only)* | `src/lib/blog/` | `api/blog/run` | — |
@@ -230,32 +230,77 @@ and return `RawSpyProduct[]` with `source` set to the platform name.
 
 **What it does:** selects WooCommerce products, queues render jobs, composites
 images into 1080×1920 vertical MP4s with Ken Burns + xfade transitions and
-background music, then hands the result to YouTube.
+background music, then hands the result to YouTube. If a background image pool
+exists (Background Library), each video picks one at random and reuses it for
+every scene behind the sharp product — the video opens on the clear background
+alone for `OPENING_HOOK_DURATION` (0.7 s, no product), then a product intro over
+`OPENING_INTRO_DURATION` (0.8 s) fades the product in (slightly smaller + softer
+→ normal size, sharp) while the background dissolves into the existing slight
+blur + darken, all settled by ~1.5 s. An empty pool keeps the legacy blurred
+product-fill (no opening animation there). After the render, each job also
+composes a **separate thumbnail image** (never a video frame): the same
+selected background kept clear, product small in the top-left with padding —
+saved next to the video as `thumbnail-<productId>.jpg` and uploaded to YouTube
+as the custom thumbnail.
 
 **Read in this order:**
 
 1. `src/services/video/jobManager.ts` — **the queue and the lifecycle.**
    `enqueueJob(jobId)` → `processJob(job)`:
-   `preparing` → `prepImages` → `rendering` → `renderVideo` → `completed` →
+   `preparing` → `prepImages` → `rendering` → `renderVideo` →
+   `generateThumbnail` (fail-open: a thumbnail error never fails the job) →
+   `completed` (stores `outputPath` + `thumbnailPath`) →
    fire-and-forget `publishToYoutube` → on error, Telegram notify →
-   `finally` cleanup + `tryProcessNext()`.
-2. `src/services/video/config.ts` — `VIDEO_CONFIG` and `VIDEO_PATHS`. 20 lines.
-3. `src/services/video/imagePrep.ts` — download → sharp → `frame-0000.jpg`.
+   `finally` cleanup + `tryProcessNext()`. `getBackgroundPaths()` here resolves
+   the `backgroundImages` pool to on-disk paths at render time.
+2. `src/services/video/config.ts` — `VIDEO_CONFIG` (incl.
+   `BACKGROUND_BLUR_SIGMA`, `OPENING_*`, `THUMBNAIL_*`,
+   `FALLBACK_BACKGROUND_BLUR_SIGMA`, `BACKGROUND_DARKEN`) and
+   `VIDEO_PATHS`. 33 lines.
+3. `src/services/video/imagePrep.ts` — download → sharp → `frame-0000.jpg`
+   (originals are **not** resized; video filters scale them per frame, and the
+   thumbnail uses the file directly).
 4. `src/services/video/renderVideo.ts` — the only ffmpeg call site in the repo.
    Read the `complexFilter` construction carefully; it is the hardest code here.
-5. `src/services/video/createVideoJobsFromPipeline.ts` — job creation from the
+   Scene backgrounds are extra `-loop 1` inputs appended after the frames, so
+   the music audio index is `frameCount + backgroundInputCount`. Selected
+   backgrounds get the opening animation: clear during the hook, then an
+   `xfade` per scene (offset/duration measured from each scene's global start,
+   so it stays continuous across scene transitions) dissolves clear →
+   blur+darken while a second `xfade` on an rgba-padded product layer plus
+   `fade=alpha` dissolves the product in (slightly smaller/softer → final).
+   Scenes fully past the opening keep the static blur chain and the original
+   centered overlay, so their pixels are unchanged. Ken Burns uses
+   `zoompan d=1` with an `z='…on…'`-based zoom driven by a preceding
+   `fps=${fps}` filter — that is what lets the opening animation animate in
+   real time instead of being frame-held; the zoom trajectory is
+   byte-identical to the old `d=framesPerImage` form (do not "simplify" it back).
+5. `src/services/video/backgroundSelect.ts` — pure per-video random pick
+   (`-1` = fall back to the product-fill background; the picked image is reused
+   for all scenes). Tested in `__tests__/backgroundSelect.test.ts`.
+6. `src/services/video/thumbnail.ts` — sharp, no ffmpeg: cover-fits the
+   background (clear — no blur/darken) or the blurred product-fill when the
+   pool is empty, overlays `frame-0000.jpg` top-left inside a
+   `THUMBNAIL_PRODUCT_MAX_*_RATIO` box (`computeThumbnailProductBox` is pure
+   and tested). Render returns the exact `backgroundPath` it used so the
+   thumbnail reuses it instead of re-rolling the random pick.
+7. `src/services/video/createVideoJobsFromPipeline.ts` — job creation from the
    product pipeline (duplicates logic in `api/video/generate/route.ts`).
-6. `src/types/video.ts` — `VideoJob`, `VideoJobStatus`, `YoutubePublishStatus`.
+8. `src/types/video.ts` — `VideoJob`, `VideoJobStatus`, `YoutubePublishStatus`,
+   `AudioFile`, `BackgroundImage`.
 
 **UI:** `src/app/(page)/video-generator/page.tsx` →
 `src/components/video-generator/VideoGeneratorPage.tsx` (owns the socket
 listener, triggers `useVideoJobs` mutate) → `ProductSelector.tsx`,
-`VideoSettings.tsx`, `AudioLibrary.tsx`, `JobList.tsx`.
+`VideoSettings.tsx`, `AudioLibrary.tsx`, `BackgroundLibrary.tsx`,
+`JobList.tsx`.
 `useVideoJobs` polls every 2 s.
 
 **API:** `src/app/api/video/*` — `products`, `generate`, `jobs`,
-`jobs/[id]`, `audio`, `audio/[id]`, `download/[id]`, `download-all`. All
+`jobs/[id]`, `audio`, `audio/[id]`, `backgrounds`, `backgrounds/[id]`,
+`download/[id]`, `download-all`. All
 session-guarded. There is no `api/video/download/route.ts` — only `[id]`.
+Backgrounds are a global pool (no per-website scoping), same as audio.
 
 ---
 
@@ -270,7 +315,9 @@ scheduled publication, comment templating, and a retry/release cron.
      `exchangeCode`, `getChannelInfo`, `upsertChannel`, `removeChannel`
    - publish: `publishToYoutube(jobId, siteId)` — the main entry point, with
      `resolvePublishAt`, `buildVideoStatus`, `insertYoutubeVideo`,
-     `applyScheduleToVideo`
+     `applyScheduleToVideo`; after the video id exists it calls
+     `thumbnails.set` with the job's `thumbnailPath` (fail-open: a thumbnail
+     upload error is logged, never fails the publish)
    - comment rules + `describeYoutubeCommentError`
    - cron: `retryFailedPublishes`, `releaseScheduledPublishes`,
      `startYoutubeRetryCron`

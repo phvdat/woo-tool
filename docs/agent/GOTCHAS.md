@@ -57,7 +57,7 @@ socket consumer, you must filter client-side.
 
 ### `middleware.ts` is the only auth most routes get
 It protects everything except `api/auth`, `login`, `uploads`, `_next`,
-`favicon.ico`, `api/youtube/callback`. Only 19 of 36 route handlers add their
+`favicon.ico`, `api/youtube/callback`. Only 23 of 40 route handlers add their
 own `getServerSession`. The intended-but-incomplete pattern is to add the
 explicit check in the handler; do that for new routes.
 

@@ -110,7 +110,7 @@ Violations to avoid in new code:
 |---|---|
 | `src/app/(auth)/login` | Only public page. `"use client"`, Google OAuth button. |
 | `src/app/(page)/**` | Authenticated shell. `layout.tsx` → `MainLayout` (SessionProvider + Sidebar) + `ErrorBoundary`. |
-| `src/app/api/**` | 36 route handlers. |
+| `src/app/api/**` | 40 route handlers. |
 
 Most `(page)/<tool>/page.tsx` files are **7-line wrappers** that default-export a
 `"use client"` component of the same name — keep that shape. Three are
@@ -130,7 +130,7 @@ Two independent layers:
    `/uploads` as a prefix match on the negative lookahead beyond the literal,
    and `api/youtube/callback` is excluded because Google redirects there.
 
-2. **`getServerSession(authOptions)` inside the handler** — only 19 of 36 routes
+2. **`getServerSession(authOptions)` inside the handler** — only 23 of 40 routes
    do this. It is the stronger, intended pattern; add it to new routes.
 
 `authOptions` (`src/lib/auth.ts`) is unusual: the `signIn` callback fetches
@@ -221,6 +221,7 @@ Not repo-relative. The app writes to absolute host paths served by nginx:
   videos/<jobId>/product-<id>.mp4
   music/<websiteId>/bg.mp3
   music/global/<uuid>.<ext>      uploaded audio library
+  backgrounds/<uuid>.<ext>       uploaded video background library
   blogs/<jobId>/                  composited blog images
   zips/images-<jobId>.zip
 ```
@@ -234,7 +235,8 @@ Temp/scratch:
 
 Public asset URLs are built as `${process.env.NEXTAUTH_URL}/uploads/...` — see
 `src/helper/website.ts`, `src/helper/format-image.ts`,
-`api/video/audio/route.ts`, `api/woo/website-config/upload-music/route.ts`.
+`api/video/audio/route.ts`, `api/video/backgrounds/route.ts`,
+`api/woo/website-config/upload-music/route.ts`.
 
 The product pipeline's `exportExcel` is a misnomer: it writes a **CSV into
 `process.cwd()`** and sends it to Telegram. Same for the crawl routes, which

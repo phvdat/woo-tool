@@ -71,7 +71,7 @@ Boot sequence lives in `server.ts` (51 lines) — read it once, it is worth it.
   `videoJobs`, `audioFiles`, `youtubeChannels`) write real `Date`s. **Check the
   target collection before writing a date-range query** — see `DATA.md` §2.
 - **Auth:** `src/middleware.ts` protects everything except `api/auth`, `login`,
-  `uploads`, `_next`, `favicon.ico`, `api/youtube/callback`. Only 19 of 36 route
+  `uploads`, `_next`, `favicon.ico`, `api/youtube/callback`. Only 23 of 40 route
   handlers additionally call `getServerSession`. For any new route that reads or
   writes user data, add the explicit `getServerSession(authOptions)` check —
   that is the stronger, intended pattern.
@@ -94,7 +94,7 @@ src/app/
   (auth)/login/               public
   (page)/layout.tsx           MainLayout (SessionProvider + Sidebar) + ErrorBoundary
   (page)/<feature>/           one folder per tool; page.tsx is a 7-line wrapper
-  api/<feature>/route.ts      36 App Router route handlers
+  api/<feature>/route.ts      40 App Router route handlers
   hooks/                      12 SWR/client hooks (the only client data layer)
 src/components/<feature>/     feature UI
 src/services/<feature>/       server logic, no React

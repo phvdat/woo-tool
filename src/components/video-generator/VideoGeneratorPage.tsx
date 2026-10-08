@@ -3,6 +3,7 @@
 import { useVideoJobs } from "@/app/hooks/useVideoJobs";
 import Container from "@/components/commons/Container";
 import AudioLibrary from "./AudioLibrary";
+import BackgroundLibrary from "./BackgroundLibrary";
 import ProductSelector from "./ProductSelector";
 import VideoSettings from "./VideoSettings";
 import JobList from "./JobList";
@@ -104,6 +105,8 @@ export default function VideoGeneratorPage() {
         />
 
         <AudioLibrary />
+
+        <BackgroundLibrary />
 
         <JobList
           jobs={jobs}

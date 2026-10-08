@@ -37,6 +37,7 @@ wart, not a pattern to copy.
 | `SIZE_CHART_LINKS_CONFIG_COLLECTION` | *(not a collection — it is the document `_id` inside `global_config`)* | `{_id, data, updatedAt}` | `api/global-config/size-chart-links` | convert-file `ExcludeSizeChartLink` |
 | `VIDEO_JOBS_COLLECTION` | `videoJobs` | `VideoJob` | `api/video/generate`, `jobManager` | video UI, `youtubeService` |
 | `AUDIO_FILES_COLLECTION` | `audioFiles` | `AudioFile` | `api/video/audio` | video UI, job creation |
+| `BACKGROUND_IMAGES_COLLECTION` | `backgroundImages` | `BackgroundImage` | `api/video/backgrounds` | video UI, `jobManager` (render) |
 | `YOUTUBE_CHANNELS_COLLECTION` | `youtubeChannels` | `YoutubeChannel` | `youtubeService` (`upsertChannel`, `saveOauthConfig`); deleted by `api/youtube/disconnect` | `youtubeService`, settings UI |
 | `SPY_COMPETITORS_COLLECTION` | `spy_competitors` | `SpyCompetitor` | `api/product-spy/competitors`, `checker` | spy UI, scheduler |
 | `SPY_PRODUCTS_COLLECTION` | `spy_products` | `SpyProduct` | `checker` only | `api/product-spy/products` |
@@ -87,11 +88,16 @@ sorts by `createdAt` (but `POST` does not set `createdAt` — known gap).
 - Global config: singleton docs keyed by a string `_id`
   (`cate_keyword_config` / `size_chart_links`), payload in a `data` field.
 - `videoJobs`: `VideoJob` in `src/types/video.ts`. Carries render fields
-  (`images[]`, `status`, `progress`, `outputPath`, `config`) **and** the YouTube
+  (`images[]`, `status`, `progress`, `outputPath`, `thumbnailPath`,
+  `config`) **and** the YouTube
   publish fields (`youtubeStatus`, `youtubeVideoId`, `youtubePublishAt`,
   `youtubeError`, `youtubeCommentError`, `youtubeCommentedAt`,
   `youtubeRetryCount`, `youtubePublishedAt`).
 - `audioFiles`: `{ filename, originalName, url, size, createdAt }`.
+- `backgroundImages`: same shape as `audioFiles` but `createdAt` is an ISO
+  **string** (house default). Pool of video backgrounds — one is picked at
+  random per render and reused for every scene; `jobManager` resolves
+  `filename` → `/var/www/html/uploads/backgrounds/` at render time.
 - `youtubeChannels`: keyed by `siteId`. `clientId`,
   `clientSecretEncrypted`, `refreshTokenEncrypted` (AES-256-GCM via
   `src/lib/encryption.ts`), `channelId`, `channelTitle`, `connectedByEmail`.
@@ -170,7 +176,7 @@ Defined in `.env`. **Never commit secrets**; `.env` is gitignored.
 | `MONGODB_URI` | yes | `src/lib/mongodb.ts` | Atlas connection string |
 | `MONGODB_DB` | yes | `src/lib/mongodb.ts` | DB name |
 | `NEXTAUTH_SECRET` | yes | `src/lib/auth.ts` | JWT signing |
-| `NEXTAUTH_URL` | yes | asset URL builders (`helper/website.ts`, `helper/format-image.ts`, `api/video/audio`, `api/woo/website-config/upload-music`); NextAuth reads it implicitly — `src/lib/auth.ts` never names it | public origin for `/uploads/...` |
+| `NEXTAUTH_URL` | yes | asset URL builders (`helper/website.ts`, `helper/format-image.ts`, `api/video/audio`, `api/video/backgrounds`, `api/woo/website-config/upload-music`); NextAuth reads it implicitly — `src/lib/auth.ts` never names it | public origin for `/uploads/...` |
 | `GOOGLE_CLIENT_ID` | yes | `src/lib/auth.ts` | NextAuth Google provider |
 | `GOOGLE_CLIENT_SECRET` | yes | `src/lib/auth.ts` | NextAuth Google provider |
 | `NEXT_PUBLIC_ADMIN_EMAIL` | yes | `auth`, `/settings`, `/management-users`, sidebar/header | super-admin email; auto-allowed sign-in |
@@ -259,6 +265,7 @@ Not repo-relative. Served by nginx `location /uploads/` → `/var/www/html/uploa
   videos/<jobId>/product-<id>.mp4
   music/<websiteId>/bg.mp3       per-website background music
   music/global/<uuid>.<ext>     uploaded audio library
+  backgrounds/<uuid>.<ext>      uploaded video background library
   blogs/<jobId>/                 composited blog images
   zips/images-<jobId>.zip        format-image downloads
 
@@ -268,6 +275,7 @@ Not repo-relative. Served by nginx `location /uploads/` → `/var/www/html/uploa
 
 - Public asset URLs: `${NEXTAUTH_URL}/uploads/<rest>`. Built in
   `helper/website.ts`, `helper/format-image.ts`, `api/video/audio/route.ts`,
+  `api/video/backgrounds/route.ts`,
   `api/woo/website-config/upload-music/route.ts`.
 - Per-shop dir: `shopName.replace('.com','')`.
 - URL→path: replace `NEXTAUTH_URL/uploads/` with `/var/www/html/uploads/`.

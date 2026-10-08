@@ -1,12 +1,14 @@
-import { VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, USERS_COLLECTION } from '@/constant/collections';
+import { VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, USERS_COLLECTION, BACKGROUND_IMAGES_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobStatus } from '@/types/video';
 import { ObjectId } from 'mongodb';
-import { VIDEO_CONFIG } from './config';
+import { VIDEO_CONFIG, VIDEO_PATHS } from './config';
 import { prepImages, cleanupTempDir } from './imagePrep';
 import { renderVideo } from './renderVideo';
+import { generateThumbnail } from './thumbnail';
 import { publishToYoutube } from '@/services/youtube/youtubeService';
 import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
+import { existsSync } from 'fs';
 import path from 'path';
 
 let isProcessing = false;
@@ -69,6 +71,22 @@ async function getTelegramIdForJob(job: VideoJob): Promise<string | null> {
   }
 }
 
+async function getBackgroundPaths(): Promise<string[]> {
+  try {
+    const { db } = await connectToDatabase();
+    const docs = await db
+      .collection(BACKGROUND_IMAGES_COLLECTION)
+      .find({})
+      .toArray();
+
+    return docs
+      .map((doc) => path.join(VIDEO_PATHS.BACKGROUND_BASE, String(doc.filename)))
+      .filter((filePath) => existsSync(filePath));
+  } catch {
+    return [];
+  }
+}
+
 async function processJob(job: VideoJob) {
   const jobId = String(job._id!);
   const frameDir = path.join('/tmp/video-gen', jobId);
@@ -86,7 +104,9 @@ async function processJob(job: VideoJob) {
     await updateJobStatus(jobId, 'rendering', { progress: 5 });
     emitVideoProgress(jobId, 5);
 
-    const { outputPath } = await renderVideo({
+    const backgroundPaths = await getBackgroundPaths();
+
+    const { outputPath, backgroundPath } = await renderVideo({
       jobId,
       productId: job.productId,
       frameDir: preparedDir,
@@ -95,6 +115,7 @@ async function processJob(job: VideoJob) {
       transitionDuration: job.config.transitionDuration,
       kenBurns: job.config.kenBurns,
       backgroundMusicPath: job.config.backgroundMusicPath,
+      backgroundPaths,
       onProgress: (percent) => {
         const adjusted = 5 + Math.round(percent * 0.95);
         updateJobStatus(jobId, 'rendering', { progress: adjusted });
@@ -102,9 +123,27 @@ async function processJob(job: VideoJob) {
       },
     });
 
+    let thumbnailPath: string | null = null;
+    try {
+      thumbnailPath = await generateThumbnail({
+        productImagePath: path.join(preparedDir, 'frame-0000.jpg'),
+        backgroundPath,
+        outputPath: path.join(
+          VIDEO_PATHS.OUTPUT_BASE,
+          jobId,
+          `thumbnail-${job.productId}${VIDEO_CONFIG.THUMBNAIL_EXTENSION}`
+        ),
+      });
+    } catch (error: any) {
+      console.error(
+        `[VIDEO THUMBNAIL] Job ${jobId} failed: ${error?.message || 'Unknown error'}`
+      );
+    }
+
     await updateJobStatus(jobId, 'completed', {
       progress: 100,
       outputPath,
+      thumbnailPath,
       completedAt: new Date(),
     });
     emitVideoCompleted(jobId);

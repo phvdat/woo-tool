@@ -1,5 +1,5 @@
 import { google, youtube_v3 } from 'googleapis';
-import { createReadStream } from 'fs';
+import { createReadStream, existsSync } from 'fs';
 import { YOUTUBE_CHANNELS_COLLECTION, VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, USERS_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { decrypt, encrypt } from '@/lib/encryption';
@@ -413,6 +413,22 @@ export async function publishToYoutube(
         publishAt,
       );
       isNewUpload = true;
+    }
+
+    if (job.thumbnailPath && existsSync(job.thumbnailPath)) {
+      try {
+        await youtube.thumbnails.set({
+          videoId,
+          media: {
+            mimeType: 'image/jpeg',
+            body: createReadStream(job.thumbnailPath),
+          },
+        });
+      } catch (thumbnailError: any) {
+        console.error(
+          `[YOUTUBE THUMBNAIL] Job ${jobId} (video ${videoId}): ${thumbnailError?.message || 'Unknown error'}`
+        );
+      }
     }
 
     const fields: Record<string, any> = {

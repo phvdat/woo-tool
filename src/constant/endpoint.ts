@@ -33,6 +33,7 @@ researchTopics: '/api/research/topics',
   videoGenerate: '/api/video/generate',
   videoJobs: '/api/video/jobs',
   videoDownloadAll: '/api/video/download-all',
+  videoBackgrounds: '/api/video/backgrounds',
 
   youtubeConnect: '/api/youtube/connect',
   youtubeStatus: '/api/youtube/status',
