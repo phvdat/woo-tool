@@ -54,7 +54,9 @@ Every other feature keys off this. Shape is `WebsiteConfig` in
   `CanvasPosition`), `imageWidth`, `imageHeight`, `quality`.
 - `product`: `{ aiProvider, publicTime, gapFrom, gapTo, promptDescriptionProduct, promptTagsProduct, researchEnabled }`. `researchEnabled` is opt-in and absent/false on every pre-existing document, which is why turning it off is a no-op for stored stores.
 - `autoBlog`: `{ enabled, cron, status, postsPerRun }`.
-- `autoVideo`: `{ enabled }`.
+- `autoVideo`: `{ enabled, useBackgroundImage? }`. `useBackgroundImage` is
+  opt-in and absent/false on every pre-existing document; missing is treated as
+  OFF (blurred product background) by `jobManager`.
 - `backgroundMusicUrl`, `youtubeDescriptionTemplate`, `youtubeCommentTemplate`.
 - Access: `owner OR members` (both lowercased). Canonical filter:
   `buildWebsiteAccessFilter` in `src/services/revenue/websiteAccess.ts`.

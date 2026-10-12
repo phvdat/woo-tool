@@ -85,6 +85,18 @@ async function getBackgroundPaths(): Promise<string[]> {
   }
 }
 
+async function getWebsiteUseBackgroundImage(websiteId: string): Promise<boolean> {
+  try {
+    const { db } = await connectToDatabase();
+    const website = await db
+      .collection(WEBSITES_COLLECTION)
+      .findOne({ _id: new ObjectId(websiteId) }, { projection: { autoVideo: 1 } });
+    return website?.autoVideo?.useBackgroundImage === true;
+  } catch {
+    return false;
+  }
+}
+
 async function processJob(job: VideoJob) {
   const jobId = String(job._id!);
   const frameDir = path.join('/tmp/video-gen', jobId);
@@ -102,7 +114,8 @@ async function processJob(job: VideoJob) {
     await updateJobStatus(jobId, 'rendering', { progress: 5 });
     emitVideoProgress(jobId, 5);
 
-    const backgroundPaths = await getBackgroundPaths();
+    const useBackgroundImage = await getWebsiteUseBackgroundImage(job.websiteId);
+    const backgroundPaths = useBackgroundImage ? await getBackgroundPaths() : [];
 
     const { outputPath, backgroundPath } = await renderVideo({
       jobId,

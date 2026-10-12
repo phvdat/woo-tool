@@ -16,6 +16,19 @@ export default function AutoVideoConfig() {
           ]}
         />
       </Form.Item>
+      <Form.Item
+        name={["autoVideo", "useBackgroundImage"]}
+        label="Use Background Image"
+        initialValue={false}
+        tooltip="On: use a random image from the Background Library. Off: use the blurred product image."
+      >
+        <Segmented
+          options={[
+            { label: "Off", value: false },
+            { label: "On", value: true },
+          ]}
+        />
+      </Form.Item>
     </Card>
   );
 }

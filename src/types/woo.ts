@@ -97,6 +97,9 @@ export interface WebsiteConfig {
   owner: string;
   autoVideo?: {
     enabled: boolean;
+    // Use a random Background Library image instead of the blurred product
+    // image. Missing/false = OFF (legacy behavior).
+    useBackgroundImage?: boolean;
   };
 }
 

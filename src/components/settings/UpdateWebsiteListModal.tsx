@@ -55,6 +55,7 @@ const defaultFormValue: WebsiteFormValue = {
   },
   autoVideo: {
     enabled: false,
+    useBackgroundImage: false,
   },
 };
 

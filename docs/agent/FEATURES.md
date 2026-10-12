@@ -259,7 +259,9 @@ as the custom thumbnail.
    `completed` (stores `outputPath` + `thumbnailPath`) →
    fire-and-forget `publishToYoutube` → on error, Telegram notify →
    `finally` cleanup, then the pump picks the next job. `getBackgroundPaths()`
-   here resolves the `backgroundImages` pool to on-disk paths at render time.
+   here resolves the `backgroundImages` pool to on-disk paths at render time,
+   but only when the job's website has `autoVideo.useBackgroundImage === true`
+   (missing = OFF → the blurred product-fill fallback).
 2. `src/services/video/config.ts` — `VIDEO_CONFIG` (incl.
    `BACKGROUND_BLUR_SIGMA`, `BACKGROUND_SCROLL_SPEED`, `OPENING_*`,
    `THUMBNAIL_*`, `FALLBACK_BACKGROUND_BLUR_SIGMA`, `BACKGROUND_DARKEN`) and
@@ -558,7 +560,7 @@ Three routes, all under `(page)/settings/`:
 | `WebsiteForm.tsx` | `url`, `shopName`, `logoUrl`, `logoWidth`, `logoHeight`, `logoPosition`, `imageWidth`, `imageHeight`, `quality`, `members[]`, `wpUsername`, `wpAppPassword` |
 | `ProductConfigForm.tsx` | `product.*` — `aiProvider`, `publicTime`, `gapFrom/gapTo`, `promptDescriptionProduct`, `promptTagsProduct` |
 | `BlogConfigForm.tsx` | `autoBlog.{enabled,status,postsPerRun,cron}` |
-| `AutoVideoConfig.tsx` | `autoVideo.enabled` |
+| `AutoVideoConfig.tsx` | `autoVideo.enabled`, `autoVideo.useBackgroundImage` |
 | `MusicUploader.tsx` | *(no field of its own — it sets the form's `backgroundMusicUrl`; the value is persisted by `api/woo/website-config` on save, after `upload-music` returns it)* |
 | `YouTubeConfig.tsx` | channel connection (not a document field) |
 | `YouTubeDescriptionTemplate.tsx` / `YouTubeCommentTemplate.tsx` | `youtubeDescriptionTemplate` / `youtubeCommentTemplate` |
