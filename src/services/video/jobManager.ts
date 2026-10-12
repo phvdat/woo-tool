@@ -6,13 +6,11 @@ import { VIDEO_CONFIG, VIDEO_PATHS } from './config';
 import { prepImages, cleanupTempDir } from './imagePrep';
 import { renderVideo } from './renderVideo';
 import { generateThumbnail } from './thumbnail';
+import { createRenderQueue, type RenderQueue } from './renderQueue';
 import { publishToYoutube } from '@/services/youtube/youtubeService';
 import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
 import { existsSync } from 'fs';
 import path from 'path';
-
-let isProcessing = false;
-let processingCount = 0;
 
 function emitVideoProgress(jobId: string, percent: number) {
   try {
@@ -167,33 +165,41 @@ async function processJob(job: VideoJob) {
     }
   } finally {
     cleanupTempDir(frameDir);
-    processingCount--;
-    tryProcessNext();
   }
 }
 
-async function tryProcessNext() {
-  if (processingCount >= VIDEO_CONFIG.MAX_CONCURRENT_JOBS) return;
-  if (isProcessing) return;
+async function claimNextPendingJob(): Promise<VideoJob | null> {
+  const { db } = await connectToDatabase();
+  const job = await db
+    .collection(VIDEO_JOBS_COLLECTION)
+    .findOneAndUpdate(
+      { status: 'pending' },
+      { $set: { status: 'preparing', progress: 0 } },
+      { sort: { createdAt: 1 } }
+    );
+  return (job as unknown as VideoJob) ?? null;
+}
 
-  isProcessing = true;
-  try {
-    const { db } = await connectToDatabase();
-    const nextJob = await db
-      .collection(VIDEO_JOBS_COLLECTION)
-      .findOneAndUpdate(
-        { status: 'pending' },
-        { $set: { status: 'pending' } },
-        { sort: { createdAt: 1 } }
-      );
+const globalForVideoQueue = globalThis as unknown as {
+  __videoRenderQueue?: RenderQueue<VideoJob>;
+};
 
-    if (nextJob) {
-      processingCount++;
-      processJob(nextJob as unknown as VideoJob);
-    }
-  } finally {
-    isProcessing = false;
+function getRenderQueue(): RenderQueue<VideoJob> {
+  if (!globalForVideoQueue.__videoRenderQueue) {
+    globalForVideoQueue.__videoRenderQueue = createRenderQueue<VideoJob>({
+      concurrency: VIDEO_CONFIG.MAX_CONCURRENT_JOBS,
+      claimNext: claimNextPendingJob,
+      run: processJob,
+      onError: (error, job) => {
+        console.error(
+          `[VIDEO JOB] Job ${String(job._id)} crashed: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`
+        );
+      },
+    });
   }
+  return globalForVideoQueue.__videoRenderQueue;
 }
 
 export async function enqueueJob(jobId: string) {
@@ -204,8 +210,7 @@ export async function enqueueJob(jobId: string) {
 
   if (!job) throw new Error('Job not found');
 
-  processingCount++;
-  processJob(job as unknown as VideoJob);
+  await getRenderQueue().pump();
 }
 
 export async function recoverPendingJobs() {
@@ -218,15 +223,5 @@ export async function recoverPendingJobs() {
       { $set: { status: 'pending', progress: 0 } }
     );
 
-  const pendingJobs = await db
-    .collection(VIDEO_JOBS_COLLECTION)
-    .find({ status: 'pending' })
-    .sort({ createdAt: 1 })
-    .toArray();
-
-  for (const job of pendingJobs) {
-    if (processingCount >= VIDEO_CONFIG.MAX_CONCURRENT_JOBS) break;
-    processingCount++;
-    processJob(job as unknown as VideoJob);
-  }
+  await getRenderQueue().pump();
 }

@@ -1,5 +1,7 @@
 export const VIDEO_CONFIG = {
-  MAX_CONCURRENT_JOBS: 2,
+  // One render at a time, globally across every website. The queue in
+  // jobManager.ts is the single owner of this limit.
+  MAX_CONCURRENT_JOBS: 1,
   MAX_IMAGES: 10,
   DEFAULT_DISPLAY_DURATION: 6,
   DEFAULT_TRANSITION_DURATION: 0.5,

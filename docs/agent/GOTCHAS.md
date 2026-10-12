@@ -131,10 +131,15 @@ homepage. One `detectPlatform` call can fire up to ~7 homepage requests.
 `api/product-spy/competitors` `PATCH` re-detects every competitor sequentially
 in one request.
 
-### Video job claim is not atomic
-`tryProcessNext()` uses a no-op `findOneAndUpdate` to "claim" the next pending
-job. It only works because the in-process `isProcessing` flag serializes it.
-Don't assume it's safe across processes.
+### Video rendering is a single global queue (fixed)
+`jobManager.ts` now owns one process-wide queue (`createRenderQueue`, a
+`globalThis` singleton) and claims work atomically by moving a job
+`pending → preparing` in a single `findOneAndUpdate`. Only
+`VIDEO_CONFIG.MAX_CONCURRENT_JOBS` (1) renders run at once for **all** websites;
+`enqueueJob` and `recoverPendingJobs` just pump the queue instead of starting
+renders directly. The atomic claim prevents duplicate workers, but there is
+still only one process (see `AGENTS.md` §1) — do not assume cross-process
+concurrency limits.
 
 ### Blog `excerpt` is always undefined
 `writer.ts`'s prompt requests 4 JSON fields but `BlogArticle` requires

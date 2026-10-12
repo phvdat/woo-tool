@@ -249,13 +249,17 @@ as the custom thumbnail.
 **Read in this order:**
 
 1. `src/services/video/jobManager.ts` — **the queue and the lifecycle.**
-   `enqueueJob(jobId)` → `processJob(job)`:
+   `enqueueJob(jobId)` / `recoverPendingJobs()` only nudge one shared
+   `createRenderQueue` pump (`renderQueue.ts`); the pump atomically claims the
+   oldest `pending` job (`findOneAndUpdate` → `preparing`) and runs
+   `processJob(job)` one at a time globally (`VIDEO_CONFIG.MAX_CONCURRENT_JOBS`
+   = 1, across all websites):
    `preparing` → `prepImages` → `rendering` → `renderVideo` →
    `generateThumbnail` (fail-open: a thumbnail error never fails the job) →
    `completed` (stores `outputPath` + `thumbnailPath`) →
    fire-and-forget `publishToYoutube` → on error, Telegram notify →
-   `finally` cleanup + `tryProcessNext()`. `getBackgroundPaths()` here resolves
-   the `backgroundImages` pool to on-disk paths at render time.
+   `finally` cleanup, then the pump picks the next job. `getBackgroundPaths()`
+   here resolves the `backgroundImages` pool to on-disk paths at render time.
 2. `src/services/video/config.ts` — `VIDEO_CONFIG` (incl.
    `BACKGROUND_BLUR_SIGMA`, `BACKGROUND_SCROLL_SPEED`, `OPENING_*`,
    `THUMBNAIL_*`, `FALLBACK_BACKGROUND_BLUR_SIGMA`, `BACKGROUND_DARKEN`) and
