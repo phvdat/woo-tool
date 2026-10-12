@@ -74,13 +74,6 @@ export function renderVideo({
     const totalDuration = frameCount * actualClipDuration - (frameCount - 1) * transitionDuration;
     const W = VIDEO_CONFIG.OUTPUT_WIDTH;
     const H = VIDEO_CONFIG.OUTPUT_HEIGHT;
-    // Background pan: scale to a taller intermediate and walk the crop window
-    // down over the whole video (global time, clamped), so longer videos pan
-    // slower and the position never jumps at scene boundaries.
-    const panHeight =
-      Math.ceil((H * (1 + VIDEO_CONFIG.BACKGROUND_PAN_OVERSCAN_RATIO)) / 2) * 2;
-    const panTravel = panHeight - H;
-    const totalStr = totalDuration.toFixed(3);
     // Opening: background-only hook, then a product intro that doubles as the
     // clear -> blur+darken background transition. Clamped so short videos still
     // end on a settled frame.
@@ -106,25 +99,48 @@ export function renderVideo({
       const introStr = (introEndLocal - hookLocal).toFixed(3);
 
       if (backgroundInput >= 0) {
-        const panY =
-          `(ih-${panHeight})/2+` +
-          `min(${sceneStart.toFixed(3)}+t,${totalStr})/${totalStr}*${panTravel}`;
-        const bgFill =
+        // Vertical repeat: fill-crop one tile, stack a second copy under it,
+        // then slide an H-tall window up the 2H strip (shrinking y reads as
+        // downward motion). y walks H->0 and jumps back to H; the strip
+        // repeats with period H, so the jump and every tile exit are
+        // pixel-identical (seamless loop). sceneStart keeps the position on
+        // the global timeline, so it never jumps at scene boundaries.
+        const scrollY = (startSeconds: number) => {
+          const off =
+            `${(startSeconds * VIDEO_CONFIG.BACKGROUND_SCROLL_SPEED).toFixed(6)}` +
+            `+t*${VIDEO_CONFIG.BACKGROUND_SCROLL_SPEED}`;
+          return `(floor(${off})+1-(${off}))*${H}`;
+        };
+        const bgScale =
           `[${backgroundInput}:v]` +
-          `scale=${W}:${panHeight}:force_original_aspect_ratio=increase,` +
-          // Loop inputs tick at 25fps; normalize to output fps so the pan
-          // position advances once per output frame.
-          `fps=${fps},` +
-          `crop=${W}:${H}:x=(iw-${W})/2:y='${panY}'`;
+          `scale=${W}:${H}:force_original_aspect_ratio=increase,` +
+          `crop=${W}:${H},` +
+          // Loop inputs tick at 25fps; normalize so the scroll position
+          // advances evenly on output frames.
+          `fps=${fps}`;
 
         if (hasOpening) {
           // Clear until the hook ends, then dissolve into blur+darken. Offsets
           // are local to this scene but measured from the global timeline so
           // the dissolve stays continuous across scene transitions.
-          filterComplex.push(`${bgFill}[bgF${i}]`);
-          filterComplex.push(`[bgF${i}]split=2[bgClr${i}][bgBlr${i}]`);
+          // xfade time-shifts its second input by `offset`, so the treated
+          // branch's frames land hookLocal late on the output timeline; each
+          // branch therefore gets its own scroll crop, with the treated one
+          // starting hookLocal ahead, or the two dissolve layers (and the
+          // scenes after them) drift apart.
           filterComplex.push(
-            `[bgBlr${i}]` +
+            `${bgScale},split=4[bgC0${i}][bgC1${i}][bgB0${i}][bgB1${i}]`
+          );
+          filterComplex.push(
+            `[bgC0${i}][bgC1${i}]vstack=inputs=2,` +
+            `crop=${W}:${H}:x=0:y='${scrollY(sceneStart)}'[bgClr${i}]`
+          );
+          filterComplex.push(
+            `[bgB0${i}][bgB1${i}]vstack=inputs=2,` +
+            `crop=${W}:${H}:x=0:y='${scrollY(sceneStart + hookLocal)}'[bgTrt${i}]`
+          );
+          filterComplex.push(
+            `[bgTrt${i}]` +
             `gblur=sigma=${VIDEO_CONFIG.BACKGROUND_BLUR_SIGMA},` +
             `eq=brightness=${VIDEO_CONFIG.BACKGROUND_DARKEN}` +
             `[bgTreat${i}]`
@@ -134,7 +150,10 @@ export function renderVideo({
           );
         } else {
           filterComplex.push(
-            `${bgFill},` +
+            `${bgScale},` +
+            `split=2[bgT0${i}][bgT1${i}];` +
+            `[bgT0${i}][bgT1${i}]vstack=inputs=2,` +
+            `crop=${W}:${H}:x=0:y='${scrollY(sceneStart)}',` +
             `gblur=sigma=${VIDEO_CONFIG.BACKGROUND_BLUR_SIGMA},` +
             `eq=brightness=${VIDEO_CONFIG.BACKGROUND_DARKEN}` +
             `[bgP${i}]`

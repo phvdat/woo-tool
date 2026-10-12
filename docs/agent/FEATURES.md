@@ -232,7 +232,10 @@ and return `RawSpyProduct[]` with `source` set to the platform name.
 images into 1080×1920 vertical MP4s with Ken Burns + xfade transitions and
 background music, then hands the result to YouTube. If a background image pool
 exists (Background Library), each video picks one at random and reuses it for
-every scene behind the sharp product — the video opens on the clear background
+every scene behind the sharp product. The background is **tiled vertically and
+scrolls downward** at `BACKGROUND_SCROLL_SPEED` (1.0 screen-heights/second —
+fast, seamless because the tile repeats), never zooming or panning
+horizontally. The video opens on the clear background
 alone for `OPENING_HOOK_DURATION` (0.7 s, no product), then a product intro over
 `OPENING_INTRO_DURATION` (0.8 s) fades the product in (slightly smaller + softer
 → normal size, sharp) while the background dissolves into the existing slight
@@ -254,9 +257,9 @@ as the custom thumbnail.
    `finally` cleanup + `tryProcessNext()`. `getBackgroundPaths()` here resolves
    the `backgroundImages` pool to on-disk paths at render time.
 2. `src/services/video/config.ts` — `VIDEO_CONFIG` (incl.
-   `BACKGROUND_BLUR_SIGMA`, `OPENING_*`, `THUMBNAIL_*`,
-   `FALLBACK_BACKGROUND_BLUR_SIGMA`, `BACKGROUND_DARKEN`) and
-   `VIDEO_PATHS`. 33 lines.
+   `BACKGROUND_BLUR_SIGMA`, `BACKGROUND_SCROLL_SPEED`, `OPENING_*`,
+   `THUMBNAIL_*`, `FALLBACK_BACKGROUND_BLUR_SIGMA`, `BACKGROUND_DARKEN`) and
+   `VIDEO_PATHS`. 36 lines.
 3. `src/services/video/imagePrep.ts` — download → sharp → `frame-0000.jpg`
    (originals are **not** resized; video filters scale them per frame, and the
    thumbnail uses the file directly).
@@ -267,10 +270,18 @@ as the custom thumbnail.
    backgrounds get the opening animation: clear during the hook, then an
    `xfade` per scene (offset/duration measured from each scene's global start,
    so it stays continuous across scene transitions) dissolves clear →
-   blur+darken while a second `xfade` on an rgba-padded product layer plus
-   `fade=alpha` dissolves the product in (slightly smaller/softer → final).
-   Scenes fully past the opening keep the static blur chain and the original
-   centered overlay, so their pixels are unchanged. Ken Burns uses
+    blur+darken while a second `xfade` on an rgba-padded product layer plus
+    `fade=alpha` dissolves the product in (slightly smaller/softer → final).
+    The scrolling background: each background input is cover-scaled + fps
+    normalized, `vstack`ed with itself, and a `crop` window slides down it via
+    `scrollY(globalTime)` — the strip repeats with period `OUTPUT_HEIGHT`, so
+    the wrap is pixel-identical (seamless). **Gotcha:** ffmpeg `xfade`
+    time-shifts its second input by `offset` seconds, so the opening's
+    treated branch crops on `scrollY(sceneStart + hookLocal)` — using plain
+    `sceneStart` there lags the clear layer by the full `offset` and jumps at
+    the end of the intro. Scenes fully past the opening keep the scroll +
+    blur chain and the original centered overlay, so their product pixels
+    are unchanged. Ken Burns uses
    `zoompan d=1` with an `z='…on…'`-based zoom driven by a preceding
    `fps=${fps}` filter — that is what lets the opening animation animate in
    real time instead of being frame-held; the zoom trajectory is

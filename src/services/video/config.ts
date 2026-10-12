@@ -22,9 +22,9 @@ export const VIDEO_CONFIG = {
   THUMBNAIL_QUALITY: 90,
   FALLBACK_BACKGROUND_BLUR_SIGMA: 30,
   BACKGROUND_DARKEN: -0.05,
-  // Extra height scaled into the background so the crop window has room to
-  // pan down over the video without exposing an edge.
-  BACKGROUND_PAN_OVERSCAN_RATIO: 0.06,
+  // Vertical background scroll in frame-heights per second; 1.0 scrolls the
+  // tiled background one full screen per second (fast, not a slow drift).
+  BACKGROUND_SCROLL_SPEED: 1.0,
 } as const;
 
 export const VIDEO_PATHS = {
