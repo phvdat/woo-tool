@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       backgroundMusicPath,
       outputWidth: VIDEO_CONFIG.OUTPUT_WIDTH,
       outputHeight: VIDEO_CONFIG.OUTPUT_HEIGHT,
+      showCta: userConfig?.showCta ?? VIDEO_CONFIG.DEFAULT_CTA_ENABLED,
     };
 
     const createdJobs: VideoJob[] = [];

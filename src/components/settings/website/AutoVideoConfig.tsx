@@ -29,6 +29,19 @@ export default function AutoVideoConfig() {
           ]}
         />
       </Form.Item>
+      <Form.Item
+        name={["autoVideo", "showCta"]}
+        label="Show CTA Overlay"
+        initialValue={true}
+        tooltip="Show 'PRODUCT LINK IN COMMENTS' in the last 3 seconds of videos"
+      >
+        <Segmented
+          options={[
+            { label: "Off", value: false },
+            { label: "On", value: true },
+          ]}
+        />
+      </Form.Item>
     </Card>
   );
 }

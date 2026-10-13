@@ -5,6 +5,7 @@ export interface VideoJobConfig {
   backgroundMusicPath: string | null;
   outputWidth: number;
   outputHeight: number;
+  showCta?: boolean;
 }
 
 export type VideoJobStatus = 'pending' | 'preparing' | 'rendering' | 'completed' | 'failed';

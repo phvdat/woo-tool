@@ -100,6 +100,7 @@ export interface WebsiteConfig {
     // Use a random Background Library image instead of the blurred product
     // image. Missing/false = OFF (legacy behavior).
     useBackgroundImage?: boolean;
+    showCta?: boolean;
   };
   // Automatic themed product-compilation videos. Missing = OFF.
   autoCompilation?: {

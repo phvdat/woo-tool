@@ -44,6 +44,7 @@ export async function createVideoJobsFromPipeline({
     backgroundMusicPath,
     outputWidth: VIDEO_CONFIG.OUTPUT_WIDTH,
     outputHeight: VIDEO_CONFIG.OUTPUT_HEIGHT,
+    showCta: VIDEO_CONFIG.DEFAULT_CTA_ENABLED,
   };
 
   let created = 0;
@@ -98,10 +99,11 @@ export async function createVideoJobsFromPipeline({
             websiteId,
             parseWooGmtDate(product.date_created_gmt)
           ),
-        config: {
-          ...jobConfig,
-          backgroundMusicPath: selectedMusic,
-        },
+      config: {
+        ...jobConfig,
+        backgroundMusicPath: selectedMusic,
+        showCta: website.autoVideo?.showCta ?? VIDEO_CONFIG.DEFAULT_CTA_ENABLED,
+      },
         createdAt: new Date(),
         completedAt: null,
       };

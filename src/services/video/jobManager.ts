@@ -127,6 +127,7 @@ async function processJob(job: VideoJob) {
       kenBurns: job.config.kenBurns,
       backgroundMusicPath: job.config.backgroundMusicPath,
       backgroundPaths,
+      showCta: job.config.showCta ?? VIDEO_CONFIG.DEFAULT_CTA_ENABLED,
       onProgress: (percent) => {
         const adjusted = 5 + Math.round(percent * 0.95);
         updateJobStatus(jobId, 'rendering', { progress: adjusted });

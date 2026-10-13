@@ -27,6 +27,7 @@ export const VIDEO_CONFIG = {
   // Vertical background scroll in frame-heights per second; 1.0 scrolls the
   // tiled background one full screen per second (fast, not a slow drift).
   BACKGROUND_SCROLL_SPEED: 0.25,
+  DEFAULT_CTA_ENABLED: true,
 } as const;
 
 export const VIDEO_PATHS = {

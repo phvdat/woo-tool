@@ -1,7 +1,11 @@
 import ffmpeg from 'fluent-ffmpeg';
-import { mkdirSync } from 'fs';
+import { mkdirSync, existsSync } from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import { VIDEO_CONFIG, VIDEO_PATHS } from './config';
+
+// Allow override for testing
+const OUTPUT_BASE = process.env.VIDEO_OUTPUT_BASE || VIDEO_PATHS.OUTPUT_BASE;
 import { selectBackgroundForVideo } from './backgroundSelect';
 
 export interface RenderVideoParams {
@@ -15,6 +19,7 @@ export interface RenderVideoParams {
   backgroundMusicPath: string | null;
   backgroundPaths?: string[];
   onProgress?: (percent: number) => void;
+  showCta?: boolean;
 }
 
 export interface RenderVideoResult {
@@ -33,6 +38,7 @@ export function renderVideo({
   backgroundMusicPath,
   backgroundPaths,
   onProgress,
+  showCta = VIDEO_CONFIG.DEFAULT_CTA_ENABLED,
 }: RenderVideoParams): Promise<RenderVideoResult> {
   return new Promise((resolve, reject) => {
     if (frameCount === 0) {
@@ -40,7 +46,7 @@ export function renderVideo({
       return;
     }
 
-    const outputDir = path.join(VIDEO_PATHS.OUTPUT_BASE, jobId);
+    const outputDir = path.join(OUTPUT_BASE, jobId);
     mkdirSync(outputDir, { recursive: true });
     const outputPath = path.join(outputDir, `product-${productId}${VIDEO_CONFIG.OUTPUT_EXTENSION}`);
 
@@ -284,11 +290,19 @@ export function renderVideo({
       }
     }
 
-    const fullFilter = filterComplex.join(';');
+    let fullFilter = filterComplex.join(';');
+    let hasCtaFilter = false;
+    const audioInputBase = frameCount + backgroundInputCount;
+    if (showCta) {
+      const ctaInputIndex = audioInputBase;
+      const ctaEnable = `between(t,${Math.max(totalDuration - 3, 0).toFixed(3)},${totalDuration.toFixed(3)})`;
+      fullFilter = fullFilter + `;[${ctaInputIndex}:v]setpts=PTS-STARTPTS[cta];[outv][cta]overlay=0:${H - 80 - 40}:enable='${ctaEnable}'[outvfinal]`;
+      hasCtaFilter = true;
+    }
     command
       .complexFilter(fullFilter)
       .outputOptions([
-        '-map', '[outv]',
+        '-map', hasCtaFilter ? '[outvfinal]' : '[outv]',
         '-c:v', VIDEO_CONFIG.OUTPUT_CODEC,
         '-pix_fmt', VIDEO_CONFIG.OUTPUTPixelFormat,
         '-t', String(totalDuration),
@@ -296,10 +310,30 @@ export function renderVideo({
         '-y',
       ]);
 
+    let ctaOverlayPath: string | null = null;
+    if (showCta) {
+      try {
+        const ctaText = 'PRODUCT LINK IN COMMENTS';
+        const ctaSvg = `<svg width="${W}" height="80">
+          <text x="${W / 2}" y="50" font-size="44" font-family="Arial" font-weight="bold" text-anchor="middle" fill="white" stroke="black" stroke-width="3">${ctaText}</text>
+        </svg>`;
+        ctaOverlayPath = path.join(outputDir, `cta-${jobId}.png`);
+        sharp(Buffer.from(ctaSvg)).png().toFile(ctaOverlayPath!).then(() => {
+          if (ctaOverlayPath && existsSync(ctaOverlayPath)) {
+            command.input(ctaOverlayPath);
+          }
+        }).catch((err) => {
+          console.error(`[VIDEO CTA] Failed to create CTA overlay: ${err}`);
+        });
+      } catch (err) {
+        console.error(`[VIDEO CTA] Failed to create CTA overlay: ${err}`);
+      }
+    }
+
+    const audioInputIndex = frameCount + backgroundInputCount;
     if (backgroundMusicPath) {
-      const audioIndex = frameCount + backgroundInputCount;
       command.input(backgroundMusicPath);
-      command.outputOptions(['-map', `${audioIndex}:a`, '-shortest']);
+      command.outputOptions(['-map', `${audioInputIndex}:a`, '-shortest']);
     }
 
     command

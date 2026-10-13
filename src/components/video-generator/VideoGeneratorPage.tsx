@@ -21,6 +21,7 @@ export default function VideoGeneratorPage() {
   const [displayDuration, setDisplayDuration] = useState(5);
   const [transitionDuration, setTransitionDuration] = useState(0.5);
   const [kenBurns, setKenBurns] = useState(true);
+  const [showCta, setShowCta] = useState(true);
 
   const { jobs, mutate: refreshJobs } = useVideoJobs({
     websiteId: selectedWebsiteId || undefined,
@@ -50,7 +51,7 @@ export default function VideoGeneratorPage() {
       const { data } = await axios.post(endpoint.videoGenerate, {
         websiteId,
         productIds,
-        config: { displayDuration, transitionDuration, kenBurns },
+        config: { displayDuration, transitionDuration, kenBurns, showCta },
       });
       message.success(`Created ${data.jobs.length} video job(s)`);
       refreshJobs();
@@ -99,9 +100,11 @@ export default function VideoGeneratorPage() {
           displayDuration={displayDuration}
           transitionDuration={transitionDuration}
           kenBurns={kenBurns}
+          showCta={showCta}
           onDisplayDurationChange={setDisplayDuration}
           onTransitionDurationChange={setTransitionDuration}
           onKenBurnsChange={setKenBurns}
+          onShowCtaChange={setShowCta}
         />
 
         <AudioLibrary />

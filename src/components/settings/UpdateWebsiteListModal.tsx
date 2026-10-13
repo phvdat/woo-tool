@@ -57,6 +57,7 @@ const defaultFormValue: WebsiteFormValue = {
   autoVideo: {
     enabled: false,
     useBackgroundImage: false,
+    showCta: true,
   },
   autoCompilation: {
     enabled: false,

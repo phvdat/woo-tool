@@ -8,23 +8,27 @@ interface VideoSettingsProps {
   displayDuration: number;
   transitionDuration: number;
   kenBurns: boolean;
+  showCta: boolean;
   onDisplayDurationChange: (value: number) => void;
   onTransitionDurationChange: (value: number) => void;
   onKenBurnsChange: (value: boolean) => void;
+  onShowCtaChange: (value: boolean) => void;
 }
 
 export default function VideoSettings({
   displayDuration,
   transitionDuration,
   kenBurns,
+  showCta,
   onDisplayDurationChange,
   onTransitionDurationChange,
   onKenBurnsChange,
+  onShowCtaChange,
 }: VideoSettingsProps) {
   return (
     <Card title="Video Settings" size="small">
       <Row gutter={[24, 16]}>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={6}>
           <Text strong>Display Duration: {displayDuration}s</Text>
           <Slider
             min={1}
@@ -34,7 +38,7 @@ export default function VideoSettings({
             onChange={onDisplayDurationChange}
           />
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={6}>
           <Text strong>Transition: {transitionDuration}s</Text>
           <Slider
             min={0}
@@ -44,12 +48,23 @@ export default function VideoSettings({
             onChange={onTransitionDurationChange}
           />
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={6}>
           <Text strong>Ken Burns Effect</Text>
           <div style={{ marginTop: 8 }}>
             <Switch
               checked={kenBurns}
               onChange={onKenBurnsChange}
+              checkedChildren="ON"
+              unCheckedChildren="OFF"
+            />
+          </div>
+        </Col>
+        <Col xs={24} sm={6}>
+          <Text strong>CTA Overlay</Text>
+          <div style={{ marginTop: 8 }}>
+            <Switch
+              checked={showCta}
+              onChange={onShowCtaChange}
               checkedChildren="ON"
               unCheckedChildren="OFF"
             />
