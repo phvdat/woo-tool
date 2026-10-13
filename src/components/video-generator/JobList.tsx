@@ -149,7 +149,7 @@ export default function JobList({
           return <span style={{ fontSize: 12 }}>{scheduledFor}</span>;
         }
         return (
-          <Tooltip title="YouTube publishes at the same time as the product">
+          <Tooltip title="Scheduled YouTube publish time">
             <Tag color={record.youtubeStatus === "failed" ? "error" : "warning"}>
               {scheduledFor}
             </Tag>
@@ -182,7 +182,7 @@ export default function JobList({
 
         const tooltip =
           youtubeStatus === "scheduled"
-            ? `Publishes at ${scheduledFor ?? "an unknown time"} (same time as the product)`
+            ? `Publishes at ${scheduledFor ?? "an unknown time"}`
             : youtubeStatus === "failed"
               ? record.youtubeError
               : null;

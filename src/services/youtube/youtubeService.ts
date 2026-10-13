@@ -7,6 +7,7 @@ import { ObjectId } from 'mongodb';
 import { YoutubeChannel, YoutubePublishJobFields } from '@/types/youtube';
 import { VideoCompilationProduct } from '@/types/video';
 import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
+import { resolveYoutubePublishAt } from './resolveYoutubePublishAt';
 
 const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
@@ -393,7 +394,24 @@ export async function publishToYoutube(
         );
 
   const existingVideoId: string = job.youtubeVideoId || '';
-  const publishAt = resolvePublishAt(job.youtubePublishAt);
+  let publishAt = resolvePublishAt(job.youtubePublishAt);
+
+  // Auto-assign a stable publish slot for fresh uploads that have no explicit
+  // future schedule (unscheduled products, legacy/in-flight jobs). Jobs that
+  // were already uploaded (scheduled releases, retries) keep their stored
+  // schedule so releaseScheduledPublishes and retries behave as before.
+  // Persisting before upload makes the slot stable across cron runs/retries.
+  if (!publishAt && !existingVideoId) {
+    const assigned = await resolveYoutubePublishAt(siteId, null);
+    await db
+      .collection(VIDEO_JOBS_COLLECTION)
+      .updateOne(
+        { _id: new ObjectId(jobId) },
+        { $set: { youtubePublishAt: assigned } }
+      );
+    job.youtubePublishAt = assigned;
+    publishAt = assigned;
+  }
 
   if (!existingVideoId) {
     await db

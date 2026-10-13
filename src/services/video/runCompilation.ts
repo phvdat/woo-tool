@@ -6,6 +6,7 @@ import { VideoJob, VideoJobConfig } from '@/types/video';
 import { WooWebsitePayload } from '@/types/woo';
 import { VIDEO_CONFIG } from './config';
 import { enqueueJob } from './jobManager';
+import { resolveYoutubePublishAt } from '@/services/youtube/resolveYoutubePublishAt';
 import {
   COMPILATION_SIZE,
   CompilationProductInput,
@@ -173,7 +174,7 @@ export async function runCompilationForWebsite(
         name: p.name,
         url: p.permalink || '',
       })),
-      youtubePublishAt: null,
+      youtubePublishAt: await resolveYoutubePublishAt(websiteId, null),
     };
 
     const result = await db.collection(VIDEO_JOBS_COLLECTION).insertOne(job as any);

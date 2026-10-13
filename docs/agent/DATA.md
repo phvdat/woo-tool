@@ -97,7 +97,11 @@ sorts by `createdAt` (but `POST` does not set `createdAt` — known gap).
   `config`) **and** the YouTube
   publish fields (`youtubeStatus`, `youtubeVideoId`, `youtubePublishAt`,
   `youtubeError`, `youtubeCommentError`, `youtubeCommentedAt`,
-  `youtubeRetryCount`, `youtubePublishedAt`). Compilation jobs additionally set
+  `youtubeRetryCount`, `youtubePublishedAt`). `youtubePublishAt` is a real
+  `Date` assigned once at job creation: the product's future `date_created_gmt`
+  when explicitly scheduled, otherwise a queued slot 5 minutes after the latest
+  pending video on the **same website** (`resolveYoutubePublishAt` in
+  `services/youtube/`), persisted so retries reuse it. Compilation jobs additionally set
   `kind: 'compilation'`, `compilationTag`, `compilationBatchKey`,
   `compilationProductIds[]`, `compilationProducts[]` (`{name,url}`); absent
   `kind` = individual. `compilationBatchKey` is the sorted product-id join and

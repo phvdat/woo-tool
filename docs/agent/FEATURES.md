@@ -337,8 +337,9 @@ tag, then publishes it. Isolated from individual job creation.
 **YouTube:** `publishToYoutube` detects `job.kind === 'compilation'` and builds
 the comment via `buildCompilationComment` (numbered `name - url` list for all 5
 products, still honoring `youtubeCommentTemplate`); publishing/retry/comment
-guards are unchanged from individual jobs. Compilation jobs publish immediately
-(`youtubePublishAt: null`).
+guards are unchanged from individual jobs. Compilation jobs carry no explicit
+schedule, so they get a queued `youtubePublishAt` exactly like unscheduled
+individual jobs (see §6).
 
 **UI:** `src/app/(page)/video-generator/page.tsx` →
 `src/components/video-generator/VideoGeneratorPage.tsx` (owns the socket
@@ -374,14 +375,36 @@ scheduled publication, comment templating, and a retry/release cron.
    - comment rules + `describeYoutubeCommentError`
    - cron: `retryFailedPublishes`, `releaseScheduledPublishes`,
      `startYoutubeRetryCron`
-2. `src/types/youtube.ts` — `YoutubeChannel` document shape.
-3. `src/lib/encryption.ts` — AES-256-GCM for `clientSecretEncrypted` and
+2. `src/services/youtube/publishSchedule.ts` — pure slot math:
+   `YOUTUBE_PUBLISH_GAP_MS` (5 min), `futureSchedule` (only a *future* date
+   counts as an explicit schedule), `nextYoutubePublishAt` (latest pending +
+   5 min, else now + 5 min).
+3. `src/services/youtube/resolveYoutubePublishAt.ts` — the DB resolver
+   `resolveYoutubePublishAt(websiteId, explicitSchedule?)`. Explicit future
+   dates are kept unchanged; otherwise it queries `videoJobs` for the latest
+   *pending* slot on the **same website** (future `youtubePublishAt`, not
+   published, render not failed) and returns `latest + 5 min` (or `now + 5 min`
+   when none). Queues **per website/channel only** — never mixed across
+   websites. Called at job creation (pipeline, manual generate, compilation)
+   and as a publish-time fallback.
+4. `src/types/youtube.ts` — `YoutubeChannel` document shape.
+5. `src/lib/encryption.ts` — AES-256-GCM for `clientSecretEncrypted` and
    `refreshTokenEncrypted`. Wire format `ivHex:authTagHex:cipherHex`.
-4. `src/app/api/youtube/*` — `oauth-config` (GET/PUT), `connect` (GET, 302),
+6. `src/app/api/youtube/*` — `oauth-config` (GET/PUT), `connect` (GET, 302),
    `callback` (GET, posts to `window.opener`), `status` (GET), `disconnect` (DELETE).
-5. UI: `src/components/settings/website/YouTubeConfig.tsx`,
+7. UI: `src/components/settings/website/YouTubeConfig.tsx`,
    `YouTubeDescriptionTemplate.tsx`, `YouTubeCommentTemplate.tsx`.
    Hook: `src/app/hooks/useYouTubeChannel.ts`.
+
+**Publish-slot assignment:** every job's `youtubePublishAt` is set once at
+creation: the product's future `date_created_gmt` wins (`JobList`'s "publishes
+at the same time as the product" rule); otherwise the job is queued 5 minutes
+after the latest pending video on the same website's channel (or 5 minutes from
+now). `publishToYoutube` additionally re-queues a fresh upload (`youtubeVideoId`
+absent) whose stored schedule is blank/past — legacy/in-flight jobs get a slot
+too, persisted before upload so retries reuse it. The fallback is guarded so
+scheduled releases (`youtubeVideoId` present) are untouched: releasing a video
+to public on schedule is unchanged.
 
 **Template placeholders** (shared by description and comment):
 `{productName} {shortDescription} {productUrl} {shopName} {siteUrl} {tags} {tagsHashtags}`
