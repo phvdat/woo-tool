@@ -101,6 +101,11 @@ export interface WebsiteConfig {
     // image. Missing/false = OFF (legacy behavior).
     useBackgroundImage?: boolean;
   };
+  // Automatic themed product-compilation videos. Missing = OFF.
+  autoCompilation?: {
+    enabled: boolean;
+    intervalMinutes: number;
+  };
 }
 
 export interface WooWebsitePayload extends WebsiteConfig {

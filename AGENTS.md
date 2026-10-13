@@ -18,7 +18,7 @@ and is loaded on demand.
 `tsx server.ts` — a custom HTTP server that:
 
 1. boots Next programmatically,
-2. dynamically imports and starts **4 in-process crons**,
+2. dynamically imports and starts **5 in-process crons**,
 3. attaches a **Socket.IO** relay,
 4. then listens on `PORT` (default 3000).
 
@@ -86,7 +86,7 @@ Boot sequence lives in `server.ts` (51 lines) — read it once, it is worth it.
 ## 4. Layout in one screen
 
 ```
-server.ts                     custom server: Next + 4 crons + Socket.IO   ← read once
+server.ts                     custom server: Next + 5 crons + Socket.IO   ← read once
 src/middleware.ts             next-auth guard + matcher
 src/app/
   layout.tsx                  root: AntdRegistry + ConfigProvider(theme)

@@ -11,6 +11,7 @@ import WebsiteForm from "./website/WebsiteForm";
 import ProductConfigForm from "./website/ProductConfigForm";
 import BlogConfigForm from "./website/BlogConfigForm";
 import AutoVideoConfig from "./website/AutoVideoConfig";
+import AutoCompilationConfig from "./website/AutoCompilationConfig";
 import MusicUploader from "./website/MusicUploader";
 import YouTubeConfig from "./website/YouTubeConfig";
 import YouTubeDescriptionTemplate from "./website/YouTubeDescriptionTemplate";
@@ -56,6 +57,10 @@ const defaultFormValue: WebsiteFormValue = {
   autoVideo: {
     enabled: false,
     useBackgroundImage: false,
+  },
+  autoCompilation: {
+    enabled: false,
+    intervalMinutes: 30,
   },
 };
 
@@ -152,6 +157,7 @@ const UpdateWebsiteListModal = ({
               >
                 <BlogConfigForm />
                 <AutoVideoConfig />
+                <AutoCompilationConfig />
                 <MusicUploader siteId={_id} onRefresh={refresh} />
                 <YouTubeConfig siteId={_id} onRefresh={refresh} />
                 <YouTubeDescriptionTemplate />

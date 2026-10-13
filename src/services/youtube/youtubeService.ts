@@ -5,6 +5,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { decrypt, encrypt } from '@/lib/encryption';
 import { ObjectId } from 'mongodb';
 import { YoutubeChannel, YoutubePublishJobFields } from '@/types/youtube';
+import { VideoCompilationProduct } from '@/types/video';
 import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
 
 const YOUTUBE_SCOPES = [
@@ -372,15 +373,24 @@ export async function publishToYoutube(
     youtubeDescriptionTemplate
   );
   const tags = buildTags(productName, siteDisplayName, productTags);
-  const commentText = buildComment(
-    productName,
-    siteDisplayName,
-    siteHomepageUrl,
-    productUrl,
-    productTags,
-    productShortDescription,
-    youtubeCommentTemplate
-  );
+  const commentText =
+    job.kind === 'compilation' && job.compilationProducts?.length
+      ? buildCompilationComment(
+          job.compilationProducts,
+          siteDisplayName,
+          siteHomepageUrl,
+          job.compilationTag || productName,
+          youtubeCommentTemplate
+        )
+      : buildComment(
+          productName,
+          siteDisplayName,
+          siteHomepageUrl,
+          productUrl,
+          productTags,
+          productShortDescription,
+          youtubeCommentTemplate
+        );
 
   const existingVideoId: string = job.youtubeVideoId || '';
   const publishAt = resolvePublishAt(job.youtubePublishAt);
@@ -791,4 +801,35 @@ function buildComment(
   }
 
   return productUrl;
+}
+
+function buildCompilationComment(
+  products: VideoCompilationProduct[],
+  siteDisplayName: string,
+  siteHomepageUrl: string,
+  tag: string,
+  template: string
+): string {
+  const links = products
+    .map((product, index) => `${index + 1}. ${product.name} - ${product.url}`)
+    .join('\n');
+
+  if (template) {
+    return template
+      .replace(/\{productName\}/g, tag)
+      .replace(/\{shortDescription\}/g, `Featured ${tag} products:`)
+      .replace(/\{productUrl\}/g, links)
+      .replace(/\{shopName\}/g, siteDisplayName)
+      .replace(/\{siteUrl\}/g, siteHomepageUrl)
+      .replace(/\{tags\}/g, tag)
+      .replace(/\{tagsHashtags\}/g, `#${tag.replace(/\s+/g, '')}`);
+  }
+
+  const parts = [`Featured ${tag} products:`];
+  parts.push(links);
+  if (siteHomepageUrl && siteDisplayName) {
+    parts.push('');
+    parts.push(`Shop all at ${siteDisplayName}: ${siteHomepageUrl}`);
+  }
+  return parts.join('\n');
 }

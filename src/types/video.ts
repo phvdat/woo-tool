@@ -15,6 +15,11 @@ export type YoutubePublishStatus =
   | 'published'
   | 'failed';
 
+export interface VideoCompilationProduct {
+  name: string;
+  url: string;
+}
+
 export interface VideoJob {
   _id?: string;
   websiteId: string;
@@ -32,6 +37,12 @@ export interface VideoJob {
   config: VideoJobConfig;
   createdAt: Date;
   completedAt: Date | null;
+  // Compilation (themed multi-product) jobs. Absent = individual product job.
+  kind?: 'individual' | 'compilation';
+  compilationTag?: string;
+  compilationBatchKey?: string;
+  compilationProductIds?: string[];
+  compilationProducts?: VideoCompilationProduct[];
   youtubeStatus?: YoutubePublishStatus;
   youtubeVideoId?: string;
   youtubePublishAt?: Date | string | null;

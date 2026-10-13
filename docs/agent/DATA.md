@@ -57,6 +57,9 @@ Every other feature keys off this. Shape is `WebsiteConfig` in
 - `autoVideo`: `{ enabled, useBackgroundImage? }`. `useBackgroundImage` is
   opt-in and absent/false on every pre-existing document; missing is treated as
   OFF (blurred product background) by `jobManager`.
+- `autoCompilation`: `{ enabled, intervalMinutes }`. Missing = OFF. Drives the
+  per-website auto compilation cron (`video/compilationScheduler.ts`); interval
+  defaults to 30 minutes when absent.
 - `backgroundMusicUrl`, `youtubeDescriptionTemplate`, `youtubeCommentTemplate`.
 - Access: `owner OR members` (both lowercased). Canonical filter:
   `buildWebsiteAccessFilter` in `src/services/revenue/websiteAccess.ts`.
@@ -94,7 +97,12 @@ sorts by `createdAt` (but `POST` does not set `createdAt` — known gap).
   `config`) **and** the YouTube
   publish fields (`youtubeStatus`, `youtubeVideoId`, `youtubePublishAt`,
   `youtubeError`, `youtubeCommentError`, `youtubeCommentedAt`,
-  `youtubeRetryCount`, `youtubePublishedAt`).
+  `youtubeRetryCount`, `youtubePublishedAt`). Compilation jobs additionally set
+  `kind: 'compilation'`, `compilationTag`, `compilationBatchKey`,
+  `compilationProductIds[]`, `compilationProducts[]` (`{name,url}`); absent
+  `kind` = individual. `compilationBatchKey` is the sorted product-id join and
+  is the dedupe key (`runCompilation.ts`); there is no separate batch
+  collection.
 - `audioFiles`: `{ filename, originalName, url, size, createdAt }`.
 - `backgroundImages`: same shape as `audioFiles` but `createdAt` is an ISO
   **string** (house default). Pool of video backgrounds — one is picked at

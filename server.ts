@@ -23,6 +23,8 @@ app.prepare().then(async () => {
   startProductSpyCron();
   const { startRevenueCron } = await import("@/services/revenue/scheduler");
   startRevenueCron();
+  const { startCompilationCron } = await import("@/services/video/compilationScheduler");
+  startCompilationCron();
   const httpServer = createServer(handler);
 
   const io = new Server(httpServer);

@@ -17,6 +17,7 @@ app.prepare().then(async () => {
   startYoutubeRetryCron()  // @/services/youtube/youtubeService
   startProductSpyCron()    // @/services/product-spy/scheduler
   startRevenueCron()       // @/services/revenue/scheduler
+  startCompilationCron()   // @/services/video/compilationScheduler
   const io = new Server(createServer(handler))   // Socket.IO relay
   httpServer.listen(port)
 })
@@ -24,14 +25,14 @@ app.prepare().then(async () => {
 
 Two things follow from this:
 
-- **Crons are dynamically imported inside `prepare()`.** Adding a 5th cron means
+- **Crons are dynamically imported inside `prepare()`.** Adding a new cron means
   editing `server.ts` *and* creating a `start*Cron()` export with an
   idempotency guard (module-level handle + `if (x) return`).
 - **The Socket.IO server is a dumb broadcast relay.** No rooms, no per-socket
   filtering. Every inbound event is re-emitted to everyone; clients demultiplex
   by comparing a `socketId` field in the payload themselves.
 
-### The 4 crons
+### The 5 crons
 
 | Cron | Source | Schedule | TZ | Work |
 |---|---|---|---|---|
@@ -39,11 +40,13 @@ Two things follow from this:
 | `startYoutubeRetryCron` | `src/services/youtube/youtubeService.ts` | every 5 min (JS interval) | — | Retry failed YouTube publishes; release scheduled ones |
 | `startProductSpyCron` | `src/services/product-spy/scheduler.ts` | `* * * * *` (every min) | Asia/Ho_Chi_Minh | Poll due competitors |
 | `startRevenueCron` | `src/services/revenue/scheduler.ts` | `*/30 * * * *` | Asia/Ho_Chi_Minh | Sync WooCommerce orders → `revenue_history` |
+| `startCompilationCron` | `src/services/video/compilationScheduler.ts` | `* * * * *` (every min) | Asia/Ho_Chi_Minh | Queue auto compilation video per due website |
 
-Overlap protection is inconsistent. The two `node-cron` schedulers
-(`product-spy/scheduler.ts:9`, `revenue/scheduler.ts:6`) use a module-level
-`isRunning` guard *and* `noOverlap: true`. `startBlogCron` instead passes
-`noOverlap: true` to `node-cron` with no `isRunning`. `startYoutubeRetryCron` is
+Overlap protection is inconsistent. The `node-cron` schedulers
+(`product-spy/scheduler.ts:9`, `revenue/scheduler.ts:6`,
+`video/compilationScheduler.ts`) use a module-level `isRunning` guard *and*
+`noOverlap: true`. `startBlogCron` instead passes `noOverlap: true` to
+`node-cron` with no `isRunning`. `startYoutubeRetryCron` is
 a plain `setInterval` with an `if (retryInterval) return` idempotency guard and
 no overlap protection at all.
 

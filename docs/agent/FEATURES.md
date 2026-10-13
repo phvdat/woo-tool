@@ -306,6 +306,40 @@ as the custom thumbnail.
 8. `src/types/video.ts` — `VideoJob`, `VideoJobStatus`, `YoutubePublishStatus`,
    `AudioFile`, `BackgroundImage`.
 
+### 5.1 Auto compilation videos (per-website)
+
+**What it does:** on its own cron, each website with `autoCompilation.enabled`
+periodically builds one themed video from the 5 newest products sharing a random
+tag, then publishes it. Isolated from individual job creation.
+
+1. `src/services/video/compilationScheduler.ts` — `* * * * *` cron
+   (`isRunning` + `noOverlap`). Finds `{ 'autoCompilation.enabled': true }` and
+   calls `runCompilationForWebsite` per website; errors are per-website caught.
+2. `src/services/video/runCompilation.ts` — `runCompilationForWebsite(website)`.
+   Skips when a compilation job for the website is already active
+   (`pending`/`preparing`/`rendering`) or when `intervalMinutes` (default 30)
+   has not elapsed since the last compilation job's `createdAt`. Then fetches
+   `/products/tags`, shuffles tags with `count >= 5`, and for each fetches the 5
+   newest `/products?tag=…&orderby=date&order=desc`. Builds a job whose `images`
+   are the first image of each product and whose `kind: 'compilation'` +
+   `compilationProducts` carry the tag/links, inserts it, and `enqueueJob`s it
+   (reuses the shared render queue).
+3. `src/services/video/compilation.ts` — pure helpers
+   (`buildCompilationBatchKey`, `selectCompilationProducts`, `COMPILATION_SIZE`
+   = 5), tested in `__tests__/compilation.test.ts`.
+3. **Dedupe:** a batch is the sorted set of product ids. A compilation job is
+   only created if no `completed` job already has the same
+   `compilationBatchKey`; failed jobs do not block and retry after the interval.
+   Individual-video status is never consulted.
+4. `src/types/woo.ts` `autoCompilation?: { enabled, intervalMinutes }` (missing
+   = OFF). Settings UI: `AutoCompilationConfig.tsx`.
+
+**YouTube:** `publishToYoutube` detects `job.kind === 'compilation'` and builds
+the comment via `buildCompilationComment` (numbered `name - url` list for all 5
+products, still honoring `youtubeCommentTemplate`); publishing/retry/comment
+guards are unchanged from individual jobs. Compilation jobs publish immediately
+(`youtubePublishAt: null`).
+
 **UI:** `src/app/(page)/video-generator/page.tsx` →
 `src/components/video-generator/VideoGeneratorPage.tsx` (owns the socket
 listener, triggers `useVideoJobs` mutate) → `ProductSelector.tsx`,
@@ -333,8 +367,10 @@ scheduled publication, comment templating, and a retry/release cron.
    - publish: `publishToYoutube(jobId, siteId)` — the main entry point, with
      `resolvePublishAt`, `buildVideoStatus`, `insertYoutubeVideo`,
      `applyScheduleToVideo`; after the video id exists it calls
-     `thumbnails.set` with the job's `thumbnailPath` (fail-open: a thumbnail
-     upload error is logged, never fails the publish)
+     `youtube.thumbnails.set` with the job's `thumbnailPath` (fail-open: a
+     thumbnail error never fails the job). The top-level comment comes from
+     `buildComment` (single-product) or `buildCompilationComment` (lists all 5
+     product links when `job.kind === 'compilation'`).
    - comment rules + `describeYoutubeCommentError`
    - cron: `retryFailedPublishes`, `releaseScheduledPublishes`,
      `startYoutubeRetryCron`
@@ -561,6 +597,7 @@ Three routes, all under `(page)/settings/`:
 | `ProductConfigForm.tsx` | `product.*` — `aiProvider`, `publicTime`, `gapFrom/gapTo`, `promptDescriptionProduct`, `promptTagsProduct` |
 | `BlogConfigForm.tsx` | `autoBlog.{enabled,status,postsPerRun,cron}` |
 | `AutoVideoConfig.tsx` | `autoVideo.enabled`, `autoVideo.useBackgroundImage` |
+| `AutoCompilationConfig.tsx` | `autoCompilation.enabled`, `autoCompilation.intervalMinutes` |
 | `MusicUploader.tsx` | *(no field of its own — it sets the form's `backgroundMusicUrl`; the value is persisted by `api/woo/website-config` on save, after `upload-music` returns it)* |
 | `YouTubeConfig.tsx` | channel connection (not a document field) |
 | `YouTubeDescriptionTemplate.tsx` / `YouTubeCommentTemplate.tsx` | `youtubeDescriptionTemplate` / `youtubeCommentTemplate` |
