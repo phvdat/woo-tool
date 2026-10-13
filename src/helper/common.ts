@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import _get from 'lodash/get';
 import { WooCommerce } from '@/types/woo';
+import { decode } from "he";
 
 export function handleErrorMongoDB(error: unknown) {
   const errorMessage = _get(
@@ -108,11 +109,14 @@ export function upscaleImage(url: string) {
 }
 
 export function fixEncoding(text = "") {
-  return text
-    .replace(/Ã¢ÂÂ/g, "'")
-    .replace(/Ã¢ÂÂ|Ã¢ÂÂ/g, '"')
-    .replace(/Ã¢ÂÂ/g, "-")
-    .replace(/Ã¢ÂÂ¦/g, "...");
+  return decode(
+    text
+      .replace(/Ã¢ÂÂ/g, "'")
+      .replace(/Ã¢ÂÂ|Ã¢ÂÂ/g, '"')
+      .replace(/Ã¢ÂÂ/g, "–")
+      .replace(/Ã¢ÂÂ¦/g, "...")
+      .replace(/\s+[–-]\s+(?=[A-Za-z0-9]*[A-Za-z])(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+$/g, "")
+  );
 }
 
 
