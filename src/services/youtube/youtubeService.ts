@@ -363,7 +363,7 @@ export async function publishToYoutube(
   const productTags = (job.productTags as string[]) || [];
   const productShortDescription = (job.productShortDescription as string) || '';
 
-  const title = buildTitle(productName, siteDisplayName);
+  const title = buildTitle(productName);
   const description = buildDescription(
     productName,
     siteDisplayName,
@@ -377,21 +377,21 @@ export async function publishToYoutube(
   const commentText =
     job.kind === 'compilation' && job.compilationProducts?.length
       ? buildCompilationComment(
-          job.compilationProducts,
-          siteDisplayName,
-          siteHomepageUrl,
-          job.compilationTag || productName,
-          youtubeCommentTemplate
-        )
+        job.compilationProducts,
+        siteDisplayName,
+        siteHomepageUrl,
+        job.compilationTag || productName,
+        youtubeCommentTemplate
+      )
       : buildComment(
-          productName,
-          siteDisplayName,
-          siteHomepageUrl,
-          productUrl,
-          productTags,
-          productShortDescription,
-          youtubeCommentTemplate
-        );
+        productName,
+        siteDisplayName,
+        siteHomepageUrl,
+        productUrl,
+        productTags,
+        productShortDescription,
+        youtubeCommentTemplate
+      );
 
   const existingVideoId: string = job.youtubeVideoId || '';
   let publishAt = resolvePublishAt(job.youtubePublishAt);
@@ -712,10 +712,10 @@ export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
   }, intervalMs);
 }
 
-function buildTitle(productName: string, siteDisplayName: string): string {
-  const title = `${siteDisplayName} | ${productName}`;
-  if (title.length <= 70) return title;
-  return `${productName.substring(0, 65)} | ${siteDisplayName}`;
+function buildTitle(productName: string): string {
+  const prefix = "Link in comment: ";
+  const maxLength = 70 - prefix.length;
+  return `${prefix}${productName.substring(0, maxLength).trim()}`;
 }
 
 function buildDescription(
