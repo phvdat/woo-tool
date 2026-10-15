@@ -247,8 +247,8 @@ export default function ProductList() {
               title="Clear all selected products?"
               onConfirm={async () => {
                 copyUrls();
-                const sent = await downloadExcel();
-                if (sent) clearSelection();
+                await downloadExcel();
+                clearSelection();
               }}
               onCancel={downloadExcel}
               okText="Yes"
