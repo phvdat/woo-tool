@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobConfig } from '@/types/video';
 import { parseWooGmtDate } from '@/helper/common';
+import { resolveWooProductUrl } from '@/helper/productUrl';
 import { resolveYoutubePublishAt } from '@/services/youtube/resolveYoutubePublishAt';
 import { VIDEO_CONFIG } from '@/services/video/config';
 import { enqueueJob } from '@/services/video/jobManager';
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
           progress: 0,
           outputPath: null,
           error: null,
-          productUrl: product.permalink || null,
+          productUrl: resolveWooProductUrl(product, website.url),
           youtubePublishAt: await resolveYoutubePublishAt(
             websiteId,
             parseWooGmtDate(product.date_created_gmt)

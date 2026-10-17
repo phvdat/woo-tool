@@ -2,6 +2,7 @@ import axios from 'axios';
 import { AUDIO_FILES_COLLECTION, VIDEO_JOBS_COLLECTION } from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { getErrorMessage } from '@/lib/error-utils';
+import { resolveWooProductUrl } from '@/helper/productUrl';
 import { VideoJob, VideoJobConfig } from '@/types/video';
 import { WooWebsitePayload } from '@/types/woo';
 import { VIDEO_CONFIG } from './config';
@@ -176,7 +177,7 @@ export async function runCompilationForWebsite(
       compilationProductIds: selected.map((p) => String(p.id)),
       compilationProducts: selected.map((p) => ({
         name: p.name,
-        url: p.permalink || '',
+        url: resolveWooProductUrl(p, website.url) || '',
       })),
       youtubePublishAt: await resolveYoutubePublishAt(websiteId, null),
     };

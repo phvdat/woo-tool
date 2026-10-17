@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { VideoJob, VideoJobConfig } from '@/types/video';
 import { WooWebsitePayload } from '@/types/woo';
 import { parseWooGmtDate } from '@/helper/common';
+import { resolveWooProductUrl } from '@/helper/productUrl';
 import { resolveYoutubePublishAt } from '@/services/youtube/resolveYoutubePublishAt';
 import { isWebsiteYoutubeBlocked } from '@/services/youtube/projectQuota';
 import { VIDEO_CONFIG } from './config';
@@ -100,7 +101,7 @@ export async function createVideoJobsFromPipeline({
         progress: 0,
         outputPath: null,
         error: null,
-        productUrl: product.permalink || null,
+        productUrl: resolveWooProductUrl(product, website.url),
         youtubePublishAt: await resolveYoutubePublishAt(
             websiteId,
             parseWooGmtDate(product.date_created_gmt)

@@ -446,6 +446,14 @@ to public on schedule is unchanged.
 **Template placeholders** (shared by description and comment):
 `{productName} {shortDescription} {productUrl} {shopName} {siteUrl} {tags} {tagsHashtags}`
 
+`{productUrl}` is stored on the job at creation via `resolveWooProductUrl`
+(`src/helper/productUrl.ts`): it prefers the WooCommerce API `permalink` /
+`link` when it is a real pretty URL, and rebuilds `<siteUrl>/product/<slug>/`
+from the API `slug` when the API only returns the plain
+`?post_type=product&p=ID` form (which it does for not-yet-published /
+`status: future` products uploaded by the pipeline). Compilation jobs store the
+per-product links in `compilationProducts[].url` the same way.
+
 ---
 
 ## 7. Revenue

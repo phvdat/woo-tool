@@ -4,6 +4,7 @@ export interface CompilationProductInput {
   id: number | string;
   name: string;
   permalink?: string;
+  slug?: string;
   images?: { src?: string }[];
 }
 
