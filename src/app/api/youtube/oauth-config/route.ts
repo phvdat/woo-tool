@@ -34,7 +34,7 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { siteId, clientId, clientSecret } = body;
+    const { siteId, projectId, clientId, clientSecret } = body;
 
     if (!siteId || !clientId || !clientSecret) {
       return Response.json(
@@ -43,8 +43,14 @@ export async function PUT(request: Request) {
       );
     }
 
-    await saveOauthConfig(siteId, clientId, clientSecret, session.user.email);
-    return Response.json({ success: true });
+    const result = await saveOauthConfig(
+      siteId,
+      clientId,
+      clientSecret,
+      session.user.email,
+      typeof projectId === 'string' && projectId ? projectId : undefined,
+    );
+    return Response.json({ success: true, projectId: result.projectId });
   } catch (error: any) {
     console.error('[YOUTUBE OAUTH CONFIG PUT]', error?.message);
     return Response.json(

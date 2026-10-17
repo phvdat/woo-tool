@@ -10,12 +10,13 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const siteId = searchParams.get('siteId');
+  const projectId = searchParams.get('projectId') || undefined;
   if (!siteId) {
     return Response.json({ error: 'siteId is required' }, { status: 400 });
   }
 
   try {
-    const removed = await removeChannel(siteId);
+    const removed = await removeChannel(siteId, projectId);
     return Response.json({ success: removed });
   } catch (error: any) {
     console.error('[YOUTUBE DISCONNECT]', error?.message);

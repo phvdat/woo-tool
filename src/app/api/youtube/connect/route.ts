@@ -10,23 +10,28 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const siteId = searchParams.get('siteId');
+  const projectId = searchParams.get('projectId') || undefined;
   if (!siteId) {
     return Response.json({ error: 'siteId is required' }, { status: 400 });
   }
 
   const config = await getOauthConfig(siteId);
-  if (!config.configured || !config.clientId) {
+  const project = projectId
+    ? config.projects.find((item) => item.projectId === projectId)
+    : config.projects.find((item) => item.configured);
+
+  if (!project?.configured || !project.clientId) {
     return Response.json(
-      { error: 'YouTube OAuth credentials not configured for this site. Please save Client ID and Client Secret first.' },
+      { error: 'YouTube OAuth credentials not configured for this project. Please save Client ID and Client Secret first.' },
       { status: 400 }
     );
   }
 
   const state = Buffer.from(
-    JSON.stringify({ siteId, email: session.user.email })
+    JSON.stringify({ siteId, email: session.user.email, projectId: project.projectId })
   ).toString('base64');
 
-  const authUrl = getAuthUrl(state, config.clientId);
+  const authUrl = getAuthUrl(state, project.clientId);
 
   return Response.redirect(authUrl);
 }

@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { exchangeCode, getChannelInfo, upsertChannel, getChannelBySiteId } from '@/services/youtube/youtubeService';
 import { encrypt } from '@/lib/encryption';
+import { normalizeProjects } from '@/services/youtube/quotaRules';
 
 function htmlResponse(html: string): Response {
   return new Response(html, {
@@ -32,16 +33,20 @@ export async function GET(request: Request) {
 
   try {
     const state = JSON.parse(Buffer.from(stateParam, 'base64').toString());
-    const { siteId, email } = state;
+    const { siteId, email, projectId } = state;
 
     if (!siteId || !email) {
       return htmlResponse('<html><body><p>Invalid state parameter</p></body></html>');
     }
 
-    const tokens = await exchangeCode(code, siteId);
+    const existingChannel = await getChannelBySiteId(siteId);
+    const existingProject = projectId
+      ? normalizeProjects(existingChannel).find((project) => project.projectId === projectId)
+      : normalizeProjects(existingChannel)[0];
+
+    const tokens = await exchangeCode(code, siteId, projectId);
     if (!tokens.refresh_token) {
-      const existingChannel = await getChannelBySiteId(siteId);
-      const message = existingChannel?.refreshTokenEncrypted
+      const message = existingProject?.refreshTokenEncrypted
         ? 'Google did not return a new refresh token, so the previous credentials are still in use. Disconnect the channel and reconnect to reauthorize it.'
         : 'No refresh token received. Please disconnect and reconnect the channel.';
 
@@ -62,13 +67,15 @@ export async function GET(request: Request) {
     const channelInfo = await getChannelInfo(
       tokens.access_token!,
       tokens.refresh_token,
-      siteId
+      siteId,
+      projectId
     );
 
     const refreshTokenEncrypted = encrypt(tokens.refresh_token);
 
     await upsertChannel({
       siteId,
+      projectId,
       channelId: channelInfo.channelId,
       channelTitle: channelInfo.channelTitle,
       refreshTokenEncrypted,

@@ -4,6 +4,7 @@ import { VideoJob, VideoJobConfig } from '@/types/video';
 import { WooWebsitePayload } from '@/types/woo';
 import { parseWooGmtDate } from '@/helper/common';
 import { resolveYoutubePublishAt } from '@/services/youtube/resolveYoutubePublishAt';
+import { isWebsiteYoutubeBlocked } from '@/services/youtube/projectQuota';
 import { VIDEO_CONFIG } from './config';
 import { enqueueJob } from './jobManager';
 import axios from 'axios';
@@ -19,6 +20,11 @@ export async function createVideoJobsFromPipeline({
   productIds,
   website,
 }: CreateVideoJobsParams): Promise<{ created: number; errors: number }> {
+  if (await isWebsiteYoutubeBlocked(websiteId)) {
+    console.log(`[VIDEO PIPELINE] ${websiteId}: YouTube quota paused, skipping video job creation`);
+    return { created: 0, errors: 0 };
+  }
+
   const { db } = await connectToDatabase();
 
   const woo = axios.create({

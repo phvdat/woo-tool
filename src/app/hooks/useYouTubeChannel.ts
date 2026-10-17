@@ -1,15 +1,9 @@
 import { endpoint } from '@/constant/endpoint';
+import { YouTubeChannelStatus } from '@/types/youtube';
 import axios from 'axios';
 import useSWR from 'swr';
 
-export interface YouTubeChannelStatus {
-  connected: boolean;
-  channelTitle?: string;
-  channelId?: string;
-  connectedByEmail?: string;
-  updatedAt?: string;
-  hasOauthConfig: boolean;
-}
+export type { YouTubeChannelStatus, YouTubeProjectStatus } from '@/types/youtube';
 
 const fetcher = async (url: string) => {
   const { data } = await axios.get<YouTubeChannelStatus>(url);

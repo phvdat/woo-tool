@@ -39,6 +39,8 @@ wart, not a pattern to copy.
 | `AUDIO_FILES_COLLECTION` | `audioFiles` | `AudioFile` | `api/video/audio` | video UI, job creation |
 | `BACKGROUND_IMAGES_COLLECTION` | `backgroundImages` | `BackgroundImage` | `api/video/backgrounds` | video UI, `jobManager` (render) |
 | `YOUTUBE_CHANNELS_COLLECTION` | `youtubeChannels` | `YoutubeChannel` | `youtubeService` (`upsertChannel`, `saveOauthConfig`); deleted by `api/youtube/disconnect` | `youtubeService`, settings UI |
+| `YOUTUBE_QUOTA_STATE_COLLECTION` | `youtube_quota_state` | `YoutubeProjectQuotaState` | `projectQuota.markProjectQuotaExhausted` / `removeProjectQuotaState` | `projectQuota.getAvailableProjects` |
+| `YOUTUBE_QUOTA_BLOCKS_COLLECTION` | `youtube_quota_blocks` | `YoutubeWebsiteQuotaBlock` | `projectQuota.blockWebsiteQuota` / `notifyQuotaBlock` | `projectQuota.isWebsiteYoutubeBlocked`, settings UI |
 | `SPY_COMPETITORS_COLLECTION` | `spy_competitors` | `SpyCompetitor` | `api/product-spy/competitors`, `checker` | spy UI, scheduler |
 | `SPY_PRODUCTS_COLLECTION` | `spy_products` | `SpyProduct` | `checker` only | `api/product-spy/products` |
 | `REVENUE_HISTORY_COLLECTION` | `revenue_history` | `RevenueHistoryRecord` | `revenueHistory.save*` | revenue UI |
@@ -95,9 +97,11 @@ sorts by `createdAt` (but `POST` does not set `createdAt` — known gap).
 - `videoJobs`: `VideoJob` in `src/types/video.ts`. Carries render fields
   (`images[]`, `status`, `progress`, `outputPath`, `thumbnailPath`,
   `config`) **and** the YouTube
-  publish fields (`youtubeStatus`, `youtubeVideoId`, `youtubePublishAt`,
-  `youtubeError`, `youtubeCommentError`, `youtubeCommentedAt`,
-  `youtubeRetryCount`, `youtubePublishedAt`). `youtubePublishAt` is a real
+  publish fields (`youtubeStatus`, `youtubeVideoId`, `youtubeProjectId`,
+  `youtubePublishAt`, `youtubeError`, `youtubeCommentError`,
+  `youtubeCommentedAt`, `youtubeRetryCount`, `youtubePublishedAt`).
+  `youtubeProjectId` records which OAuth project owns the upload so thumbnail /
+  comment / schedule calls reuse the same channel. `youtubePublishAt` is a real
   `Date` assigned once at job creation: the product's future `date_created_gmt`
   when explicitly scheduled, otherwise a queued slot 5 minutes after the latest
   pending video on the **same website** (`resolveYoutubePublishAt` in
@@ -112,9 +116,24 @@ sorts by `createdAt` (but `POST` does not set `createdAt` — known gap).
   **string** (house default). Pool of video backgrounds — one is picked at
   random per render and reused for every scene; `jobManager` resolves
   `filename` → `/var/www/html/uploads/backgrounds/` at render time.
-- `youtubeChannels`: keyed by `siteId`. `clientId`,
-  `clientSecretEncrypted`, `refreshTokenEncrypted` (AES-256-GCM via
-  `src/lib/encryption.ts`), `channelId`, `channelTitle`, `connectedByEmail`.
+- `youtubeChannels`: keyed by `siteId`. One document per website holds **one or
+  more OAuth projects** in `projects: YoutubeProject[]`, each with `projectId`,
+  `clientId`, `clientSecretEncrypted`, `refreshTokenEncrypted` (AES-256-GCM via
+  `src/lib/encryption.ts`), `channelId`, `channelTitle`, `connectedByEmail`. The
+  legacy top-level `clientId`/`clientSecretEncrypted`/`refreshTokenEncrypted`/
+  `channelId`/`channelTitle`/`connectedByEmail` fields are still written (mirrored
+  from `projects[0]`) and `normalizeProjects()` reads either shape for backward
+  compatibility.
+- `youtube_quota_state`: `{ siteId, projectId, operation, reason, exhaustedUntil }`
+  — one doc per `(siteId, projectId, operation)` where `operation` is one of
+  `videos.insert` / `videos.update` / `thumbnails.set` / `commentThreads.insert`.
+  `exhaustedUntil` is the next Pacific midnight; expired rows are ignored so a
+  project auto-recovers after reset.
+- `youtube_quota_blocks`: `{ siteId, blockedUntil, reason, projects, notifiedAt }`
+  — written when **every** project is exhausted for uploads. While active,
+  `isWebsiteYoutubeBlocked` pauses all video creation/compilation for the site.
+  `notifiedAt` dedupes the Telegram alert; `shouldNotifyQuotaBlock` re-notifies
+  only after `blockedUntil` passes.
 
 ### 2.9 `blog_history` — the exception
 
@@ -137,7 +156,9 @@ refreshes.
 
 Six collections store real `Date` values: `revenue_history` (`createdAt`,
 `updatedAt`), `blog_history`, `global_config`, `videoJobs`, `audioFiles`, and
-`youtubeChannels`. Everything else uses ISO strings.
+`youtubeChannels`. The YouTube quota collections (`youtube_quota_state`,
+`youtube_quota_blocks`) also use real `Date`s (`exhaustedUntil` / `blockedUntil`
+/ `notifiedAt`). Everything else uses ISO strings.
 
 `revenue_history.date` is the exception *within* that set — it is a **string**
 (the raw WooCommerce `date_created`). This is safe to range-query because

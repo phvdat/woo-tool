@@ -46,6 +46,9 @@ export interface VideoJob {
   compilationProducts?: VideoCompilationProduct[];
   youtubeStatus?: YoutubePublishStatus;
   youtubeVideoId?: string;
+  // Which YouTube API project uploaded this video. Once set, later operations
+  // (thumbnail/comment/schedule) reuse that project so channels never mix.
+  youtubeProjectId?: string;
   youtubePublishAt?: Date | string | null;
   youtubeError?: string;
   youtubeCommentError?: string;

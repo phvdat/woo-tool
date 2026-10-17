@@ -4,10 +4,26 @@ import { YOUTUBE_CHANNELS_COLLECTION, VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION
 import { connectToDatabase } from '@/lib/mongodb';
 import { decrypt, encrypt } from '@/lib/encryption';
 import { ObjectId } from 'mongodb';
-import { YoutubeChannel, YoutubePublishJobFields } from '@/types/youtube';
+import { YoutubeChannel, YoutubeProject, YouTubeChannelStatus } from '@/types/youtube';
 import { VideoCompilationProduct } from '@/types/video';
 import { sendTelegramMessage } from '@/services/telegram/sendTelegramMessage';
 import { resolveYoutubePublishAt } from './resolveYoutubePublishAt';
+import {
+  blockWebsiteQuota,
+  getAvailableProjects,
+  getProjectQuotaStates,
+  getWebsiteQuotaBlock,
+  isWebsiteYoutubeBlocked,
+  markProjectQuotaExhausted,
+  removeProjectQuotaState,
+  withSiteLock,
+} from './projectQuota';
+import {
+  isQuotaExceededError,
+  normalizeProjects,
+  quotaReasonFromError,
+  uploadWithProjectFailover,
+} from './quotaRules';
 
 const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
@@ -20,75 +36,151 @@ const MAX_YOUTUBE_RETRIES = 3;
 const MAX_YOUTUBE_COMMENT_ATTEMPTS = 3;
 const YOUTUBE_COMMENT_RETRY_DELAY_MS = 3_000;
 
-export async function getOAuth2ClientForSite(siteId: string) {
-  const { db } = await connectToDatabase();
-  const channel = await db
-    .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-    .findOne({ siteId });
+const QUOTA_EXCEEDED_MESSAGE =
+  'YouTube API quota exceeded for every configured project. Publishing will resume after the quota resets.';
 
-  if (!channel) {
+// In-process guard so concurrent callers (retry cron + button) never publish
+// the same job twice. Single-process deployment, matching AGENTS.md.
+const inFlightPublishes = new Set<string>();
+
+function generateProjectId(): string {
+  return new ObjectId().toString();
+}
+
+async function findProject(siteId: string, projectId?: string): Promise<YoutubeProject | null> {
+  const channel = await getChannelBySiteId(siteId);
+  const projects = normalizeProjects(channel);
+  if (projects.length === 0) return null;
+  if (projectId) return projects.find((project) => project.projectId === projectId) ?? null;
+  return projects[0];
+}
+
+export async function getOAuth2ClientForSite(siteId: string, projectId?: string) {
+  const project = await findProject(siteId, projectId);
+  if (!project || !project.clientId || !project.clientSecretEncrypted) {
     throw new Error('No YouTube OAuth config found for this site. Please save OAuth credentials first.');
   }
 
-  const clientSecret = decrypt(channel.clientSecretEncrypted);
+  const clientSecret = decrypt(project.clientSecretEncrypted);
 
   return new google.auth.OAuth2(
-    channel.clientId,
+    project.clientId,
     clientSecret,
     process.env.YOUTUBE_REDIRECT_URI
   );
 }
 
-export async function saveOauthConfig(siteId: string, clientId: string, clientSecret: string, email: string) {
+async function writeProjects(
+  siteId: string,
+  projects: YoutubeProject[],
+  existing: YoutubeChannel | null,
+  now: Date,
+): Promise<void> {
   const { db } = await connectToDatabase();
-  const now = new Date();
-  const clientSecretEncrypted = encrypt(clientSecret);
+  const mirror = projects[0];
 
-  const existing = await db
-    .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-    .findOne({ siteId });
+  const doc = {
+    siteId,
+    clientId: mirror?.clientId ?? '',
+    clientSecretEncrypted: mirror?.clientSecretEncrypted ?? '',
+    refreshTokenEncrypted: mirror?.refreshTokenEncrypted ?? '',
+    channelId: mirror?.channelId ?? '',
+    channelTitle: mirror?.channelTitle ?? '',
+    connectedByEmail: mirror?.connectedByEmail ?? '',
+    projects,
+    updatedAt: now,
+  };
 
   if (existing) {
     await db
       .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-      .updateOne(
-        { siteId },
-        {
-          $set: {
-            clientId,
-            clientSecretEncrypted,
-            updatedAt: now,
-          },
-        }
-      );
+      .updateOne({ siteId }, { $set: doc });
   } else {
     await db
       .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-      .insertOne({
-        siteId,
-        channelId: '',
-        channelTitle: '',
-        clientId,
-        clientSecretEncrypted,
-        refreshTokenEncrypted: '',
-        connectedByEmail: email,
-        createdAt: now,
-        updatedAt: now,
-      });
+      .insertOne({ ...doc, createdAt: now } as YoutubeChannel);
   }
 }
 
-export async function getOauthConfig(siteId: string): Promise<{ configured: boolean; clientId?: string }> {
-  const { db } = await connectToDatabase();
-  const channel = await db
-    .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-    .findOne({ siteId });
+/**
+ * Adds or updates one project's OAuth credentials. When `projectId` is omitted
+ * the first existing project is updated (legacy single-project callers); a new
+ * project is created otherwise. Returns the project id so the caller can start
+ * the OAuth connect flow against it.
+ */
+export async function saveOauthConfig(
+  siteId: string,
+  clientId: string,
+  clientSecret: string,
+  email: string,
+  projectId?: string,
+): Promise<{ projectId: string }> {
+  const existing = await getChannelBySiteId(siteId);
+  const projects = normalizeProjects(existing);
+  const now = new Date();
+  const clientSecretEncrypted = encrypt(clientSecret);
 
-  if (!channel || !channel.clientId || !channel.clientSecretEncrypted) {
-    return { configured: false };
+  let target = projectId
+    ? projects.find((project) => project.projectId === projectId)
+    : projects[0];
+
+  if (target) {
+    target.clientId = clientId;
+    target.clientSecretEncrypted = clientSecretEncrypted;
+    if (email) target.connectedByEmail = email;
+    target.updatedAt = now;
+  } else {
+    target = {
+      projectId: projectId || generateProjectId(),
+      label: '',
+      clientId,
+      clientSecretEncrypted,
+      refreshTokenEncrypted: '',
+      channelId: '',
+      channelTitle: '',
+      connectedByEmail: email,
+      createdAt: now,
+      updatedAt: now,
+    };
+    projects.push(target);
   }
 
-  return { configured: true, clientId: channel.clientId };
+  await writeProjects(siteId, projects, existing, now);
+  return { projectId: target.projectId };
+}
+
+export async function getOauthConfig(siteId: string): Promise<{
+  configured: boolean;
+  clientId?: string;
+  projects: Array<{
+    projectId: string;
+    label?: string;
+    clientId?: string;
+    configured: boolean;
+    connected: boolean;
+    channelTitle?: string;
+    channelId?: string;
+    connectedByEmail?: string;
+  }>;
+}> {
+  const channel = await getChannelBySiteId(siteId);
+  const projects = normalizeProjects(channel);
+  const configured = projects.filter((project) => project.clientId && project.clientSecretEncrypted);
+
+  return {
+    configured: configured.length > 0,
+    clientId: configured[0]?.clientId,
+    projects: projects.map((project) => ({
+      projectId: project.projectId,
+      label: project.label,
+      clientId: project.clientId || undefined,
+      configured: Boolean(project.clientId && project.clientSecretEncrypted),
+      connected: Boolean(project.refreshTokenEncrypted),
+      channelTitle: project.channelTitle || undefined,
+      channelId: project.channelId || undefined,
+      connectedByEmail: project.connectedByEmail || undefined,
+    })),
+  };
 }
 
 export function getAuthUrl(state: string, clientId: string): string {
@@ -105,14 +197,19 @@ export function getAuthUrl(state: string, clientId: string): string {
   });
 }
 
-export async function exchangeCode(code: string, siteId: string) {
-  const oauth2Client = await getOAuth2ClientForSite(siteId);
+export async function exchangeCode(code: string, siteId: string, projectId?: string) {
+  const oauth2Client = await getOAuth2ClientForSite(siteId, projectId);
   const { tokens } = await oauth2Client.getToken(code);
   return tokens;
 }
 
-export async function getChannelInfo(accessToken: string, refreshToken: string, siteId: string) {
-  const oauth2Client = await getOAuth2ClientForSite(siteId);
+export async function getChannelInfo(
+  accessToken: string,
+  refreshToken: string,
+  siteId: string,
+  projectId?: string,
+) {
+  const oauth2Client = await getOAuth2ClientForSite(siteId, projectId);
   oauth2Client.setCredentials({
     access_token: accessToken,
     refresh_token: refreshToken,
@@ -139,44 +236,39 @@ export async function upsertChannel(channelData: {
   channelTitle: string;
   refreshTokenEncrypted: string;
   connectedByEmail: string;
+  projectId?: string;
 }) {
-  const { db } = await connectToDatabase();
+  const existing = await getChannelBySiteId(channelData.siteId);
+  const projects = normalizeProjects(existing);
   const now = new Date();
 
-  const existing = await db
-    .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-    .findOne({ siteId: channelData.siteId });
+  let target = channelData.projectId
+    ? projects.find((project) => project.projectId === channelData.projectId)
+    : projects[0];
 
-  if (existing) {
-    await db
-      .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-      .updateOne(
-        { siteId: channelData.siteId },
-        {
-          $set: {
-            channelId: channelData.channelId,
-            channelTitle: channelData.channelTitle,
-            refreshTokenEncrypted: channelData.refreshTokenEncrypted,
-            connectedByEmail: channelData.connectedByEmail,
-            updatedAt: now,
-          },
-        }
-      );
+  if (target) {
+    target.channelId = channelData.channelId;
+    target.channelTitle = channelData.channelTitle;
+    target.refreshTokenEncrypted = channelData.refreshTokenEncrypted;
+    target.connectedByEmail = channelData.connectedByEmail;
+    target.updatedAt = now;
   } else {
-    await db
-      .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-      .insertOne({
-        siteId: channelData.siteId,
-        channelId: channelData.channelId,
-        channelTitle: channelData.channelTitle,
-        clientId: '',
-        clientSecretEncrypted: '',
-        refreshTokenEncrypted: channelData.refreshTokenEncrypted,
-        connectedByEmail: channelData.connectedByEmail,
-        createdAt: now,
-        updatedAt: now,
-      });
+    target = {
+      projectId: channelData.projectId || generateProjectId(),
+      label: '',
+      clientId: '',
+      clientSecretEncrypted: '',
+      refreshTokenEncrypted: channelData.refreshTokenEncrypted,
+      channelId: channelData.channelId,
+      channelTitle: channelData.channelTitle,
+      connectedByEmail: channelData.connectedByEmail,
+      createdAt: now,
+      updatedAt: now,
+    };
+    projects.push(target);
   }
+
+  await writeProjects(channelData.siteId, projects, existing, now);
 }
 
 export async function getChannelBySiteId(siteId: string): Promise<YoutubeChannel | null> {
@@ -186,20 +278,87 @@ export async function getChannelBySiteId(siteId: string): Promise<YoutubeChannel
     .findOne({ siteId });
 }
 
-export async function removeChannel(siteId: string): Promise<boolean> {
+/**
+ * Removes one project (when `projectId` is given) or the whole YouTube config
+ * for the site. Quota state for removed projects is cleared so a later project
+ * with the same id is not falsely considered exhausted.
+ */
+export async function removeChannel(siteId: string, projectId?: string): Promise<boolean> {
   const { db } = await connectToDatabase();
-  const result = await db
-    .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-    .deleteOne({ siteId });
-  return result.deletedCount > 0;
+  const existing = await getChannelBySiteId(siteId);
+  if (!existing) return false;
+
+  if (!projectId) {
+    await db.collection(YOUTUBE_CHANNELS_COLLECTION).deleteOne({ siteId });
+    await removeProjectQuotaState(siteId);
+    return true;
+  }
+
+  const projects = normalizeProjects(existing).filter((project) => project.projectId !== projectId);
+  await removeProjectQuotaState(siteId, projectId);
+
+  if (projects.length === 0) {
+    await db.collection(YOUTUBE_CHANNELS_COLLECTION).deleteOne({ siteId });
+  } else {
+    await writeProjects(siteId, projects, existing, new Date());
+  }
+  return true;
 }
 
 type YoutubeClient = ReturnType<typeof google.youtube>;
 
-async function createYoutubeClient(siteId: string, refreshToken: string): Promise<YoutubeClient> {
-  const oauth2Client = await getOAuth2ClientForSite(siteId);
-  oauth2Client.setCredentials({ refresh_token: refreshToken });
+async function createYoutubeClientForProject(project: YoutubeProject): Promise<YoutubeClient> {
+  const oauth2Client = new google.auth.OAuth2(
+    project.clientId,
+    decrypt(project.clientSecretEncrypted),
+    process.env.YOUTUBE_REDIRECT_URI,
+  );
+  oauth2Client.setCredentials({ refresh_token: decrypt(project.refreshTokenEncrypted) });
   return google.youtube({ version: 'v3', auth: oauth2Client });
+}
+
+export async function getYoutubeStatus(siteId: string): Promise<YouTubeChannelStatus> {
+  const channel = await getChannelBySiteId(siteId);
+  const projects = normalizeProjects(channel);
+  const now = new Date();
+  const [states, block] = await Promise.all([
+    getProjectQuotaStates(siteId),
+    getWebsiteQuotaBlock(siteId, now),
+  ]);
+
+  const connectedProjects = projects.filter((project) => project.refreshTokenEncrypted);
+  const primary = connectedProjects[0];
+
+  return {
+    connected: connectedProjects.length > 0,
+    channelTitle: primary?.channelTitle,
+    channelId: primary?.channelId,
+    connectedByEmail: primary?.connectedByEmail,
+    updatedAt: primary?.updatedAt as unknown as string,
+    hasOauthConfig: projects.some((project) => project.clientId && project.clientSecretEncrypted),
+    projects: projects.map((project) => {
+      const state = states.find(
+        (item) =>
+          item.projectId === project.projectId &&
+          new Date(item.exhaustedUntil).getTime() > now.getTime(),
+      );
+      return {
+        projectId: project.projectId,
+        label: project.label,
+        clientId: project.clientId || undefined,
+        configured: Boolean(project.clientId && project.clientSecretEncrypted),
+        connected: Boolean(project.refreshTokenEncrypted),
+        channelId: project.channelId || undefined,
+        channelTitle: project.channelTitle || undefined,
+        connectedByEmail: project.connectedByEmail || undefined,
+        updatedAt: project.updatedAt as unknown as string,
+        quotaBlocked: Boolean(state),
+        quotaResetAt: state?.exhaustedUntil,
+      };
+    }),
+    blocked: Boolean(block),
+    blockedUntil: block?.blockedUntil,
+  };
 }
 
 function resolvePublishAt(value: unknown, now: Date = new Date()): Date | null {
@@ -321,14 +480,52 @@ async function applyScheduleToVideo(
   });
 }
 
-export async function publishToYoutube(
+type PublishResult =
+  | { videoId: string }
+  | { skipped: true }
+  | { error: string; retryable: boolean };
+
+async function markJobFailedWithoutRetry(jobId: string, message: string): Promise<void> {
+  const { db } = await connectToDatabase();
+  await db
+    .collection(VIDEO_JOBS_COLLECTION)
+    .updateOne(
+      { _id: new ObjectId(jobId) },
+      { $set: { youtubeStatus: 'failed', youtubeError: message } },
+    );
+}
+
+async function blockAndFail(
+  siteId: string,
   jobId: string,
-  siteId: string
-): Promise<{ videoId: string } | { skipped: true } | { error: string; retryable: boolean }> {
+  projectIds: string[],
+  reason: string,
+): Promise<{ error: string; retryable: boolean }> {
+  await blockWebsiteQuota({ siteId, projectIds, reason });
+  await markJobFailedWithoutRetry(jobId, QUOTA_EXCEEDED_MESSAGE);
+  console.log(`[YOUTUBE QUOTA] ${siteId}: all projects exhausted (${reason})`);
+  return { error: QUOTA_EXCEEDED_MESSAGE, retryable: true };
+}
+
+export async function publishToYoutube(jobId: string, siteId: string): Promise<PublishResult> {
+  if (inFlightPublishes.has(jobId)) {
+    return { error: 'YouTube publish already in progress', retryable: true };
+  }
+  inFlightPublishes.add(jobId);
+  try {
+    return await withSiteLock(siteId, () => publishToYoutubeLocked(jobId, siteId));
+  } finally {
+    inFlightPublishes.delete(jobId);
+  }
+}
+
+async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<PublishResult> {
   const { db } = await connectToDatabase();
 
   const channel = await getChannelBySiteId(siteId);
-  if (!channel || !channel.refreshTokenEncrypted) {
+  const projects = normalizeProjects(channel);
+  const connectedProjects = projects.filter((project) => project.refreshTokenEncrypted);
+  if (connectedProjects.length === 0) {
     await db
       .collection(VIDEO_JOBS_COLLECTION)
       .updateOne(
@@ -347,6 +544,16 @@ export async function publishToYoutube(
   if (!job.outputPath) return { error: 'No video output path found', retryable: false };
   if (job.youtubeVideoId && job.youtubeStatus === 'published') {
     return { skipped: true };
+  }
+
+  const now = new Date();
+
+  // Website-level pause: fail fast without burning retries or re-uploading.
+  if (await isWebsiteYoutubeBlocked(siteId, now)) {
+    if (!job.youtubeVideoId) {
+      await markJobFailedWithoutRetry(jobId, QUOTA_EXCEEDED_MESSAGE);
+    }
+    return { error: QUOTA_EXCEEDED_MESSAGE, retryable: true };
   }
 
   const website = await db
@@ -423,29 +630,91 @@ export async function publishToYoutube(
   }
 
   try {
-    const youtube = await createYoutubeClient(
-      siteId,
-      decrypt(channel.refreshTokenEncrypted),
-    );
-
     let videoId = existingVideoId;
     let isNewUpload = false;
+    let activeProject: YoutubeProject | null = existingVideoId
+      ? connectedProjects.find((project) => project.projectId === job.youtubeProjectId) ?? connectedProjects[0]
+      : null;
+    let activeClient: YoutubeClient | null = null;
 
     if (videoId) {
-      await applyScheduleToVideo(youtube, videoId, publishAt);
+      activeClient = await createYoutubeClientForProject(activeProject!);
+      try {
+        await applyScheduleToVideo(activeClient, videoId, publishAt);
+      } catch (error) {
+        if (isQuotaExceededError(error) && activeProject) {
+          await markProjectQuotaExhausted(
+            siteId,
+            activeProject.projectId,
+            'videos.update',
+            quotaReasonFromError(error) || 'quotaExceeded',
+            new Date(),
+          );
+        }
+        throw error;
+      }
     } else {
-      videoId = await insertYoutubeVideo(
-        youtube,
-        job.outputPath,
-        { title, description, tags },
-        publishAt,
-      );
+      const available = await getAvailableProjects(siteId, 'videos.insert', now);
+      if (available.length === 0) {
+        return await blockAndFail(
+          siteId,
+          jobId,
+          connectedProjects.map((project) => project.projectId),
+          'quotaExceeded',
+        );
+      }
+
+      const attempt = await uploadWithProjectFailover({
+        availableProjects: available,
+        upload: async (project) => {
+          const client = await createYoutubeClientForProject(project);
+          return insertYoutubeVideo(client, job.outputPath, { title, description, tags }, publishAt);
+        },
+        markExhausted: async (project, reason) => {
+          await markProjectQuotaExhausted(siteId, project.projectId, 'videos.insert', reason, new Date());
+          console.log(
+            `[YOUTUBE QUOTA] Project ${project.projectId} exhausted (${reason}); trying next project`
+          );
+        },
+      });
+
+      if (!attempt.ok) {
+        return await blockAndFail(
+          siteId,
+          jobId,
+          connectedProjects.map((project) => project.projectId),
+          attempt.reason,
+        );
+      }
+
+      videoId = attempt.videoId;
+      activeProject = attempt.project;
       isNewUpload = true;
+
+      // Persist the upload id + owning project immediately so a later
+      // failure/retry can never re-upload or move the video to another channel.
+      await db
+        .collection(VIDEO_JOBS_COLLECTION)
+        .updateOne(
+          { _id: new ObjectId(jobId) },
+          {
+            $set: {
+              youtubeVideoId: videoId,
+              youtubeProjectId: activeProject.projectId,
+              youtubeStatus: 'publishing',
+              youtubeError: undefined,
+            },
+          },
+        );
     }
 
-    if (job.thumbnailPath && existsSync(job.thumbnailPath)) {
+    if (!activeClient && activeProject) {
+      activeClient = await createYoutubeClientForProject(activeProject);
+    }
+
+    if (job.thumbnailPath && existsSync(job.thumbnailPath) && activeClient) {
       try {
-        await youtube.thumbnails.set({
+        await activeClient.thumbnails.set({
           videoId,
           media: {
             mimeType: 'image/jpeg',
@@ -453,6 +722,15 @@ export async function publishToYoutube(
           },
         });
       } catch (thumbnailError: any) {
+        if (isQuotaExceededError(thumbnailError) && activeProject) {
+          await markProjectQuotaExhausted(
+            siteId,
+            activeProject.projectId,
+            'thumbnails.set',
+            quotaReasonFromError(thumbnailError) || 'quotaExceeded',
+            new Date(),
+          );
+        }
         console.error(
           `[YOUTUBE THUMBNAIL] Job ${jobId} (video ${videoId}): ${thumbnailError?.message || 'Unknown error'}`
         );
@@ -462,6 +740,7 @@ export async function publishToYoutube(
     const fields: Record<string, any> = {
       youtubeStatus: publishAt ? 'scheduled' : 'published',
       youtubeVideoId: videoId,
+      youtubeProjectId: activeProject?.projectId,
       youtubePublishAt: job.youtubePublishAt || null,
       youtubeError: undefined,
       youtubeRetryCount: 0,
@@ -493,8 +772,9 @@ export async function publishToYoutube(
 
     const attempts = isScheduleRelease ? MAX_YOUTUBE_COMMENT_ATTEMPTS : 1;
 
-    if (shouldAddComment) {
-      await insertYoutubeCommentWithRetry(videoId, siteId, commentText, attempts)
+    if (shouldAddComment && activeProject) {
+      const commentProject = activeProject;
+      await insertYoutubeCommentWithRetry(videoId, commentProject, commentText, attempts)
         .then(() =>
           db
             .collection(VIDEO_JOBS_COLLECTION)
@@ -506,6 +786,15 @@ export async function publishToYoutube(
         )
         .catch(async (err: any) => {
           const commentError = describeYoutubeCommentError(err);
+          if (isQuotaExceededError(err)) {
+            await markProjectQuotaExhausted(
+              siteId,
+              commentProject.projectId,
+              'commentThreads.insert',
+              quotaReasonFromError(err) || 'quotaExceeded',
+              new Date(),
+            ).catch(() => { });
+          }
           console.error(`[YOUTUBE COMMENT] Job ${jobId} (video ${videoId}): ${commentError}`);
           await db
             .collection(VIDEO_JOBS_COLLECTION)
@@ -525,6 +814,7 @@ export async function publishToYoutube(
 
     return { videoId };
   } catch (error: any) {
+    const quotaReason = quotaReasonFromError(error);
     const isRevokedToken =
       error?.code === 401 ||
       error?.message?.includes('invalid_grant') ||
@@ -532,13 +822,20 @@ export async function publishToYoutube(
 
     let errorMessage = error?.message || 'Unknown error during YouTube upload';
 
-    if (error?.code === 403 && error?.errors?.[0]?.reason === 'quotaExceeded') {
+    if (quotaReason) {
       errorMessage = 'YouTube upload quota exceeded. Will retry automatically.';
     } else if (isRevokedToken) {
       errorMessage = 'YouTube authentication expired. Reconnect the channel in website settings.';
     }
 
     console.error(`[YOUTUBE PUBLISH] Job ${jobId} failed: ${errorMessage}`);
+
+    if (quotaReason) {
+      // Quota failures must not consume the finite retry budget; the job stays
+      // resumable until the quota resets.
+      await markJobFailedWithoutRetry(jobId, errorMessage);
+      return { error: errorMessage, retryable: true };
+    }
 
     const retryCount = (job.youtubeRetryCount || 0) + 1;
     const retryable = !isRevokedToken && retryCount < MAX_YOUTUBE_RETRIES;
@@ -573,15 +870,13 @@ export async function publishToYoutube(
 
 export async function addYoutubeComment(
   videoId: string,
-  siteId: string,
+  project: YoutubeProject,
   commentText: string
 ): Promise<void> {
   if (!commentText) return;
+  if (!project.refreshTokenEncrypted) return;
 
-  const channel = await getChannelBySiteId(siteId);
-  if (!channel?.refreshTokenEncrypted) return;
-
-  const youtube = await createYoutubeClient(siteId, decrypt(channel.refreshTokenEncrypted));
+  const youtube = await createYoutubeClientForProject(project);
 
   await youtube.commentThreads.insert({
     part: ['snippet'],
@@ -600,7 +895,7 @@ export async function addYoutubeComment(
 
 async function insertYoutubeCommentWithRetry(
   videoId: string,
-  siteId: string,
+  project: YoutubeProject,
   commentText: string,
   attempts: number
 ): Promise<void> {
@@ -608,7 +903,7 @@ async function insertYoutubeCommentWithRetry(
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      await addYoutubeComment(videoId, siteId, commentText);
+      await addYoutubeComment(videoId, project, commentText);
       return;
     } catch (error) {
       lastError = error;
@@ -638,6 +933,7 @@ export async function retryFailedPublishes(): Promise<number> {
 
   for (const job of failedJobs) {
     const jobId = String(job._id);
+    if (await isWebsiteYoutubeBlocked(job.websiteId)) continue;
     console.log(`[YOUTUBE RETRY] Retrying job ${jobId} (attempt ${(job.youtubeRetryCount || 0) + 1}/${MAX_YOUTUBE_RETRIES})`);
 
     const result = await publishToYoutube(jobId, job.websiteId);
@@ -671,6 +967,7 @@ export async function releaseScheduledPublishes(now: Date = new Date()): Promise
 
   for (const job of dueJobs) {
     const jobId = String(job._id);
+    if (await isWebsiteYoutubeBlocked(job.websiteId)) continue;
     console.log(`[YOUTUBE SCHEDULE] Releasing job ${jobId} (was scheduled for ${job.youtubePublishAt})`);
 
     const result = await publishToYoutube(jobId, job.websiteId);
@@ -687,11 +984,14 @@ export async function releaseScheduledPublishes(now: Date = new Date()): Promise
 }
 
 let retryInterval: ReturnType<typeof setInterval> | null = null;
+let retryCronRunning = false;
 
 export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
   if (retryInterval) return;
   console.log(`[YOUTUBE RETRY] Starting retry cron (every ${intervalMs / 1000}s)`);
   retryInterval = setInterval(async () => {
+    if (retryCronRunning) return;
+    retryCronRunning = true;
     try {
       const count = await retryFailedPublishes();
       if (count > 0) {
@@ -708,6 +1008,8 @@ export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
       }
     } catch (err: any) {
       console.error(`[YOUTUBE SCHEDULE] Release error: ${err?.message || 'Unknown error'}`);
+    } finally {
+      retryCronRunning = false;
     }
   }, intervalMs);
 }

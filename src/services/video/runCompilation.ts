@@ -7,6 +7,7 @@ import { WooWebsitePayload } from '@/types/woo';
 import { VIDEO_CONFIG } from './config';
 import { enqueueJob } from './jobManager';
 import { resolveYoutubePublishAt } from '@/services/youtube/resolveYoutubePublishAt';
+import { isWebsiteYoutubeBlocked } from '@/services/youtube/projectQuota';
 import {
   COMPILATION_SIZE,
   CompilationProductInput,
@@ -39,6 +40,9 @@ export async function runCompilationForWebsite(
 ): Promise<boolean> {
   const websiteId = String(website._id);
   if (!websiteId) return false;
+
+  // All YouTube projects are out of quota: queue nothing until it resets.
+  if (await isWebsiteYoutubeBlocked(websiteId)) return false;
 
   const intervalMinutes =
     website.autoCompilation?.intervalMinutes &&

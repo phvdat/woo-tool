@@ -339,7 +339,9 @@ the comment via `buildCompilationComment` (numbered `name - url` list for all 5
 products, still honoring `youtubeCommentTemplate`); publishing/retry/comment
 guards are unchanged from individual jobs. Compilation jobs carry no explicit
 schedule, so they get a queued `youtubePublishAt` exactly like unscheduled
-individual jobs (see §6).
+individual jobs (see §6). `runCompilationForWebsite` and
+`createVideoJobsFromPipeline` short-circuit while the website is quota-paused
+(`isWebsiteYoutubeBlocked`), so no jobs are queued during a full quota outage.
 
 **UI:** `src/app/(page)/video-generator/page.tsx` →
 `src/components/video-generator/VideoGeneratorPage.tsx` (owns the socket
@@ -358,28 +360,45 @@ Backgrounds are a global pool (no per-website scoping), same as audio.
 
 ## 6. YouTube
 
-**What it does:** per-website OAuth channel connection, video upload,
-scheduled publication, comment templating, and a retry/release cron.
+**What it does:** per-website OAuth channel connection (one or more Google
+Cloud **projects** per website for quota failover), video upload, scheduled
+publication, comment templating, and a retry/release cron.
 
-1. `src/services/youtube/youtubeService.ts` (778 lines) — read in sections:
+1. `src/services/youtube/youtubeService.ts` — read in sections:
    - top: constants, `MAX_YOUTUBE_RETRIES = 3`
-   - OAuth: `getOAuth2ClientForSite`, `saveOauthConfig`, `getAuthUrl`,
-     `exchangeCode`, `getChannelInfo`, `upsertChannel`, `removeChannel`
-   - publish: `publishToYoutube(jobId, siteId)` — the main entry point, with
-     `resolvePublishAt`, `buildVideoStatus`, `insertYoutubeVideo`,
-     `applyScheduleToVideo`; after the video id exists it calls
-     `youtube.thumbnails.set` with the job's `thumbnailPath` (fail-open: a
-     thumbnail error never fails the job). The top-level comment comes from
-     `buildComment` (single-product) or `buildCompilationComment` (lists all 5
-     product links when `job.kind === 'compilation'`).
+   - OAuth: `getOAuth2ClientForSite(siteId, projectId?)`, `saveOauthConfig`
+     (returns `{ projectId }`), `getAuthUrl`, `exchangeCode`, `getChannelInfo`,
+     `upsertChannel`, `removeChannel(siteId, projectId?)`, `writeProjects`,
+     `createYoutubeClientForProject`, `getYoutubeStatus`
+   - publish: `publishToYoutube(jobId, siteId)` (in-flight guard + `withSiteLock`)
+     → `publishToYoutubeLocked`. Fresh uploads pick an available project via
+     `getAvailableProjects` and try them through `uploadWithProjectFailover`;
+     the `youtubeVideoId` + owning `youtubeProjectId` are persisted **immediately**
+     after insert so a retry can never re-upload or switch channels. Thumbnail /
+     comment / schedule reuse the recorded owning project. After the video id
+     exists it calls `youtube.thumbnails.set` with the job's `thumbnailPath`
+     (fail-open: a thumbnail error never fails the job). The top-level comment
+     comes from `buildComment` (single-product) or `buildCompilationComment`
+     (lists all 5 product links when `job.kind === 'compilation'`).
    - comment rules + `describeYoutubeCommentError`
    - cron: `retryFailedPublishes`, `releaseScheduledPublishes`,
-     `startYoutubeRetryCron`
-2. `src/services/youtube/publishSchedule.ts` — pure slot math:
+     `startYoutubeRetryCron` (re-entrancy guarded by `retryCronRunning`)
+2. `src/services/youtube/quotaRules.ts` — **pure** quota logic (the unit-test
+   target; must not import DB): `quotaReasonFromError` / `isQuotaExceededError`,
+   `nextYoutubeQuotaReset` (next Pacific midnight), `selectAvailableProjects`,
+   `allProjectsExhausted`, `normalizeProjects` (legacy single-project vs
+   `projects[]`), `shouldNotifyQuotaBlock`, `buildQuotaBlockMessage`,
+   `uploadWithProjectFailover`, `withSiteLock`.
+3. `src/services/youtube/projectQuota.ts` — DB side of the quota system:
+   `getProjectsForSite`, `getProjectQuotaStates`, `getAvailableProjects`,
+   `markProjectQuotaExhausted`, `removeProjectQuotaState`,
+   `getWebsiteQuotaBlock`, `isWebsiteYoutubeBlocked`, `blockWebsiteQuota`,
+   `notifyQuotaBlock` (Telegram, deduped).
+4. `src/services/youtube/publishSchedule.ts` — pure slot math:
    `YOUTUBE_PUBLISH_GAP_MS` (5 min), `futureSchedule` (only a *future* date
    counts as an explicit schedule), `nextYoutubePublishAt` (latest pending +
    5 min, else now + 5 min).
-3. `src/services/youtube/resolveYoutubePublishAt.ts` — the DB resolver
+5. `src/services/youtube/resolveYoutubePublishAt.ts` — the DB resolver
    `resolveYoutubePublishAt(websiteId, explicitSchedule?)`. Explicit future
    dates are kept unchanged; otherwise it queries `videoJobs` for the latest
    *pending* slot on the **same website** (future `youtubePublishAt`, not
@@ -387,14 +406,32 @@ scheduled publication, comment templating, and a retry/release cron.
    when none). Queues **per website/channel only** — never mixed across
    websites. Called at job creation (pipeline, manual generate, compilation)
    and as a publish-time fallback.
-4. `src/types/youtube.ts` — `YoutubeChannel` document shape.
-5. `src/lib/encryption.ts` — AES-256-GCM for `clientSecretEncrypted` and
+6. `src/types/youtube.ts` — `YoutubeChannel` document shape (`projects[]` plus
+   legacy mirrored fields) and the quota types.
+7. `src/lib/encryption.ts` — AES-256-GCM for `clientSecretEncrypted` and
    `refreshTokenEncrypted`. Wire format `ivHex:authTagHex:cipherHex`.
-6. `src/app/api/youtube/*` — `oauth-config` (GET/PUT), `connect` (GET, 302),
-   `callback` (GET, posts to `window.opener`), `status` (GET), `disconnect` (DELETE).
-7. UI: `src/components/settings/website/YouTubeConfig.tsx`,
-   `YouTubeDescriptionTemplate.tsx`, `YouTubeCommentTemplate.tsx`.
-   Hook: `src/app/hooks/useYouTubeChannel.ts`.
+8. `src/app/api/youtube/*` — `oauth-config` (GET/PUT, per `projectId`),
+   `connect` (GET, 302, `projectId` in OAuth state), `callback` (GET, posts to
+   `window.opener`), `status` (GET, `getYoutubeStatus`), `disconnect`
+   (DELETE, per `projectId`).
+9. UI: `src/components/settings/website/YouTubeConfig.tsx` (multi-project:
+   add project, per-project credentials, Save & Connect, Reauthorize,
+   Disconnect, quota/blocked tags + Alert), `YouTubeDescriptionTemplate.tsx`,
+   `YouTubeCommentTemplate.tsx`. Hook: `src/app/hooks/useYouTubeChannel.ts`.
+
+**Quota failover + website pause:** each YouTube API error is classified by
+`quotaReasonFromError` (only `quotaExceeded`, `dailyLimitExceeded`,
+`rateLimitExceeded`, `userRateLimitExceeded`, `uploadLimitExceeded`). A quota
+error on upload marks `(siteId, projectId, 'videos.insert')` exhausted until the
+next Pacific midnight (`markProjectQuotaExhausted`) and the next project is
+tried. Non-quota errors (auth/permission/network) **never** fail over. When every
+project is exhausted, `blockWebsiteQuota` pauses the website: video job creation
+(`createVideoJobsFromPipeline`, `api/video/generate`) and compilation
+(`runCompilationForWebsite`) short-circuit while `isWebsiteYoutubeBlocked` is
+true, and a single Telegram alert is sent (`notifyQuotaBlock`, deduped by
+`notifiedAt`). Quota failures do **not** increment `youtubeRetryCount`; the job
+is left `failed` so the retry cron resumes it after the reset. Quota state is
+per-operation, so a comment-quota exhaustion does not block uploads.
 
 **Publish-slot assignment:** every job's `youtubePublishAt` is set once at
 creation: the product's future `date_created_gmt` wins (`JobList`'s "publishes

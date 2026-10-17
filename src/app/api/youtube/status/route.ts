@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getChannelBySiteId, getOauthConfig } from '@/services/youtube/youtubeService';
+import { getYoutubeStatus } from '@/services/youtube/youtubeService';
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -15,26 +15,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [channel, oauthConfig] = await Promise.all([
-      getChannelBySiteId(siteId),
-      getOauthConfig(siteId),
-    ]);
-
-    if (!channel || !channel.refreshTokenEncrypted) {
-      return Response.json({
-        connected: false,
-        hasOauthConfig: oauthConfig.configured,
-      });
-    }
-
-    return Response.json({
-      connected: true,
-      channelTitle: channel.channelTitle,
-      channelId: channel.channelId,
-      connectedByEmail: channel.connectedByEmail,
-      updatedAt: channel.updatedAt,
-      hasOauthConfig: oauthConfig.configured,
-    });
+    const status = await getYoutubeStatus(siteId);
+    return Response.json(status);
   } catch (error: any) {
     console.error('[YOUTUBE STATUS]', error?.message);
     return Response.json(

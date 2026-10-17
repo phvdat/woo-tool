@@ -6,6 +6,7 @@ import { parseWooGmtDate } from '@/helper/common';
 import { resolveYoutubePublishAt } from '@/services/youtube/resolveYoutubePublishAt';
 import { VIDEO_CONFIG } from '@/services/video/config';
 import { enqueueJob } from '@/services/video/jobManager';
+import { isWebsiteYoutubeBlocked } from '@/services/youtube/projectQuota';
 import axios from 'axios';
 import { ObjectId } from 'mongodb';
 import { getServerSession } from 'next-auth';
@@ -35,6 +36,16 @@ export async function POST(request: Request) {
 
     if (!website) {
       return Response.json({ error: 'Website not found' }, { status: 404 });
+    }
+
+    if (await isWebsiteYoutubeBlocked(websiteId)) {
+      return Response.json(
+        {
+          error:
+            'YouTube publishing is paused for this website because every project is out of quota. It resumes automatically after the quota resets.',
+        },
+        { status: 409 },
+      );
     }
 
     const woo = axios.create({
