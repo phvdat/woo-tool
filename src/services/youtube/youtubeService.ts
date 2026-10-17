@@ -860,7 +860,7 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
       const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
       await sendTelegramMessage({
         telegramId: user.telegramId,
-        message: `<b>YouTube Upload Failed</b>\n\nProduct: ${job.productName || 'Unknown'}\nError: ${errorMessage}\nRetry: ${retryCount}/${MAX_YOUTUBE_RETRIES}\nTime: ${time}`,
+        message: `<b>YouTube Upload Failed: ${siteDisplayName}</b>\n\nProduct: ${job.productName || 'Unknown'}\nError: ${errorMessage}\nRetry: ${retryCount}/${MAX_YOUTUBE_RETRIES}\nTime: ${time}`,
       }).catch(() => { });
     }
 
