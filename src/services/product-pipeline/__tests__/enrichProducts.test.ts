@@ -32,7 +32,7 @@ const products = [
   {
     Name: "A'ja Wilson Tee",
     Categories: "Clothing > Unisex T-Shirts",
-    Description: "(content)",
+    Description: "[content]",
   },
 ] as any[];
 

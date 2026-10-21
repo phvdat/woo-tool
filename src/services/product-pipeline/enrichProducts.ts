@@ -32,7 +32,7 @@ function categoryOf(product: WooCommerce): string {
 }
 
 function injectContent(product: WooCommerce, content: string): string {
-  return product.Description.replace("(content)", `<p>${content}</p>`);
+  return product.Description.replace("[content]", `<p>${content}</p>`);
 }
 
 export async function enrichProducts({
@@ -58,14 +58,14 @@ export async function enrichProducts({
   // `aiProvider`, which only selects the description and tag writer.
   const researchByProduct: Map<string, ResearchTopic> = researchEnabled
     ? await researchBatch(
-        products.map((product) => ({
-          productName: product.Name,
-          category: categoryOf(product),
-          description: product.Description,
-          website,
-        })),
-        { geminiApiKey },
-      )
+      products.map((product) => ({
+        productName: product.Name,
+        category: categoryOf(product),
+        description: product.Description,
+        website,
+      })),
+      { geminiApiKey },
+    )
     : new Map<string, ResearchTopic>();
 
   for (let index = 0; index < products.length; index++) {
