@@ -16,6 +16,7 @@ import {
   isWebsiteYoutubeBlocked,
   markProjectQuotaExhausted,
   removeProjectQuotaState,
+  withChannelLock,
   withSiteLock,
 } from './projectQuota';
 import {
@@ -24,6 +25,7 @@ import {
   quotaReasonFromError,
   uploadWithProjectFailover,
 } from './quotaRules';
+import { applyProjectConnection, applyProjectCredentials } from './projectCredentials';
 
 const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
@@ -103,10 +105,11 @@ async function writeProjects(
 }
 
 /**
- * Adds or updates one project's OAuth credentials. When `projectId` is omitted
- * the first existing project is updated (legacy single-project callers); a new
- * project is created otherwise. Returns the project id so the caller can start
- * the OAuth connect flow against it.
+ * Adds or updates one project's OAuth credentials. An existing project is only
+ * updated when `projectId` matches a stored project; without a matching id a
+ * NEW project is created, so adding a project never overwrites the
+ * credentials of an existing one. Returns the project id so the caller can
+ * start the OAuth connect flow against it.
  */
 export async function saveOauthConfig(
   siteId: string,
@@ -115,38 +118,25 @@ export async function saveOauthConfig(
   email: string,
   projectId?: string,
 ): Promise<{ projectId: string }> {
-  const existing = await getChannelBySiteId(siteId);
-  const projects = normalizeProjects(existing);
-  const now = new Date();
-  const clientSecretEncrypted = encrypt(clientSecret);
+  return withChannelLock(siteId, async () => {
+    const existing = await getChannelBySiteId(siteId);
+    const projects = normalizeProjects(existing);
+    const now = new Date();
+    const clientSecretEncrypted = encrypt(clientSecret);
 
-  let target = projectId
-    ? projects.find((project) => project.projectId === projectId)
-    : projects[0];
-
-  if (target) {
-    target.clientId = clientId;
-    target.clientSecretEncrypted = clientSecretEncrypted;
-    if (email) target.connectedByEmail = email;
-    target.updatedAt = now;
-  } else {
-    target = {
-      projectId: projectId || generateProjectId(),
-      label: '',
+    const result = applyProjectCredentials({
+      projects,
+      projectId,
+      generateProjectId,
       clientId,
       clientSecretEncrypted,
-      refreshTokenEncrypted: '',
-      channelId: '',
-      channelTitle: '',
       connectedByEmail: email,
-      createdAt: now,
-      updatedAt: now,
-    };
-    projects.push(target);
-  }
+      now,
+    });
 
-  await writeProjects(siteId, projects, existing, now);
-  return { projectId: target.projectId };
+    await writeProjects(siteId, result.projects, existing, now);
+    return { projectId: result.project.projectId };
+  });
 }
 
 export async function getOauthConfig(siteId: string): Promise<{
@@ -238,37 +228,24 @@ export async function upsertChannel(channelData: {
   connectedByEmail: string;
   projectId?: string;
 }) {
-  const existing = await getChannelBySiteId(channelData.siteId);
-  const projects = normalizeProjects(existing);
-  const now = new Date();
+  return withChannelLock(channelData.siteId, async () => {
+    const existing = await getChannelBySiteId(channelData.siteId);
+    const projects = normalizeProjects(existing);
+    const now = new Date();
 
-  let target = channelData.projectId
-    ? projects.find((project) => project.projectId === channelData.projectId)
-    : projects[0];
-
-  if (target) {
-    target.channelId = channelData.channelId;
-    target.channelTitle = channelData.channelTitle;
-    target.refreshTokenEncrypted = channelData.refreshTokenEncrypted;
-    target.connectedByEmail = channelData.connectedByEmail;
-    target.updatedAt = now;
-  } else {
-    target = {
-      projectId: channelData.projectId || generateProjectId(),
-      label: '',
-      clientId: '',
-      clientSecretEncrypted: '',
-      refreshTokenEncrypted: channelData.refreshTokenEncrypted,
+    const result = applyProjectConnection({
+      projects,
+      projectId: channelData.projectId,
+      generateProjectId,
       channelId: channelData.channelId,
       channelTitle: channelData.channelTitle,
+      refreshTokenEncrypted: channelData.refreshTokenEncrypted,
       connectedByEmail: channelData.connectedByEmail,
-      createdAt: now,
-      updatedAt: now,
-    };
-    projects.push(target);
-  }
+      now,
+    });
 
-  await writeProjects(channelData.siteId, projects, existing, now);
+    await writeProjects(channelData.siteId, result.projects, existing, now);
+  });
 }
 
 export async function getChannelBySiteId(siteId: string): Promise<YoutubeChannel | null> {
@@ -284,25 +261,27 @@ export async function getChannelBySiteId(siteId: string): Promise<YoutubeChannel
  * with the same id is not falsely considered exhausted.
  */
 export async function removeChannel(siteId: string, projectId?: string): Promise<boolean> {
-  const { db } = await connectToDatabase();
-  const existing = await getChannelBySiteId(siteId);
-  if (!existing) return false;
+  return withChannelLock(siteId, async () => {
+    const { db } = await connectToDatabase();
+    const existing = await getChannelBySiteId(siteId);
+    if (!existing) return false;
 
-  if (!projectId) {
-    await db.collection(YOUTUBE_CHANNELS_COLLECTION).deleteOne({ siteId });
-    await removeProjectQuotaState(siteId);
+    if (!projectId) {
+      await db.collection(YOUTUBE_CHANNELS_COLLECTION).deleteOne({ siteId });
+      await removeProjectQuotaState(siteId);
+      return true;
+    }
+
+    const projects = normalizeProjects(existing).filter((project) => project.projectId !== projectId);
+    await removeProjectQuotaState(siteId, projectId);
+
+    if (projects.length === 0) {
+      await db.collection(YOUTUBE_CHANNELS_COLLECTION).deleteOne({ siteId });
+    } else {
+      await writeProjects(siteId, projects, existing, new Date());
+    }
     return true;
-  }
-
-  const projects = normalizeProjects(existing).filter((project) => project.projectId !== projectId);
-  await removeProjectQuotaState(siteId, projectId);
-
-  if (projects.length === 0) {
-    await db.collection(YOUTUBE_CHANNELS_COLLECTION).deleteOne({ siteId });
-  } else {
-    await writeProjects(siteId, projects, existing, new Date());
-  }
-  return true;
+  });
 }
 
 type YoutubeClient = ReturnType<typeof google.youtube>;

@@ -369,7 +369,11 @@ publication, comment templating, and a retry/release cron.
    - OAuth: `getOAuth2ClientForSite(siteId, projectId?)`, `saveOauthConfig`
      (returns `{ projectId }`), `getAuthUrl`, `exchangeCode`, `getChannelInfo`,
      `upsertChannel`, `removeChannel(siteId, projectId?)`, `writeProjects`,
-     `createYoutubeClientForProject`, `getYoutubeStatus`
+     `createYoutubeClientForProject`, `getYoutubeStatus`.
+     `saveOauthConfig` / `upsertChannel` / `removeChannel` are serialized with
+     `withChannelLock(siteId, …)` so two concurrent writes cannot drop a
+     project. That lock is separate from `withSiteLock`, which is held for the
+     whole duration of a video upload.
    - publish: `publishToYoutube(jobId, siteId)` (in-flight guard + `withSiteLock`)
      → `publishToYoutubeLocked`. Fresh uploads pick an available project via
      `getAvailableProjects` and try them through `uploadWithProjectFailover`;
@@ -388,17 +392,26 @@ publication, comment templating, and a retry/release cron.
    `nextYoutubeQuotaReset` (next Pacific midnight), `selectAvailableProjects`,
    `allProjectsExhausted`, `normalizeProjects` (legacy single-project vs
    `projects[]`), `shouldNotifyQuotaBlock`, `buildQuotaBlockMessage`,
-   `uploadWithProjectFailover`, `withSiteLock`.
+   `uploadWithProjectFailover`, `withSiteLock` (held for a whole upload),
+   `withChannelLock` (channel-config writes only).
 3. `src/services/youtube/projectQuota.ts` — DB side of the quota system:
    `getProjectsForSite`, `getProjectQuotaStates`, `getAvailableProjects`,
    `markProjectQuotaExhausted`, `removeProjectQuotaState`,
    `getWebsiteQuotaBlock`, `isWebsiteYoutubeBlocked`, `blockWebsiteQuota`,
    `notifyQuotaBlock` (Telegram, deduped).
-4. `src/services/youtube/publishSchedule.ts` — pure slot math:
+4. `src/services/youtube/projectCredentials.ts` — **pure** writes into the
+   `projects[]` array (unit-tested): `applyProjectCredentials` /
+   `applyProjectConnection`. Both take the target `projectId` **optional** and
+   only modify a project whose id matches a stored project; every other call
+   **creates a new project** (given id, or `generateProjectId()`). This is the
+   invariant that keeps "Add Project" from overwriting the project that is
+   already configured — there is no "fall back to the first project" branch
+   anywhere in the YouTube write path.
+5. `src/services/youtube/publishSchedule.ts` — pure slot math:
    `YOUTUBE_PUBLISH_GAP_MS` (5 min), `futureSchedule` (only a *future* date
    counts as an explicit schedule), `nextYoutubePublishAt` (latest pending +
    5 min, else now + 5 min).
-5. `src/services/youtube/resolveYoutubePublishAt.ts` — the DB resolver
+6. `src/services/youtube/resolveYoutubePublishAt.ts` — the DB resolver
    `resolveYoutubePublishAt(websiteId, explicitSchedule?)`. Explicit future
    dates are kept unchanged; otherwise it queries `videoJobs` for the latest
    *pending* slot on the **same website** (future `youtubePublishAt`, not
@@ -406,18 +419,23 @@ publication, comment templating, and a retry/release cron.
    when none). Queues **per website/channel only** — never mixed across
    websites. Called at job creation (pipeline, manual generate, compilation)
    and as a publish-time fallback.
-6. `src/types/youtube.ts` — `YoutubeChannel` document shape (`projects[]` plus
+7. `src/types/youtube.ts` — `YoutubeChannel` document shape (`projects[]` plus
    legacy mirrored fields) and the quota types.
-7. `src/lib/encryption.ts` — AES-256-GCM for `clientSecretEncrypted` and
+8. `src/lib/encryption.ts` — AES-256-GCM for `clientSecretEncrypted` and
    `refreshTokenEncrypted`. Wire format `ivHex:authTagHex:cipherHex`.
-8. `src/app/api/youtube/*` — `oauth-config` (GET/PUT, per `projectId`),
+9. `src/app/api/youtube/*` — `oauth-config` (GET/PUT, per `projectId`),
    `connect` (GET, 302, `projectId` in OAuth state), `callback` (GET, posts to
-   `window.opener`), `status` (GET, `getYoutubeStatus`), `disconnect`
+   `window.opener`; resolves the target project id once and writes the token
+   back to that same project), `status` (GET, `getYoutubeStatus`), `disconnect`
    (DELETE, per `projectId`).
-9. UI: `src/components/settings/website/YouTubeConfig.tsx` (multi-project:
+10. UI: `src/components/settings/website/YouTubeConfig.tsx` (multi-project:
    add project, per-project credentials, Save & Connect, Reauthorize,
    Disconnect, quota/blocked tags + Alert), `YouTubeDescriptionTemplate.tsx`,
    `YouTubeCommentTemplate.tsx`. Hook: `src/app/hooks/useYouTubeChannel.ts`.
+   The card list is re-synced from `/api/youtube/status` on a signature that
+   covers every rendered field (id, configured, connected, channel title, owner,
+   quota state), so a finished OAuth connect shows up without a page reload;
+   in-progress input in a Client ID/Secret field survives the re-sync.
 
 **Quota failover + website pause:** each YouTube API error is classified by
 `quotaReasonFromError` (only `quotaExceeded`, `dailyLimitExceeded`,

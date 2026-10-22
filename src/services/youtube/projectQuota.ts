@@ -207,3 +207,10 @@ async function notifyQuotaBlock(
  * process only, matching the deployment model.
  */
 export { withSiteLock } from './quotaRules';
+
+/**
+ * Serializes channel-config writes per website so two concurrent saves cannot
+ * drop a project. Separate from `withSiteLock`, which is held for the whole
+ * duration of a video upload.
+ */
+export { withChannelLock } from './quotaRules';

@@ -61,23 +61,39 @@ export default function YouTubeConfig({ siteId, onRefresh }: YouTubeConfigProps)
 
   useEffect(() => {
     const incoming = channelStatus?.projects ?? [];
-    const signature = incoming.map((project) => project.projectId).join(",");
+    // Signature covers every field the card renders, so a connection or a quota
+    // change is reflected without a full page reload.
+    const signature = JSON.stringify(
+      incoming.map((project) => [
+        project.projectId,
+        project.configured ? 1 : 0,
+        project.connected ? 1 : 0,
+        project.channelTitle ?? "",
+        project.connectedByEmail ?? "",
+        project.quotaBlocked ? 1 : 0,
+        project.quotaResetAt ?? "",
+      ]),
+    );
     if (signature === syncedSignature) return;
     setSyncedSignature(signature);
     setForms((prev) => {
       const drafts = prev.filter((form) => !form.projectId);
-      const existing = incoming.map<ProjectForm>((project) => ({
-        key: project.projectId,
-        projectId: project.projectId,
-        clientId: project.clientId || "",
-        clientSecret: "",
-        configured: !!project.configured,
-        connected: !!project.connected,
-        channelTitle: project.channelTitle,
-        connectedByEmail: project.connectedByEmail,
-        quotaBlocked: !!project.quotaBlocked,
-        quotaResetAt: project.quotaResetAt as string | undefined,
-      }));
+      const existing = incoming.map<ProjectForm>((project) => {
+        // Keep whatever the user already typed for this project.
+        const local = prev.find((form) => form.projectId === project.projectId);
+        return {
+          key: project.projectId,
+          projectId: project.projectId,
+          clientId: local?.clientId ?? project.clientId ?? "",
+          clientSecret: local?.clientSecret ?? "",
+          configured: !!project.configured,
+          connected: !!project.connected,
+          channelTitle: project.channelTitle,
+          connectedByEmail: project.connectedByEmail,
+          quotaBlocked: !!project.quotaBlocked,
+          quotaResetAt: project.quotaResetAt as string | undefined,
+        };
+      });
       return [...existing, ...drafts];
     });
   }, [channelStatus, syncedSignature]);
@@ -110,8 +126,9 @@ export default function YouTubeConfig({ siteId, onRefresh }: YouTubeConfigProps)
           clientSecret: form.clientSecret.trim(),
         });
         const projectId: string = data.projectId;
+        // The form keeps its own key: renaming it to the project id would
+        // collide with the project that already uses that id.
         updateForm(form.key, {
-          key: projectId,
           projectId,
           configured: true,
           clientSecret: "",

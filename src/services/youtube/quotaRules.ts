@@ -273,3 +273,26 @@ export function withSiteLock<T>(siteId: string, fn: () => Promise<T>): Promise<T
   );
   return run;
 }
+
+/**
+ * Serializes channel-config writes per website (save credentials, connect,
+ * disconnect) so two concurrent writes cannot drop a project: every write is a
+ * read-modify-write of the same `youtubeChannels` document.
+ *
+ * Deliberately a separate lock from `withSiteLock`, which is held for the
+ * whole duration of a video upload and must not make a settings save wait.
+ */
+const channelLocks = new Map<string, Promise<unknown>>();
+
+export function withChannelLock<T>(siteId: string, fn: () => Promise<T>): Promise<T> {
+  const previous = channelLocks.get(siteId) ?? Promise.resolve();
+  const run = previous.then(fn, fn);
+  channelLocks.set(
+    siteId,
+    run.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return run;
+}

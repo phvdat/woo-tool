@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { uploadWithProjectFailover, withSiteLock } from '../quotaRules';
+import { uploadWithProjectFailover, withChannelLock, withSiteLock } from '../quotaRules';
 import { YoutubeProject } from '@/types/youtube';
 
 function project(projectId: string): YoutubeProject {
@@ -143,5 +143,41 @@ describe('withSiteLock', () => {
   it('keeps the queue alive after a rejected task', async () => {
     await expect(withSiteLock('site-err', async () => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
     await expect(withSiteLock('site-err', async () => 'ok')).resolves.toBe('ok');
+  });
+});
+
+describe('withChannelLock', () => {
+  it('serializes concurrent channel-config writes for the same website', async () => {
+    const events: string[] = [];
+    const makeTask = (label: string, delay: number) =>
+      withChannelLock('site-1', async () => {
+        events.push(`${label}:start`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        events.push(`${label}:end`);
+        return label;
+      });
+
+    const first = makeTask('first', 20);
+    const second = makeTask('second', 1);
+
+    await Promise.all([first, second]);
+
+    expect(events).toEqual(['first:start', 'first:end', 'second:start', 'second:end']);
+  });
+
+  it('does not block on the publish lock', async () => {
+    const events: string[] = [];
+    const publish = withSiteLock('site-locked', async () => {
+      events.push('publish:start');
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      events.push('publish:end');
+    });
+    const config = withChannelLock('site-locked', async () => {
+      events.push('config:start');
+    });
+
+    await Promise.all([publish, config]);
+
+    expect(events.indexOf('config:start')).toBeLessThan(events.indexOf('publish:end'));
   });
 });

@@ -40,11 +40,15 @@ export async function GET(request: Request) {
     }
 
     const existingChannel = await getChannelBySiteId(siteId);
-    const existingProject = projectId
-      ? normalizeProjects(existingChannel).find((project) => project.projectId === projectId)
-      : normalizeProjects(existingChannel)[0];
+    const existingProjects = normalizeProjects(existingChannel);
+    // Resolve the project the code was authorized for once, so the token and
+    // the channel info are always written back to that same project.
+    const targetProjectId = projectId || existingProjects[0]?.projectId;
+    const existingProject = targetProjectId
+      ? existingProjects.find((item) => item.projectId === targetProjectId)
+      : undefined;
 
-    const tokens = await exchangeCode(code, siteId, projectId);
+    const tokens = await exchangeCode(code, siteId, targetProjectId);
     if (!tokens.refresh_token) {
       const message = existingProject?.refreshTokenEncrypted
         ? 'Google did not return a new refresh token, so the previous credentials are still in use. Disconnect the channel and reconnect to reauthorize it.'
@@ -68,14 +72,14 @@ export async function GET(request: Request) {
       tokens.access_token!,
       tokens.refresh_token,
       siteId,
-      projectId
+      targetProjectId
     );
 
     const refreshTokenEncrypted = encrypt(tokens.refresh_token);
 
     await upsertChannel({
       siteId,
-      projectId,
+      projectId: targetProjectId,
       channelId: channelInfo.channelId,
       channelTitle: channelInfo.channelTitle,
       refreshTokenEncrypted,
