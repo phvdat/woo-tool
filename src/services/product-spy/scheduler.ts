@@ -3,7 +3,10 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { SPY_COMPETITORS_COLLECTION } from "@/constant/collections";
 import { SpyCompetitor } from "@/types/product-spy";
 import { checkCompetitor } from "./checker";
-import { runWebsiteHealthChecks } from "./websiteHealth";
+import {
+  runInitialWebsiteHealthChecks,
+  runWebsiteHealthChecks,
+} from "./websiteHealth";
 import { getErrorMessage } from "@/lib/error-utils";
 
 let mainJob: ScheduledTask | null = null;
@@ -105,6 +108,16 @@ export async function startProductSpyCron(): Promise<void> {
   });
 
   console.log("[PRODUCT-SPY] Scheduler started");
+
+  // One-time startup pass: check every enabled competitor now instead of
+  // waiting for its 24-hour window. The DB lease still prevents overlap with a
+  // running Product Spy crawl, and lastCheckedAt makes the next daily check
+  // start 24 hours from this run.
+  void runInitialWebsiteHealthChecks().catch((err) =>
+    console.error(
+      `[PRODUCT-SPY] Initial website health check failed: ${getErrorMessage(err)}`,
+    ),
+  );
 }
 
 export async function stopProductSpyCron(): Promise<void> {

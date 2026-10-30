@@ -19,6 +19,31 @@ const WEBSITE_CHECK_TIMEOUT_MS = 15 * 1000;
 const DEAD_THRESHOLD = 2;
 const MAX_CONCURRENT = 3;
 
+export type WebsiteCheckOutcome =
+  | "alive"
+  | "dead"
+  | "unavailable"
+  | "blocked"
+  | "skipped";
+
+export interface WebsiteCheckResult {
+  status: WebsiteCheckOutcome;
+  deleted: boolean;
+}
+
+export interface WebsiteHealthStats {
+  checked: number;
+  alive: number;
+  dead: number;
+  unavailable: number;
+  blocked: number;
+  deleted: number;
+}
+
+export interface WebsiteHealthOptions {
+  force?: boolean;
+}
+
 let isRunning = false;
 
 function toCompetitorObjectId(value: unknown): ObjectId | null {
@@ -103,7 +128,8 @@ async function removeDeadCompetitor(
 
 export async function checkCompetitorWebsite(
   competitor: SpyCompetitor,
-): Promise<void> {
+  options: WebsiteHealthOptions = {},
+): Promise<WebsiteCheckResult> {
   const { db } = await connectToDatabase();
   const compId = toCompetitorObjectId(competitor._id);
 
@@ -111,7 +137,7 @@ export async function checkCompetitorWebsite(
     console.error(
       `[PRODUCT-SPY] Cannot check website without a valid id: ${competitor.name}`,
     );
-    return;
+    return { status: "skipped", deleted: false };
   }
 
   const lockOwner = await claimCompetitorCheck(db, compId);
@@ -119,7 +145,7 @@ export async function checkCompetitorWebsite(
     console.log(
       `[PRODUCT-SPY] Skipped website check for ${competitor.name}: a check is already running`,
     );
-    return;
+    return { status: "blocked", deleted: false };
   }
 
   try {
@@ -128,8 +154,12 @@ export async function checkCompetitorWebsite(
     // Re-read after claiming the lease: another instance may have finished a
     // daily check between the scheduler's query and our claim.
     const fresh = await competitorCol.findOne({ _id: compId });
-    if (!fresh || fresh.enabled === false) return;
-    if (!isWebsiteCheckDue(fresh as unknown as SpyCompetitor)) return;
+    if (!fresh || fresh.enabled === false) {
+      return { status: "skipped", deleted: false };
+    }
+    if (!options.force && !isWebsiteCheckDue(fresh as unknown as SpyCompetitor)) {
+      return { status: "skipped", deleted: false };
+    }
 
     const url = normalizeCompetitorUrl(
       typeof fresh.url === "string" ? fresh.url : "",
@@ -152,7 +182,7 @@ export async function checkCompetitorWebsite(
           },
         },
       );
-      return;
+      return { status: "alive", deleted: false };
     }
 
     if (result.status === "unavailable") {
@@ -170,7 +200,7 @@ export async function checkCompetitorWebsite(
           result.reason ? `: ${result.reason}` : ""
         }`,
       );
-      return;
+      return { status: "unavailable", deleted: false };
     }
 
     const updated = await competitorCol.findOneAndUpdate(
@@ -190,7 +220,7 @@ export async function checkCompetitorWebsite(
 
     if (deadCount >= DEAD_THRESHOLD) {
       await removeDeadCompetitor(db, compId, fresh.name, deadCount);
-      return;
+      return { status: "dead", deleted: true };
     }
 
     console.log(
@@ -198,20 +228,54 @@ export async function checkCompetitorWebsite(
         result.httpStatus ? ` [HTTP ${result.httpStatus}]` : ""
       }${result.reason ? `: ${result.reason}` : ""}`,
     );
+    return { status: "dead", deleted: false };
   } catch (err) {
     console.error(
       `[PRODUCT-SPY] Website check failed for ${competitor.name}: ${getErrorMessage(err)}`,
     );
+    return { status: "skipped", deleted: false };
   } finally {
     // A deleted competitor no longer matches, so this is a safe no-op then.
     await releaseCompetitorCheck(db, compId, lockOwner).catch(() => undefined);
   }
 }
 
+function createEmptyStats(): WebsiteHealthStats {
+  return {
+    checked: 0,
+    alive: 0,
+    dead: 0,
+    unavailable: 0,
+    blocked: 0,
+    deleted: 0,
+  };
+}
+
+function logStats(stats: WebsiteHealthStats, force: boolean): void {
+  console.log(
+    `[PRODUCT-SPY] Website health summary${force ? " (initial run)" : ""}: ` +
+      `checked=${stats.checked}, alive=${stats.alive}, dead=${stats.dead}, ` +
+      `unavailable=${stats.unavailable}, blocked=${stats.blocked}, ` +
+      `deleted=${stats.deleted}`,
+  );
+}
+
+/**
+ * One-off startup pass. Unlike the scheduled run it ignores the 24-hour
+ * `lastCheckedAt` window, but it still uses the per-competitor DB lease and
+ * updates `lastCheckedAt`, so it neither overlaps a crawl nor causes the next
+ * scheduled check to run immediately afterwards.
+ */
+export async function runInitialWebsiteHealthChecks(): Promise<WebsiteHealthStats> {
+  return runWebsiteHealthChecks(undefined, { force: true });
+}
+
 export async function runWebsiteHealthChecks(
   preloadedCompetitors?: SpyCompetitor[],
-): Promise<void> {
-  if (isRunning) return;
+  options: WebsiteHealthOptions = {},
+): Promise<WebsiteHealthStats> {
+  const stats = createEmptyStats();
+  if (isRunning) return stats;
   isRunning = true;
 
   try {
@@ -227,14 +291,23 @@ export async function runWebsiteHealthChecks(
     }
 
     const now = Date.now();
-    const due = competitors.filter((comp) =>
-      isWebsiteCheckDue(comp as unknown as SpyCompetitor, now),
-    );
+    const due = options.force
+      ? competitors
+      : competitors.filter((comp) =>
+          isWebsiteCheckDue(comp as unknown as SpyCompetitor, now),
+        );
 
-    if (due.length === 0) return;
+    if (due.length === 0) {
+      if (options.force) logStats(stats, true);
+      return stats;
+    }
+
+    stats.checked = due.length;
 
     console.log(
-      `[PRODUCT-SPY] Website health: checking ${due.length} competitor(s)`,
+      `[PRODUCT-SPY] Website health: checking ${due.length} competitor(s)${
+        options.force ? " (initial run)" : ""
+      }`,
     );
 
     let running = 0;
@@ -254,7 +327,17 @@ export async function runWebsiteHealthChecks(
       for (const comp of due) {
         queue.push(async () => {
           try {
-            await checkCompetitorWebsite(comp as unknown as SpyCompetitor);
+            const result = await checkCompetitorWebsite(
+              comp as unknown as SpyCompetitor,
+              options,
+            );
+
+            if (result.status === "alive") stats.alive++;
+            else if (result.status === "dead") stats.dead++;
+            else if (result.status === "unavailable") stats.unavailable++;
+            else if (result.status === "blocked") stats.blocked++;
+
+            if (result.deleted) stats.deleted++;
           } finally {
             completed++;
             running--;
@@ -271,10 +354,13 @@ export async function runWebsiteHealthChecks(
     });
 
     await done;
+    logStats(stats, Boolean(options.force));
+    return stats;
   } catch (err) {
     console.error(
       `[PRODUCT-SPY] Website health run failed: ${getErrorMessage(err)}`,
     );
+    return stats;
   } finally {
     isRunning = false;
   }

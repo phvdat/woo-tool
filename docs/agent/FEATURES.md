@@ -215,7 +215,9 @@ and return `RawSpyProduct[]` with `source` set to the platform name.
 2. `src/services/product-spy/scheduler.ts` — `* * * * *` tick; selects competitors
    due by `checkIntervalMinutes` (no `lastCheckAt` = always due). The checker's
    DB lease makes the per-minute tick safe against overlapping runs. The same
-   tick fires `websiteHealth.ts` (daily per competitor, non-blocking).
+   tick fires `websiteHealth.ts` (daily per competitor, non-blocking). On
+   scheduler startup it also runs one forced health pass for every enabled
+   competitor, then falls back to the normal 24-hour `lastCheckedAt` window.
 3. `src/services/product-spy/websiteHealth.ts` — once-per-24h liveness probe
    using `websiteStatus.ts` (URL normalisation + HTTP/network classification).
    Classifies alive (2xx/3xx), dead (NXDOMAIN, refused, 404, 410), or temporarily
