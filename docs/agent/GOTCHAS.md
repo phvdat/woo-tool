@@ -107,12 +107,18 @@ But the base64 `state` is **not signed** and is never cross-checked against
 
 ## 4. Edge-case behaviors that look wrong but aren't
 
-### Product-spy dedupe is insert-only
-`checker.ts` skips a product if `externalId` or `normalizedUrl` already exists.
-It never updates price/images. So known products never refresh, and a product
-that gains images later stays image-less in the UI. This is why `ProductList`
-warns about products with no `Images` ("re-select them"). Not a regression —
-don't "fix" the dedupe without a deliberate decision.
+### Product-spy dedupe is insert-only (now atomic)
+`checker.ts` inserts with `updateOne(..., { $setOnInsert, upsert: true })` keyed
+on a stable `dedupeKey` / `externalId` / `normalizedUrl`, guarded by a DB lease
+and unique indexes. It never updates price/images. So known products never
+refresh, and a product that gains images later stays image-less in the UI. This
+is why `ProductList` warns about products with no `Images` ("re-select them").
+Do not switch this to `$set`: refreshing existing rows is a separate decision.
+
+The unique indexes cover rows written by the current checker (`dedupeKey` is
+new). Legacy rows without `dedupeKey` are still matched by URL/external id. If
+legacy duplicates block creation of the URL/external-id indexes, the checker
+logs it rather than deleting data.
 
 ### `Platform` union omits `"facebook-ads"`
 `facebook-ads.ts` writes `source: "facebook-ads"`, but that value isn't in the

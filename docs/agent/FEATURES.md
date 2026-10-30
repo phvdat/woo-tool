@@ -203,11 +203,18 @@ and return `RawSpyProduct[]` with `source` set to the platform name.
 ### 4.2 Storage, scheduling, UI
 
 1. `src/services/product-spy/checker.ts` — **the only writer of `spy_products`.**
-   `checkCompetitor(competitor)` dedupes by `externalId` OR `normalizedUrl`;
-   existing products are skipped, never updated. `checkAllEnabledCompetitors()`
-   uses a hand-rolled `MAX_CONCURRENT = 3` queue.
+   `checkCompetitor(competitor)` builds a stable `dedupeKey` (via
+   `identity.ts`) and does one atomic `updateOne(..., { upsert: true })` per
+   product. Existing products are skipped, never updated. A cross-process lease
+   on the competitor (`checkLockOwner` / `checkLockUntil`) means overlapping
+   scheduler ticks, manual checks, and multiple app instances cannot crawl the
+   same competitor at once. Unique indexes on `{ competitorId, dedupeKey }`,
+   `{ competitorId, normalizedUrl }`, and `{ competitorId, externalId }` are the
+   last defence. `checkAllEnabledCompetitors()` uses a hand-rolled
+   `MAX_CONCURRENT = 3` queue.
 2. `src/services/product-spy/scheduler.ts` — `* * * * *` tick; selects competitors
-   due by `checkIntervalMinutes` (no `lastCheckAt` = always due).
+   due by `checkIntervalMinutes` (no `lastCheckAt` = always due). The checker's
+   DB lease makes the per-minute tick safe against overlapping runs.
 3. `src/services/product-spy/validator.ts` — SSRF guard used by the competitors route.
 4. `src/app/api/product-spy/competitors/route.ts` — `GET`/`POST`/`PUT`/`DELETE`/`PATCH`.
    `PATCH` re-detects the platform of every competitor.

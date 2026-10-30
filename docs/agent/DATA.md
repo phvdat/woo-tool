@@ -16,7 +16,8 @@ const { db } = await connectToDatabase()
   if either is missing.
 - The client is cached on `global._mongo` so it survives dev HMR.
 - Atlas. One `Db` handle, used directly with the raw driver.
-- **No indexes are declared anywhere except one**, see §2.
+- **Indexes are lazy and local to their service** (`revenueHistory.ts`,
+  `research/repository.ts`, `product-spy/checker.ts`), see §2.
 
 ## 2. Collections
 
@@ -146,11 +147,18 @@ refreshes.
 
 - `spy_competitors`: `name`, `url`, `platform` (detected), `enabled`,
   `checkIntervalMinutes`, `lastCheckAt`, `lastStatus`, `lastError`, `createdAt`.
-  `createdAt`/`lastCheckAt` are ISO **strings**.
-- `spy_products`: `competitorId`, `externalId`, `normalizedUrl`, `title`, `url`,
-  `slug`, `price`, `image`, `images[]`, `dateCreated`, `source` (platform),
-  `firstSeenAt` (ISO string). Written only by `checker.ts`; dedupe on
-  `externalId` OR `normalizedUrl`.
+  `createdAt`/`lastCheckAt` are ISO **strings**. While a crawl runs the checker
+  also sets `checkLockOwner` (string), `checkLockUntil` (real `Date`, 15-minute
+  lease renewed every minute), and `checkStartedAt` (ISO string); they are
+  unset when the check finishes.
+- `spy_products`: `competitorId` (ObjectId), `dedupeKey`, `externalId`,
+  `normalizedUrl`, `title`, `url`, `slug`, `price`, `image`, `images[]`,
+  `dateCreated`, `source` (platform), `firstSeenAt` (ISO string). Written only
+  by `checker.ts`; inserts are atomic upserts keyed on
+  `dedupeKey`/`externalId`/`normalizedUrl`. Lazy unique indexes:
+  `{ competitorId, dedupeKey }`, `{ competitorId, normalizedUrl }`,
+  `{ competitorId, externalId }`. Legacy rows without `dedupeKey` remain
+  readable and are still matched by the other two fields.
 
 ### 2.11 `revenue_history` — the durable ledger
 
@@ -172,9 +180,8 @@ mirrors `buildOrders` output so `calculateSummary` / `groupRevenue` /
 `{ websiteId, ownerEmail, orderId, website, customer, total, refunded, revenue,
    fee, net, status, date, paymentMethod, createdAt, updatedAt }`.
 
-- **The one index in the repo**: a lazy unique index on `{ websiteId, orderId }`
-  created by `ensureUniqueIndex()` (idempotent upserts, history survives website
-  deletion).
+- **Unique index**: a lazy unique index on `{ websiteId, orderId }` created by
+  `ensureUniqueIndex()` (idempotent upserts, history survives website deletion).
 - **Access control is not here** — it's resolved against `websites` first, then
   the caller passes `websiteIds` in. The `ownerEmail` field exists so rows stay
   readable after a website is deleted.

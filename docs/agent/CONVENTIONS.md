@@ -88,8 +88,9 @@ Patterns used in the repo:
 - `$or` for access control, `$in` for list membership, `$regex` for search.
 - Upserts for idempotent writes (`updateOne(..., { upsert: true })`), plus
   `bulkWrite` where volume warrants it (see `revenueHistory.ts`).
-- **No indexes are declared** except one lazy `createIndex` in
-  `revenueHistory.ts`. Add indexes explicitly if you introduce a hot query.
+- **Indexes are created lazily in the owning service** (see
+  `revenueHistory.ts`, `research/repository.ts`, `product-spy/checker.ts`). Add
+  indexes explicitly if you introduce a hot query.
 - **Timestamps:** most collections write `createdAt: new Date().toISOString()`
   (a string). Six write real `Date`s — `revenue_history`, `blog_history`,
   `global_config`, `videoJobs`, `audioFiles`, `youtubeChannels`. And

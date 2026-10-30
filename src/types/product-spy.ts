@@ -8,12 +8,16 @@ export interface SpyCompetitor {
   lastCheckAt?: string;
   lastStatus?: "success" | "error";
   lastError?: string;
+  checkLockOwner?: string;
+  checkLockUntil?: Date;
+  checkStartedAt?: string;
   createdAt: string;
 }
 
 export interface SpyProduct {
   _id?: string;
   competitorId: string;
+  dedupeKey?: string;
   externalId?: string;
   normalizedUrl?: string;
   title: string;
