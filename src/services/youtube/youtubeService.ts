@@ -1,6 +1,11 @@
 import { google, youtube_v3 } from 'googleapis';
-import { createReadStream, existsSync } from 'fs';
-import { YOUTUBE_CHANNELS_COLLECTION, VIDEO_JOBS_COLLECTION, WEBSITES_COLLECTION, USERS_COLLECTION } from '@/constant/collections';
+import { createReadStream } from 'fs';
+import {
+  YOUTUBE_CHANNELS_COLLECTION,
+  VIDEO_JOBS_COLLECTION,
+  WEBSITES_COLLECTION,
+  USERS_COLLECTION,
+} from '@/constant/collections';
 import { connectToDatabase } from '@/lib/mongodb';
 import { decrypt, encrypt } from '@/lib/encryption';
 import { ObjectId } from 'mongodb';
@@ -49,18 +54,10 @@ function generateProjectId(): string {
   return new ObjectId().toString();
 }
 
-async function findProject(siteId: string, projectId?: string): Promise<YoutubeProject | null> {
-  const channel = await getChannelBySiteId(siteId);
-  const projects = normalizeProjects(channel);
-  if (projects.length === 0) return null;
-  if (projectId) return projects.find((project) => project.projectId === projectId) ?? null;
-  return projects[0];
-}
-
-export async function getOAuth2ClientForSite(siteId: string, projectId?: string) {
-  const project = await findProject(siteId, projectId);
-  if (!project || !project.clientId || !project.clientSecretEncrypted) {
-    throw new Error('No YouTube OAuth config found for this site. Please save OAuth credentials first.');
+  if (!channel) {
+    throw new Error(
+      'No YouTube OAuth config found for this site. Please save OAuth credentials first.',
+    );
   }
 
   const clientSecret = decrypt(project.clientSecretEncrypted);
@@ -68,16 +65,16 @@ export async function getOAuth2ClientForSite(siteId: string, projectId?: string)
   return new google.auth.OAuth2(
     project.clientId,
     clientSecret,
-    process.env.YOUTUBE_REDIRECT_URI
+    process.env.YOUTUBE_REDIRECT_URI,
   );
 }
 
-async function writeProjects(
+export async function saveOauthConfig(
   siteId: string,
-  projects: YoutubeProject[],
-  existing: YoutubeChannel | null,
-  now: Date,
-): Promise<void> {
+  clientId: string,
+  clientSecret: string,
+  email: string,
+) {
   const { db } = await connectToDatabase();
   const mirror = projects[0];
 
@@ -94,45 +91,38 @@ async function writeProjects(
   };
 
   if (existing) {
-    await db
-      .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-      .updateOne({ siteId }, { $set: doc });
+    await db.collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION).updateOne(
+      { siteId },
+      {
+        $set: {
+          clientId,
+          clientSecretEncrypted,
+          updatedAt: now,
+        },
+      },
+    );
   } else {
-    await db
-      .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
-      .insertOne({ ...doc, createdAt: now } as YoutubeChannel);
+    await db.collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION).insertOne({
+      siteId,
+      channelId: '',
+      channelTitle: '',
+      clientId,
+      clientSecretEncrypted,
+      refreshTokenEncrypted: '',
+      connectedByEmail: email,
+      createdAt: now,
+      updatedAt: now,
+    });
   }
 }
 
-/**
- * Adds or updates one project's OAuth credentials. An existing project is only
- * updated when `projectId` matches a stored project; without a matching id a
- * NEW project is created, so adding a project never overwrites the
- * credentials of an existing one. Returns the project id so the caller can
- * start the OAuth connect flow against it.
- */
-export async function saveOauthConfig(
+export async function getOauthConfig(
   siteId: string,
-  clientId: string,
-  clientSecret: string,
-  email: string,
-  projectId?: string,
-): Promise<{ projectId: string }> {
-  return withChannelLock(siteId, async () => {
-    const existing = await getChannelBySiteId(siteId);
-    const projects = normalizeProjects(existing);
-    const now = new Date();
-    const clientSecretEncrypted = encrypt(clientSecret);
-
-    const result = applyProjectCredentials({
-      projects,
-      projectId,
-      generateProjectId,
-      clientId,
-      clientSecretEncrypted,
-      connectedByEmail: email,
-      now,
-    });
+): Promise<{ configured: boolean; clientId?: string }> {
+  const { db } = await connectToDatabase();
+  const channel = await db
+    .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
+    .findOne({ siteId });
 
     await writeProjects(siteId, result.projects, existing, now);
     return { projectId: result.project.projectId };
@@ -177,7 +167,7 @@ export function getAuthUrl(state: string, clientId: string): string {
   const oauth2Client = new google.auth.OAuth2(
     clientId,
     'dummy',
-    process.env.YOUTUBE_REDIRECT_URI
+    process.env.YOUTUBE_REDIRECT_URI,
   );
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -197,9 +187,8 @@ export async function getChannelInfo(
   accessToken: string,
   refreshToken: string,
   siteId: string,
-  projectId?: string,
 ) {
-  const oauth2Client = await getOAuth2ClientForSite(siteId, projectId);
+  const oauth2Client = await getOAuth2ClientForSite(siteId);
   oauth2Client.setCredentials({
     access_token: accessToken,
     refresh_token: refreshToken,
@@ -244,11 +233,37 @@ export async function upsertChannel(channelData: {
       now,
     });
 
-    await writeProjects(channelData.siteId, result.projects, existing, now);
-  });
+  if (existing) {
+    await db.collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION).updateOne(
+      { siteId: channelData.siteId },
+      {
+        $set: {
+          channelId: channelData.channelId,
+          channelTitle: channelData.channelTitle,
+          refreshTokenEncrypted: channelData.refreshTokenEncrypted,
+          connectedByEmail: channelData.connectedByEmail,
+          updatedAt: now,
+        },
+      },
+    );
+  } else {
+    await db.collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION).insertOne({
+      siteId: channelData.siteId,
+      channelId: channelData.channelId,
+      channelTitle: channelData.channelTitle,
+      clientId: '',
+      clientSecretEncrypted: '',
+      refreshTokenEncrypted: channelData.refreshTokenEncrypted,
+      connectedByEmail: channelData.connectedByEmail,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
 }
 
-export async function getChannelBySiteId(siteId: string): Promise<YoutubeChannel | null> {
+export async function getChannelBySiteId(
+  siteId: string,
+): Promise<YoutubeChannel | null> {
   const { db } = await connectToDatabase();
   return db
     .collection<YoutubeChannel>(YOUTUBE_CHANNELS_COLLECTION)
@@ -286,13 +301,12 @@ export async function removeChannel(siteId: string, projectId?: string): Promise
 
 type YoutubeClient = ReturnType<typeof google.youtube>;
 
-async function createYoutubeClientForProject(project: YoutubeProject): Promise<YoutubeClient> {
-  const oauth2Client = new google.auth.OAuth2(
-    project.clientId,
-    decrypt(project.clientSecretEncrypted),
-    process.env.YOUTUBE_REDIRECT_URI,
-  );
-  oauth2Client.setCredentials({ refresh_token: decrypt(project.refreshTokenEncrypted) });
+async function createYoutubeClient(
+  siteId: string,
+  refreshToken: string,
+): Promise<YoutubeClient> {
+  const oauth2Client = await getOAuth2ClientForSite(siteId);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
   return google.youtube({ version: 'v3', auth: oauth2Client });
 }
 
@@ -342,13 +356,16 @@ export async function getYoutubeStatus(siteId: string): Promise<YouTubeChannelSt
 
 function resolvePublishAt(value: unknown, now: Date = new Date()): Date | null {
   if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value as string | number);
+  const date =
+    value instanceof Date ? value : new Date(value as string | number);
   if (Number.isNaN(date.getTime())) return null;
   return date.getTime() > now.getTime() ? date : null;
 }
 
 function isInvalidPublishAt(error: any): boolean {
-  return Boolean(error?.errors?.some((item: any) => item?.reason === 'invalidPublishAt'));
+  return Boolean(
+    error?.errors?.some((item: any) => item?.reason === 'invalidPublishAt'),
+  );
 }
 
 const YOUTUBE_COMMENT_SCOPE_ERROR =
@@ -356,14 +373,18 @@ const YOUTUBE_COMMENT_SCOPE_ERROR =
 
 const YOUTUBE_COMMENT_ERROR_MESSAGES: Record<string, string> = {
   commentTextRequired: 'The comment text was empty or rejected by YouTube.',
-  commentTextTooLong: 'The comment text exceeds the YouTube comment length limit.',
+  commentTextTooLong:
+    'The comment text exceeds the YouTube comment length limit.',
   commentsDisabled: 'Comments are disabled on this video.',
-  forbidden: 'The authenticated account does not have permission to insert comments on this video.',
+  forbidden:
+    'The authenticated account does not have permission to insert comments on this video.',
   insufficientAuthenticationScopes: YOUTUBE_COMMENT_SCOPE_ERROR,
   insufficientPermissions: YOUTUBE_COMMENT_SCOPE_ERROR,
-  ineligibleAccount: 'The YouTube account used to authorize the request must be linked to a Google account.',
+  ineligibleAccount:
+    'The YouTube account used to authorize the request must be linked to a Google account.',
   quotaExceeded: 'YouTube API quota exceeded.',
-  videoNotFound: 'YouTube could not find the uploaded video, so the comment was not added.',
+  videoNotFound:
+    'YouTube could not find the uploaded video, so the comment was not added.',
   channelNotFound: 'YouTube could not resolve the channel for the comment.',
   processingFailure: 'YouTube failed to process the comment request.',
 };
@@ -381,15 +402,22 @@ function describeYoutubeCommentError(error: any): string {
     return 'YouTube authentication expired. Reconnect the channel in website settings. (authError)';
   }
 
-  if (String(error?.message || '').includes('insufficient authentication scopes')) {
-    return code ? `${YOUTUBE_COMMENT_SCOPE_ERROR} (${code})` : YOUTUBE_COMMENT_SCOPE_ERROR;
+  if (
+    String(error?.message || '').includes('insufficient authentication scopes')
+  ) {
+    return code
+      ? `${YOUTUBE_COMMENT_SCOPE_ERROR} (${code})`
+      : YOUTUBE_COMMENT_SCOPE_ERROR;
   }
 
-  const message = error?.message || 'Unknown error while adding the YouTube comment';
+  const message =
+    error?.message || 'Unknown error while adding the YouTube comment';
   return code ? `${message} (${code}${reason ? `/${reason}` : ''})` : message;
 }
 
-function buildVideoStatus(publishAt: Date | null): youtube_v3.Schema$VideoStatus {
+function buildVideoStatus(
+  publishAt: Date | null,
+): youtube_v3.Schema$VideoStatus {
   if (publishAt) {
     return {
       privacyStatus: 'private',
@@ -477,28 +505,12 @@ async function markJobFailedWithoutRetry(jobId: string, message: string): Promis
 async function blockAndFail(
   siteId: string,
   jobId: string,
-  projectIds: string[],
-  reason: string,
-): Promise<{ error: string; retryable: boolean }> {
-  await blockWebsiteQuota({ siteId, projectIds, reason });
-  await markJobFailedWithoutRetry(jobId, QUOTA_EXCEEDED_MESSAGE);
-  console.log(`[YOUTUBE QUOTA] ${siteId}: all projects exhausted (${reason})`);
-  return { error: QUOTA_EXCEEDED_MESSAGE, retryable: true };
-}
-
-export async function publishToYoutube(jobId: string, siteId: string): Promise<PublishResult> {
-  if (inFlightPublishes.has(jobId)) {
-    return { error: 'YouTube publish already in progress', retryable: true };
-  }
-  inFlightPublishes.add(jobId);
-  try {
-    return await withSiteLock(siteId, () => publishToYoutubeLocked(jobId, siteId));
-  } finally {
-    inFlightPublishes.delete(jobId);
-  }
-}
-
-async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<PublishResult> {
+  siteId: string,
+): Promise<
+  | { videoId: string }
+  | { skipped: true }
+  | { error: string; retryable: boolean }
+> {
   const { db } = await connectToDatabase();
 
   const channel = await getChannelBySiteId(siteId);
@@ -509,7 +521,7 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
       .collection(VIDEO_JOBS_COLLECTION)
       .updateOne(
         { _id: new ObjectId(jobId) },
-        { $set: { youtubeStatus: 'not_published', youtubeError: undefined } }
+        { $set: { youtubeStatus: 'not_published', youtubeError: undefined } },
       );
     return { skipped: true };
   }
@@ -519,8 +531,10 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
     .findOne({ _id: new ObjectId(jobId) });
 
   if (!job) return { error: 'Job not found', retryable: false };
-  if (job.status !== 'completed') return { error: 'Video is not completed yet', retryable: false };
-  if (!job.outputPath) return { error: 'No video output path found', retryable: false };
+  if (job.status !== 'completed')
+    return { error: 'Video is not completed yet', retryable: false };
+  if (!job.outputPath)
+    return { error: 'No video output path found', retryable: false };
   if (job.youtubeVideoId && job.youtubeStatus === 'published') {
     return { skipped: true };
   }
@@ -557,27 +571,18 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
     productUrl,
     productTags,
     productShortDescription,
-    youtubeDescriptionTemplate
+    youtubeDescriptionTemplate,
   );
   const tags = buildTags(productName, siteDisplayName, productTags);
-  const commentText =
-    job.kind === 'compilation' && job.compilationProducts?.length
-      ? buildCompilationComment(
-        job.compilationProducts,
-        siteDisplayName,
-        siteHomepageUrl,
-        job.compilationTag || productName,
-        youtubeCommentTemplate
-      )
-      : buildComment(
-        productName,
-        siteDisplayName,
-        siteHomepageUrl,
-        productUrl,
-        productTags,
-        productShortDescription,
-        youtubeCommentTemplate
-      );
+  const commentText = buildComment(
+    productName,
+    siteDisplayName,
+    siteHomepageUrl,
+    productUrl,
+    productTags,
+    productShortDescription,
+    youtubeCommentTemplate,
+  );
 
   const existingVideoId: string = job.youtubeVideoId || '';
   let publishAt = resolvePublishAt(job.youtubePublishAt);
@@ -604,7 +609,7 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
       .collection(VIDEO_JOBS_COLLECTION)
       .updateOne(
         { _id: new ObjectId(jobId) },
-        { $set: { youtubeStatus: 'publishing' } }
+        { $set: { youtubeStatus: 'publishing' } },
       );
   }
 
@@ -731,18 +736,13 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
 
     await db
       .collection(VIDEO_JOBS_COLLECTION)
-      .updateOne(
-        { _id: new ObjectId(jobId) },
-        { $set: fields }
-      );
+      .updateOne({ _id: new ObjectId(jobId) }, { $set: fields });
 
     // YouTube rejects commentThreads.insert (403 forbidden) while a video is still
     // private/scheduled, so a scheduled upload is commented once
     // releaseScheduledPublishes flips the existing video to public instead.
     const isScheduleRelease =
-      !isNewUpload &&
-      job.youtubeStatus === 'scheduled' &&
-      !publishAt;
+      !isNewUpload && job.youtubeStatus === 'scheduled' && !publishAt;
 
     const shouldAddComment =
       !publishAt &&
@@ -751,43 +751,45 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
 
     const attempts = isScheduleRelease ? MAX_YOUTUBE_COMMENT_ATTEMPTS : 1;
 
-    if (shouldAddComment && activeProject) {
-      const commentProject = activeProject;
-      await insertYoutubeCommentWithRetry(videoId, commentProject, commentText, attempts)
+    if (shouldAddComment) {
+      await insertYoutubeCommentWithRetry(
+        videoId,
+        siteId,
+        commentText,
+        attempts,
+      )
         .then(() =>
           db
             .collection(VIDEO_JOBS_COLLECTION)
             .updateOne(
               { _id: new ObjectId(jobId) },
-              { $set: { youtubeCommentedAt: new Date(), youtubeCommentError: undefined } }
+              {
+                $set: {
+                  youtubeCommentedAt: new Date(),
+                  youtubeCommentError: undefined,
+                },
+              },
             )
-            .catch(() => { })
+            .catch(() => {}),
         )
         .catch(async (err: any) => {
           const commentError = describeYoutubeCommentError(err);
-          if (isQuotaExceededError(err)) {
-            await markProjectQuotaExhausted(
-              siteId,
-              commentProject.projectId,
-              'commentThreads.insert',
-              quotaReasonFromError(err) || 'quotaExceeded',
-              new Date(),
-            ).catch(() => { });
-          }
-          console.error(`[YOUTUBE COMMENT] Job ${jobId} (video ${videoId}): ${commentError}`);
+          console.error(
+            `[YOUTUBE COMMENT] Job ${jobId} (video ${videoId}): ${commentError}`,
+          );
           await db
             .collection(VIDEO_JOBS_COLLECTION)
             .updateOne(
               { _id: new ObjectId(jobId) },
-              { $set: { youtubeCommentError: commentError } }
+              { $set: { youtubeCommentError: commentError } },
             )
-            .catch(() => { });
+            .catch(() => {});
         });
     }
 
     if (publishAt) {
       console.log(
-        `[YOUTUBE SCHEDULE] Job ${jobId} scheduled for ${publishAt.toISOString()} (product ${job.productId})`
+        `[YOUTUBE SCHEDULE] Job ${jobId} scheduled for ${publishAt.toISOString()} (product ${job.productId})`,
       );
     }
 
@@ -804,7 +806,8 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
     if (quotaReason) {
       errorMessage = 'YouTube upload quota exceeded. Will retry automatically.';
     } else if (isRevokedToken) {
-      errorMessage = 'YouTube authentication expired. Reconnect the channel in website settings.';
+      errorMessage =
+        'YouTube authentication expired. Reconnect the channel in website settings.';
     }
 
     console.error(`[YOUTUBE PUBLISH] Job ${jobId} failed: ${errorMessage}`);
@@ -819,28 +822,28 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
     const retryCount = (job.youtubeRetryCount || 0) + 1;
     const retryable = !isRevokedToken && retryCount < MAX_YOUTUBE_RETRIES;
 
-    await db
-      .collection(VIDEO_JOBS_COLLECTION)
-      .updateOne(
-        { _id: new ObjectId(jobId) },
-        {
-          $set: {
-            youtubeStatus: 'failed',
-            youtubeError: errorMessage,
-            youtubeRetryCount: retryCount,
-          },
-        }
-      );
+    await db.collection(VIDEO_JOBS_COLLECTION).updateOne(
+      { _id: new ObjectId(jobId) },
+      {
+        $set: {
+          youtubeStatus: 'failed',
+          youtubeError: errorMessage,
+          youtubeRetryCount: retryCount,
+        },
+      },
+    );
 
     const user = await db
       .collection(USERS_COLLECTION)
       .findOne({ email: website?.members?.[0] });
     if (user?.telegramId) {
-      const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      const time = new Date().toLocaleString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
       await sendTelegramMessage({
         telegramId: user.telegramId,
-        message: `<b>YouTube Upload Failed: ${siteDisplayName}</b>\n\nProduct: ${job.productName || 'Unknown'}\nError: ${errorMessage}\nRetry: ${retryCount}/${MAX_YOUTUBE_RETRIES}\nTime: ${time}`,
-      }).catch(() => { });
+        message: `<b>YouTube Upload Failed</b>\n\nProduct: ${job.productName || 'Unknown'}\nError: ${errorMessage}\nRetry: ${retryCount}/${MAX_YOUTUBE_RETRIES}\nTime: ${time}`,
+      }).catch(() => {});
     }
 
     return { error: errorMessage, retryable };
@@ -849,13 +852,19 @@ async function publishToYoutubeLocked(jobId: string, siteId: string): Promise<Pu
 
 export async function addYoutubeComment(
   videoId: string,
-  project: YoutubeProject,
-  commentText: string
+  siteId: string,
+  commentText: string,
 ): Promise<void> {
   if (!commentText) return;
   if (!project.refreshTokenEncrypted) return;
 
-  const youtube = await createYoutubeClientForProject(project);
+  const channel = await getChannelBySiteId(siteId);
+  if (!channel?.refreshTokenEncrypted) return;
+
+  const youtube = await createYoutubeClient(
+    siteId,
+    decrypt(channel.refreshTokenEncrypted),
+  );
 
   await youtube.commentThreads.insert({
     part: ['snippet'],
@@ -876,7 +885,7 @@ async function insertYoutubeCommentWithRetry(
   videoId: string,
   project: YoutubeProject,
   commentText: string,
-  attempts: number
+  attempts: number,
 ): Promise<void> {
   let lastError: any;
 
@@ -887,7 +896,9 @@ async function insertYoutubeCommentWithRetry(
     } catch (error) {
       lastError = error;
       if (attempt < attempts) {
-        await new Promise((resolve) => setTimeout(resolve, YOUTUBE_COMMENT_RETRY_DELAY_MS));
+        await new Promise((resolve) =>
+          setTimeout(resolve, YOUTUBE_COMMENT_RETRY_DELAY_MS),
+        );
       }
     }
   }
@@ -912,8 +923,9 @@ export async function retryFailedPublishes(): Promise<number> {
 
   for (const job of failedJobs) {
     const jobId = String(job._id);
-    if (await isWebsiteYoutubeBlocked(job.websiteId)) continue;
-    console.log(`[YOUTUBE RETRY] Retrying job ${jobId} (attempt ${(job.youtubeRetryCount || 0) + 1}/${MAX_YOUTUBE_RETRIES})`);
+    console.log(
+      `[YOUTUBE RETRY] Retrying job ${jobId} (attempt ${(job.youtubeRetryCount || 0) + 1}/${MAX_YOUTUBE_RETRIES})`,
+    );
 
     const result = await publishToYoutube(jobId, job.websiteId);
     if (!('skipped' in result) && !('error' in result)) {
@@ -928,7 +940,9 @@ export async function retryFailedPublishes(): Promise<number> {
   return retriedCount;
 }
 
-export async function releaseScheduledPublishes(now: Date = new Date()): Promise<number> {
+export async function releaseScheduledPublishes(
+  now: Date = new Date(),
+): Promise<number> {
   const { db } = await connectToDatabase();
 
   const dueJobs = await db
@@ -946,8 +960,9 @@ export async function releaseScheduledPublishes(now: Date = new Date()): Promise
 
   for (const job of dueJobs) {
     const jobId = String(job._id);
-    if (await isWebsiteYoutubeBlocked(job.websiteId)) continue;
-    console.log(`[YOUTUBE SCHEDULE] Releasing job ${jobId} (was scheduled for ${job.youtubePublishAt})`);
+    console.log(
+      `[YOUTUBE SCHEDULE] Releasing job ${jobId} (was scheduled for ${job.youtubePublishAt})`,
+    );
 
     const result = await publishToYoutube(jobId, job.websiteId);
     if (!('skipped' in result) && !('error' in result)) {
@@ -967,7 +982,9 @@ let retryCronRunning = false;
 
 export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
   if (retryInterval) return;
-  console.log(`[YOUTUBE RETRY] Starting retry cron (every ${intervalMs / 1000}s)`);
+  console.log(
+    `[YOUTUBE RETRY] Starting retry cron (every ${intervalMs / 1000}s)`,
+  );
   retryInterval = setInterval(async () => {
     if (retryCronRunning) return;
     retryCronRunning = true;
@@ -977,26 +994,30 @@ export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
         console.log(`[YOUTUBE RETRY] Retried ${count} failed publish(es)`);
       }
     } catch (err: any) {
-      console.error(`[YOUTUBE RETRY] Cron error: ${err?.message || 'Unknown error'}`);
+      console.error(
+        `[YOUTUBE RETRY] Cron error: ${err?.message || 'Unknown error'}`,
+      );
     }
 
     try {
       const released = await releaseScheduledPublishes();
       if (released > 0) {
-        console.log(`[YOUTUBE SCHEDULE] Released ${released} scheduled video(s)`);
+        console.log(
+          `[YOUTUBE SCHEDULE] Released ${released} scheduled video(s)`,
+        );
       }
     } catch (err: any) {
-      console.error(`[YOUTUBE SCHEDULE] Release error: ${err?.message || 'Unknown error'}`);
-    } finally {
-      retryCronRunning = false;
+      console.error(
+        `[YOUTUBE SCHEDULE] Release error: ${err?.message || 'Unknown error'}`,
+      );
     }
   }, intervalMs);
 }
 
-function buildTitle(productName: string): string {
-  const prefix = "Link in comment: ";
-  const maxLength = 70 - prefix.length;
-  return `${prefix}${productName.substring(0, maxLength).trim()}`;
+function buildTitle(productName: string, siteDisplayName: string): string {
+  const title = `${productName} | ${siteDisplayName}`;
+  if (title.length <= 70) return title;
+  return `${productName.substring(0, 65)} | ${siteDisplayName}`;
 }
 
 function buildDescription(
@@ -1006,10 +1027,12 @@ function buildDescription(
   productUrl: string,
   productTags: string[],
   productShortDescription: string,
-  template: string
+  template: string,
 ): string {
   if (template) {
-    const tagsAsHashtags = productTags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+    const tagsAsHashtags = productTags
+      .map((t) => `#${t.replace(/\s+/g, '')}`)
+      .join(' ');
     const tagsAsText = productTags.join(', ');
 
     return template
@@ -1042,12 +1065,14 @@ function buildDescription(
   }
 
   if (siteHomepageUrl && siteDisplayName) {
-    parts.push(`Discover more products at ${siteDisplayName}: ${siteHomepageUrl}`);
+    parts.push(
+      `Discover more products at ${siteDisplayName}: ${siteHomepageUrl}`,
+    );
   }
 
   if (productTags.length > 0) {
     parts.push('');
-    parts.push(productTags.map(t => `#${t.replace(/\s+/g, '')}`).join(' '));
+    parts.push(productTags.map((t) => `#${t.replace(/\s+/g, '')}`).join(' '));
   } else {
     parts.push('');
     parts.push(`#${productName.replace(/\s+/g, '')} #shop #product`);
@@ -1056,7 +1081,11 @@ function buildDescription(
   return parts.join('\n');
 }
 
-function buildTags(productName: string, siteDisplayName: string, productTags: string[] = []): string[] {
+function buildTags(
+  productName: string,
+  siteDisplayName: string,
+  productTags: string[] = [],
+): string[] {
   if (productTags.length > 0) {
     const tags = [...productTags, siteDisplayName];
     const totalLength = tags.join(',').length;
@@ -1083,10 +1112,12 @@ function buildComment(
   productUrl: string,
   productTags: string[],
   productShortDescription: string,
-  template: string
+  template: string,
 ): string {
   if (template) {
-    const tagsAsHashtags = productTags.map(t => `#${t.replace(/\s+/g, '')}`).join(' ');
+    const tagsAsHashtags = productTags
+      .map((t) => `#${t.replace(/\s+/g, '')}`)
+      .join(' ');
     const tagsAsText = productTags.join(', ');
 
     return template
