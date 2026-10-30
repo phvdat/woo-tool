@@ -151,6 +151,10 @@ refreshes.
   also sets `checkLockOwner` (string), `checkLockUntil` (real `Date`, 15-minute
   lease renewed every minute), and `checkStartedAt` (ISO string); they are
   unset when the check finishes.
+  Daily website-health fields: `deadCount`, `lastCheckedAt`, `lastAliveAt`,
+  `lastCheckStatus` (`"alive" | "dead" | "unavailable"`), all ISO strings except
+  `deadCount`. The health check shares the crawl lease and removes the
+  competitor (and its products) once `deadCount >= 2`.
 - `spy_products`: `competitorId` (ObjectId), `dedupeKey`, `externalId`,
   `normalizedUrl`, `title`, `url`, `slug`, `price`, `image`, `images[]`,
   `dateCreated`, `source` (platform), `firstSeenAt` (ISO string). Written only

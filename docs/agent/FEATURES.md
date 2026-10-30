@@ -214,21 +214,27 @@ and return `RawSpyProduct[]` with `source` set to the platform name.
    `MAX_CONCURRENT = 3` queue.
 2. `src/services/product-spy/scheduler.ts` — `* * * * *` tick; selects competitors
    due by `checkIntervalMinutes` (no `lastCheckAt` = always due). The checker's
-   DB lease makes the per-minute tick safe against overlapping runs.
-3. `src/services/product-spy/validator.ts` — SSRF guard used by the competitors route.
-4. `src/app/api/product-spy/competitors/route.ts` — `GET`/`POST`/`PUT`/`DELETE`/`PATCH`.
+   DB lease makes the per-minute tick safe against overlapping runs. The same
+   tick fires `websiteHealth.ts` (daily per competitor, non-blocking).
+3. `src/services/product-spy/websiteHealth.ts` — once-per-24h liveness probe
+   using `websiteStatus.ts` (URL normalisation + HTTP/network classification).
+   Classifies alive (2xx/3xx), dead (NXDOMAIN, refused, 404, 410), or temporarily
+   unavailable (5xx, timeout); two consecutive dead checks delete the competitor
+   and its `spy_products`. Shares `claimCompetitorCheck` with the crawler.
+4. `src/services/product-spy/validator.ts` — SSRF guard used by the competitors route.
+5. `src/app/api/product-spy/competitors/route.ts` — `GET`/`POST`/`PUT`/`DELETE`/`PATCH`.
    `PATCH` re-detects the platform of every competitor.
-5. `src/app/api/product-spy/products/route.ts` — filter/sort/paginate; the
+6. `src/app/api/product-spy/products/route.ts` — filter/sort/paginate; the
    `apparelOnly` filter uses `APPAREL_TITLE_REGEX` from `src/constant/apparel.ts`.
-6. `src/app/api/product-spy/check-now/route.ts` — fire-and-forget trigger.
-7. `src/app/api/product-spy/export-excel/route.ts` — builds the workbook
+7. `src/app/api/product-spy/check-now/route.ts` — fire-and-forget trigger.
+8. `src/app/api/product-spy/export-excel/route.ts` — builds the workbook
    client-side *and* posts it to Telegram; the route itself only handles the
    Telegram leg.
-8. UI: `src/components/product-spy/ProductSpyPage.tsx` (tabs) →
+9. UI: `src/components/product-spy/ProductSpyPage.tsx` (tabs) →
    `ProductList.tsx` (grouped by day, localStorage selection, export) and
    `CompetitorTable.tsx` (CRUD) → `CompetitorForm.tsx` (create takes one URL
    per line, edit takes one URL).
-9. `src/components/product-spy/productSelectionHelper.ts` — localStorage layer
+10. `src/components/product-spy/productSelectionHelper.ts` — localStorage layer
    that survives pagination.
 
 ---

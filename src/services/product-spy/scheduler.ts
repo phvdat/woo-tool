@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { SPY_COMPETITORS_COLLECTION } from "@/constant/collections";
 import { SpyCompetitor } from "@/types/product-spy";
 import { checkCompetitor } from "./checker";
+import { runWebsiteHealthChecks } from "./websiteHealth";
 import { getErrorMessage } from "@/lib/error-utils";
 
 let mainJob: ScheduledTask | null = null;
@@ -18,6 +19,17 @@ async function tick() {
       .collection(SPY_COMPETITORS_COLLECTION)
       .find({ enabled: true })
       .toArray();
+
+    // Daily website health checks share this scheduler and the same per-
+    // competitor DB lease as product crawls. Run them without blocking the
+    // product tick; the lease prevents double/concurrent checks.
+    void runWebsiteHealthChecks(
+      competitors as unknown as SpyCompetitor[],
+    ).catch((err) =>
+      console.error(
+        `[PRODUCT-SPY] Website health tick error: ${getErrorMessage(err)}`,
+      ),
+    );
 
     const now = Date.now();
     const due: SpyCompetitor[] = [];

@@ -87,7 +87,7 @@ async function ensureSpyProductIndexes(db: Db): Promise<void> {
  * instances) cannot crawl the same competitor at the same time. The lease is
  * renewed while the crawl runs and expires automatically if the process dies.
  */
-async function claimCompetitorCheck(
+export async function claimCompetitorCheck(
   db: Db,
   competitorId: ObjectId,
 ): Promise<string | null> {
@@ -116,7 +116,7 @@ async function claimCompetitorCheck(
   return claimed ? owner : null;
 }
 
-async function releaseCompetitorCheck(
+export async function releaseCompetitorCheck(
   db: Db,
   competitorId: ObjectId,
   owner: string,

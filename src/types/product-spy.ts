@@ -8,6 +8,10 @@ export interface SpyCompetitor {
   lastCheckAt?: string;
   lastStatus?: "success" | "error";
   lastError?: string;
+  deadCount?: number;
+  lastCheckedAt?: string;
+  lastAliveAt?: string;
+  lastCheckStatus?: "alive" | "dead" | "unavailable";
   checkLockOwner?: string;
   checkLockUntil?: Date;
   checkStartedAt?: string;
