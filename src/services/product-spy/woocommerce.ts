@@ -5,6 +5,7 @@ import { RawSpyProduct } from "@/types/product-spy";
 const UA = "WooTool-ProductSpy/1.0";
 const WC_PAGE_SIZE = 100;
 const WC_MAX_PAGES = 5;
+const WC_REFRESH_LIMIT = WC_PAGE_SIZE * WC_MAX_PAGES;
 
 export interface WooFetchOptions {
   isKnown?: (externalId: string) => boolean | Promise<boolean>;
@@ -15,13 +16,35 @@ export interface WooFetchResult {
   hasProducts: boolean;
 }
 
+interface WCProductPrices {
+  price?: string;
+  regular_price?: string;
+  sale_price?: string;
+  currency_minor_unit?: number;
+}
+
 interface WCProduct {
   id: number;
   name: string;
   slug: string;
   permalink: string;
-  price: string;
+  price?: string;
+  prices?: WCProductPrices;
   images: { src: string }[];
+}
+
+function formatWooPrice(prices?: WCProductPrices): string | undefined {
+  if (!prices) return undefined;
+  const raw = prices.price ?? prices.sale_price ?? prices.regular_price;
+  if (raw === undefined || raw === null || raw === "") return undefined;
+
+  const amount = Number(raw);
+  if (!Number.isFinite(amount)) return String(raw);
+
+  const minorUnit = Number(prices.currency_minor_unit ?? 2);
+  const divider = Math.pow(10, Number.isFinite(minorUnit) ? minorUnit : 2);
+  const value = amount / divider;
+  return value.toFixed(Number.isFinite(minorUnit) ? minorUnit : 2);
 }
 
 export async function fetchWooCommerceProducts(
@@ -32,7 +55,8 @@ export async function fetchWooCommerceProducts(
   const apiUrl = `${url}/wp-json/wc/store/v1/products`;
   const isKnown = options.isKnown;
 
-  const products: RawSpyProduct[] = [];
+  const newProducts: RawSpyProduct[] = [];
+  const knownProducts: RawSpyProduct[] = [];
   let hasProducts = false;
 
   for (let page = 1; page <= WC_MAX_PAGES; page++) {
@@ -61,32 +85,33 @@ export async function fetchWooCommerceProducts(
 
     hasProducts = true;
 
-    let unknownInPage = 0;
-
     for (const p of batch) {
       const externalId = String(p.id);
-      if (isKnown && (await isKnown(externalId))) continue;
-      unknownInPage += 1;
-      products.push({
+      const product: RawSpyProduct = {
         externalId,
         title: p.name || "",
         url: p.permalink || "",
         slug: p.slug || "",
-        price: p.price || undefined,
+        price: formatWooPrice(p.prices) || p.price || undefined,
         image: p.images?.[0]?.src || undefined,
         images: p.images?.map((img) => img.src) || [],
         source: "woocommerce",
-      });
+      };
+
+      if (isKnown && (await isKnown(externalId))) {
+        if (knownProducts.length < WC_REFRESH_LIMIT) knownProducts.push(product);
+      } else {
+        newProducts.push(product);
+      }
     }
 
-    // A short page is the last page. A full page with nothing new on it means
-    // the date-desc ordering has carried us past everything not yet seen, so
-    // everything below is already known as well.
     if (batch.length < WC_PAGE_SIZE) break;
-    if (unknownInPage === 0) break;
   }
 
-  return { products, hasProducts };
+  return {
+    products: [...knownProducts, ...newProducts],
+    hasProducts,
+  };
 }
 
 export async function isWooCommerceStore(

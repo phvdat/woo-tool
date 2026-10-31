@@ -169,7 +169,12 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
     const productCol = db.collection(SPY_PRODUCTS_COLLECTION);
 
     let isKnown: ((externalId: string) => boolean) | undefined;
-    if (competitor.platform === "woocommerce") {
+    if (
+      competitor.platform === "woocommerce" ||
+      competitor.platform === "pds" ||
+      competitor.platform === "shopline" ||
+      competitor.platform === "vsf"
+    ) {
       const knownExternalIds = new Set(
         (
           await productCol

@@ -54,6 +54,9 @@ const PLATFORMS = [
   { value: "merchize", label: "Merchize" },
   { value: "merchking", label: "MerchKing" },
   { value: "lattex", label: "Lattex" },
+  { value: "pds", label: "PDS" },
+  { value: "shopline", label: "Shopline" },
+  { value: "vsf", label: "VSF" },
   { value: "generic", label: "Generic" },
 ];
 

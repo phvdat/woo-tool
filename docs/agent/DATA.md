@@ -257,9 +257,10 @@ Notes:
 
 ### WooCommerce Store API — `https://<website>/wp-json/wc/store/v1/products`
 - **Unauthenticated** public product feed.
-- Only `src/services/product-spy/woocommerce.ts` consumes this endpoint (it is
-  the only adapter supporting incremental fetching via `isKnown`). The custom UA
-  `WooTool-ProductSpy/1.0` is shared by all 8 product-spy adapters.
+- Only `src/services/product-spy/woocommerce.ts` consumes this endpoint.
+  Incremental fetching via `isKnown` is supported by the Woo, PDS, Shopline,
+  and VSF adapters. The custom UA `WooTool-ProductSpy/1.0` is shared by the
+  product-spy adapters.
 
 ### YouTube Data API v3
 - OAuth per website; refresh token + client secret encrypted at rest.

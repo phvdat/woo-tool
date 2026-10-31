@@ -566,7 +566,7 @@ function parseJsonLdScripts(doc: Document): unknown[] {
   return blocks;
 }
 
-function findJsonLdProduct(doc: Document): any | null {
+export function findJsonLdProduct(doc: Document): any | null {
   const blocks = parseJsonLdScripts(doc);
   const products: any[] = [];
   for (let i = 0; i < blocks.length; i++) {
@@ -635,7 +635,7 @@ function collectJsonLdImageUrls(
   }
 }
 
-function extractProductImages(
+export function extractProductImages(
   doc: Document,
   pageUrl: string,
   jsonLdProduct: any | null
@@ -667,7 +667,7 @@ function extractProductImages(
   return Array.from(images).slice(0, MAX_IMAGES);
 }
 
-function extractProductFromJsonLd(
+export function extractProductFromJsonLd(
   product: any,
   pageUrl: string
 ): Partial<RawSpyProduct> | null {

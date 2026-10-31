@@ -189,23 +189,34 @@ Read in this order:
 3. `src/types/product-spy.ts` — `RawSpyProduct` (the adapter output contract),
    `SpyCompetitor`, `SpyProduct`, `SpyTelegramConfig`. The `Platform` union is
    **not** in this file — it lives in `src/services/product-spy/detector.ts:12`.
-4. `src/services/product-spy/woocommerce.ts` — the only adapter that supports
-   incremental fetching via `isKnown`.
-5. `src/services/product-spy/facebook-ads.ts` — last-resort Puppeteer fallback.
+4. `src/services/product-spy/woocommerce.ts` — Store API adapter; incremental
+   via `isKnown`, returns `WooFetchResult` (`products`, `hasProducts`).
+5. `src/services/product-spy/pds.ts` — PDS (`shop-v2`, `pdscdn.com`) campaign
+   search adapter; returns `PdsFetchResult` (`products`, `hasProducts`, `debug`).
+6. `src/services/product-spy/shopline.ts` — Shopline sitemap + JSON-LD adapter;
+   Puppeteer browser session for Cloudflare challenges.
+7. `src/services/product-spy/vsf.ts` — VSF/Ecomzi (`plfpod.com`,
+   `vue_storefront_catalog`) product `_search` adapter.
+8. `src/services/product-spy/facebook-ads.ts` — last-resort Puppeteer fallback.
 
 **To add a platform you must touch 4 places, all in `detector.ts` except the
-first:** the `Platform` union (also in `detector.ts:12`), the import list, the
-`detectPlatform` chain, and the `fetchProducts` chain.
+first:** the `Platform` union (`detector.ts`), the import list, the
+`detectPlatform` chain, and the `fetchProducts` chain. Also extend `isKnown`
+in `checker.ts`, the platform filter in `ProductList.tsx` /
+`CompetitorTable.tsx`, and the `Platform` type in `src/types/product-spy.ts`.
 
-Adapter contract: export `is<Platform>Store(url)` and `fetch<Platform>Products(url)`
-and return `RawSpyProduct[]` with `source` set to the platform name.
+Adapter contract: export `is<Platform>Store(url)` and `fetch<Platform>Products(url)`.
+Most return `RawSpyProduct[]` with `source` set to the platform name; the Woo
+and PDS adapters return a result object that also exposes `hasProducts` so the
+router can distinguish "all products already known" from "no products found".
 
 ### 4.2 Storage, scheduling, UI
 
 1. `src/services/product-spy/checker.ts` — **the only writer of `spy_products`.**
    `checkCompetitor(competitor)` builds a stable `dedupeKey` (via
    `identity.ts`) and does one atomic `updateOne(..., { upsert: true })` per
-   product. Existing products are skipped, never updated. A cross-process lease
+   product. Existing products are skipped, never updated. `isKnown` is supported
+   for `woocommerce`, `pds`, `shopline`, and `vsf`. A cross-process lease
    on the competitor (`checkLockOwner` / `checkLockUntil`) means overlapping
    scheduler ticks, manual checks, and multiple app instances cannot crawl the
    same competitor at once. Unique indexes on `{ competitorId, dedupeKey }`,
@@ -225,7 +236,8 @@ and return `RawSpyProduct[]` with `source` set to the platform name.
    and its `spy_products`. Shares `claimCompetitorCheck` with the crawler.
 4. `src/services/product-spy/validator.ts` — SSRF guard used by the competitors route.
 5. `src/app/api/product-spy/competitors/route.ts` — `GET`/`POST`/`PUT`/`DELETE`/`PATCH`.
-   `PATCH` re-detects the platform of every competitor.
+   `PATCH` re-detects the platform of every competitor, but will not downgrade a
+   specific platform to `generic`; that protects flaky Cloudflare detection.
 6. `src/app/api/product-spy/products/route.ts` — filter/sort/paginate; the
    `apparelOnly` filter uses `APPAREL_TITLE_REGEX` from `src/constant/apparel.ts`.
 7. `src/app/api/product-spy/check-now/route.ts` — fire-and-forget trigger.

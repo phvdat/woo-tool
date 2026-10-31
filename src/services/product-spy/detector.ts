@@ -6,10 +6,13 @@ import { fetchTeeChipProducts, isTeeChipStore } from "./teechip";
 import { fetchMerchizeProducts, isMerchizeStore } from "./merchize";
 import { fetchMerchKingProducts, isMerchKingStore } from "./merchking";
 import { fetchLattexProducts, isLattexStore } from "./lattex";
+import { fetchPdsProducts, isPdsStore } from "./pds";
+import { fetchShoplineProducts, isShoplineStore } from "./shopline";
+import { fetchVsFProducts, isVsFStore } from "./vsf";
 import { fetchGenericProducts, GenericFetchResult } from "./generic";
 import { fetchFacebookAdsProducts } from "./facebook-ads";
 
-export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "generic";
+export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "pds" | "shopline" | "vsf" | "generic";
 
 export interface FetchResult {
   products: RawSpyProduct[];
@@ -84,7 +87,25 @@ export async function detectPlatform(
     return { platform: "lattex", reason: lattexResult.reason };
   }
 
-  // 8. Generic
+  // 8. Vue Storefront / Ecomzi
+  const vsfResult = await isVsFStore(url);
+  if (vsfResult.detected) {
+    return { platform: "vsf", reason: vsfResult.reason };
+  }
+
+  // 9. Shopline
+  const shoplineResult = await isShoplineStore(url);
+  if (shoplineResult.detected) {
+    return { platform: "shopline", reason: shoplineResult.reason };
+  }
+
+  // 10. PDS (Print Design Studio / shop-v2 stores)
+  const pdsResult = await isPdsStore(url);
+  if (pdsResult.detected) {
+    return { platform: "pds", reason: pdsResult.reason };
+  }
+
+  // 11. Generic
   return { platform: "generic", reason: "No platform-specific signals detected" };
 }
 
@@ -276,6 +297,87 @@ export async function fetchProducts(
         products: generic.products,
         debug: [
           `Lattex fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      });
+    }
+  }
+
+  if (platform === "pds") {
+    try {
+      const result = await fetchPdsProducts(url, { isKnown });
+      if (result.hasProducts) {
+        return {
+          products: result.products,
+          debug: ["PDS campaign API returned products", ...result.debug],
+          hasProducts: true,
+        };
+      }
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: ["PDS campaign API returned 0 products", ...result.debug, ...generic.debug],
+      });
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: [
+          `PDS campaign API error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      });
+    }
+  }
+
+  if (platform === "vsf") {
+    try {
+      const result = await fetchVsFProducts(url, { isKnown });
+      if (result.hasProducts) {
+        return {
+          products: result.products,
+          debug: result.debug,
+          hasProducts: true,
+        };
+      }
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: ["VSF catalog returned 0 products", ...result.debug, ...generic.debug],
+      });
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: [
+          `VSF fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      });
+    }
+  }
+
+  if (platform === "shopline") {
+    try {
+      const result = await fetchShoplineProducts(url, { isKnown });
+      if (result.hasProducts) {
+        return {
+          products: result.products,
+          debug: result.debug,
+          hasProducts: true,
+        };
+      }
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: ["Shopline sitemap returned 0 products", ...result.debug, ...generic.debug],
+      });
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: [
+          `Shopline fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
       });

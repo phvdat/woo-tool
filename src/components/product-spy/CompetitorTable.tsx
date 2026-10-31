@@ -170,6 +170,7 @@ export default function CompetitorTable() {
           merchize: "magenta",
           merchking: "gold",
           lattex: "lime",
+          pds: "geekblue",
           generic: "blue",
         };
         const labelMap: Record<string, string> = {
@@ -180,6 +181,9 @@ export default function CompetitorTable() {
           merchize: "Merchize",
           merchking: "MerchKing",
           lattex: "Lattex",
+          pds: "PDS",
+          shopline: "Shopline",
+          vsf: "VSF",
           generic: "Generic",
         };
         return (
@@ -342,6 +346,10 @@ export default function CompetitorTable() {
               { value: "merchize", label: "Merchize" },
               { value: "merchking", label: "MerchKing" },
               { value: "lattex", label: "Lattex" },
+              { value: "pds", label: "PDS" },
+              { value: "shopline", label: "Shopline" },
+              { value: "vsf", label: "VSF" },
+  { value: "vsf", label: "VSF" },
               { value: "generic", label: "Generic" },
             ]}
           />

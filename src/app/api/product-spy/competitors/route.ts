@@ -146,12 +146,16 @@ export async function PATCH() {
     for (const comp of competitors) {
       try {
         const { platform } = await detectPlatform(comp.url);
-        if (platform !== comp.platform) {
+        const nextPlatform =
+          platform === "generic" && comp.platform && comp.platform !== "generic"
+            ? comp.platform
+            : platform;
+        if (nextPlatform !== comp.platform) {
           await db
             .collection(SPY_COMPETITORS_COLLECTION)
             .updateOne(
               { _id: comp._id },
-              { $set: { platform } }
+              { $set: { platform: nextPlatform } }
             );
           updated++;
         }
