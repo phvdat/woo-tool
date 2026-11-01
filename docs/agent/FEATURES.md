@@ -197,7 +197,13 @@ Read in this order:
    Puppeteer browser session for Cloudflare challenges.
 7. `src/services/product-spy/vsf.ts` — VSF/Ecomzi (`plfpod.com`,
    `vue_storefront_catalog`) product `_search` adapter.
-8. `src/services/product-spy/facebook-ads.ts` — last-resort Puppeteer fallback.
+8. `src/services/product-spy/viralstyle.ts` — Viralstyle marketplace
+   (`api.customers.viralstyle.com/api/v3/public/marketplace`) adapter; obtains a
+   public token, pages newest campaigns first, caps at 480 new products/10 pages.
+9. `src/services/product-spy/btf.ts` — BTF/TanStack Start storefront adapter for
+   `/shop` pages that serialize `$R[...]` product data (`products:$R[...]`).
+   Detects empty shops too; product detail pages need no extra request.
+10. `src/services/product-spy/facebook-ads.ts` — last-resort Puppeteer fallback.
 
 **To add a platform you must touch 4 places, all in `detector.ts` except the
 first:** the `Platform` union (`detector.ts`), the import list, the
@@ -218,7 +224,7 @@ the checker refuses to finish a baseline from a partial result.
    `checkCompetitor(competitor)` builds a stable `dedupeKey` (via
    `identity.ts`) and does one atomic `updateOne(..., { upsert: true })` per
    product. Existing products are skipped, never updated. `isKnown` is supported
-   for `woocommerce`, `pds`, `shopline`, and `vsf`. A competitor with
+   for `woocommerce`, `pds`, `shopline`, `vsf`, `viralstyle`, and `btf`. A competitor with
    `baselineStatus: "new"` is crawled without `isKnown`; its products are stored
    with a historical `firstSeenAt` (real `dateCreated` or the 2000 sentinel) and
    the competitor only becomes `"active"` after a non-partial crawl with at

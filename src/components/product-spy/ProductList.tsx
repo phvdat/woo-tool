@@ -57,6 +57,8 @@ const PLATFORMS = [
   { value: "pds", label: "PDS" },
   { value: "shopline", label: "Shopline" },
   { value: "vsf", label: "VSF" },
+  { value: "viralstyle", label: "Viralstyle" },
+  { value: "btf", label: "BTF" },
   { value: "generic", label: "Generic" },
 ];
 

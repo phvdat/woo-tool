@@ -9,10 +9,15 @@ import { fetchLattexProducts, isLattexStore } from "./lattex";
 import { fetchPdsProducts, isPdsStore } from "./pds";
 import { fetchShoplineProducts, isShoplineStore } from "./shopline";
 import { fetchVsFProducts, isVsFStore } from "./vsf";
+import {
+  fetchViralstyleProducts,
+  isViralstyleStore,
+} from "./viralstyle";
+import { fetchBtfProducts, isBtfStore } from "./btf";
 import { fetchGenericProducts, GenericFetchResult } from "./generic";
 import { fetchFacebookAdsProducts } from "./facebook-ads";
 
-export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "pds" | "shopline" | "vsf" | "generic";
+export type Platform = "woocommerce" | "shopify" | "shopbase" | "teechip" | "merchize" | "merchking" | "lattex" | "pds" | "shopline" | "vsf" | "viralstyle" | "btf" | "generic";
 
 export interface FetchResult {
   products: RawSpyProduct[];
@@ -95,19 +100,31 @@ export async function detectPlatform(
     return { platform: "vsf", reason: vsfResult.reason };
   }
 
-  // 9. Shopline
+  // 9. Viralstyle marketplace
+  const viralstyleResult = await isViralstyleStore(url);
+  if (viralstyleResult.detected) {
+    return { platform: "viralstyle", reason: viralstyleResult.reason };
+  }
+
+  // 10. Shopline
   const shoplineResult = await isShoplineStore(url);
   if (shoplineResult.detected) {
     return { platform: "shopline", reason: shoplineResult.reason };
   }
 
-  // 10. PDS (Print Design Studio / shop-v2 stores)
+  // 11. PDS (Print Design Studio / shop-v2 stores)
   const pdsResult = await isPdsStore(url);
   if (pdsResult.detected) {
     return { platform: "pds", reason: pdsResult.reason };
   }
 
-  // 11. Generic
+  // 12. BTF storefront (TanStack Start shop with serialized product data)
+  const btfResult = await isBtfStore(url);
+  if (btfResult.detected) {
+    return { platform: "btf", reason: btfResult.reason };
+  }
+
+  // 13. Generic
   return { platform: "generic", reason: "No platform-specific signals detected" };
 }
 
@@ -384,6 +401,62 @@ export async function fetchProducts(
         products: generic.products,
         debug: [
           `Shopline fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      });
+    }
+  }
+
+  if (platform === "viralstyle") {
+    try {
+      const result = await fetchViralstyleProducts(url, { isKnown });
+      if (result.hasProducts) {
+        return {
+          products: result.products,
+          debug: result.debug,
+          hasProducts: true,
+          complete: result.complete,
+        };
+      }
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: ["Viralstyle marketplace returned 0 products", ...result.debug, ...generic.debug],
+      });
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: [
+          `Viralstyle fetch error: ${err?.message || "unknown"}`,
+          ...generic.debug,
+        ],
+      });
+    }
+  }
+
+  if (platform === "btf") {
+    try {
+      const result = await fetchBtfProducts(url, { isKnown });
+      if (result.hasProducts) {
+        return {
+          products: result.products,
+          debug: result.debug,
+          hasProducts: true,
+          complete: result.complete,
+        };
+      }
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: ["BTF shop returned 0 products", ...result.debug, ...generic.debug],
+      });
+    } catch (err: any) {
+      const generic = await fetchGenericProducts(url);
+      return withFacebookFallback(url, {
+        products: generic.products,
+        debug: [
+          `BTF fetch error: ${err?.message || "unknown"}`,
           ...generic.debug,
         ],
       });

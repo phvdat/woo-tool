@@ -190,7 +190,9 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
       (current.platform === "woocommerce" ||
         current.platform === "pds" ||
         current.platform === "shopline" ||
-        current.platform === "vsf")
+        current.platform === "vsf" ||
+        current.platform === "viralstyle" ||
+        current.platform === "btf")
     ) {
       const knownExternalIds = new Set(
         (
