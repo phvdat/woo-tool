@@ -725,6 +725,7 @@ function extractProductFromHtml(
 
 export interface GenericFetchResult {
   products: RawSpyProduct[];
+  complete: boolean;
   debug: string[];
 }
 
@@ -775,7 +776,7 @@ export async function fetchGenericProducts(
   }
 
   if (productUrls.length === 0) {
-    return { products: [], debug };
+    return { products: [], complete: false, debug };
   }
 
   // Step 5: Fetch product detail pages
@@ -828,5 +829,5 @@ export async function fetchGenericProducts(
   debug.push(
     `Extracted ${results.length} product(s) from ${productUrls.length} page(s)`
   );
-  return { products: results, debug };
+  return { products: results, complete: true, debug };
 }

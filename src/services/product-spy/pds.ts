@@ -64,6 +64,7 @@ export interface PdsFetchOptions {
 export interface PdsFetchResult {
   products: RawSpyProduct[];
   hasProducts: boolean;
+  complete: boolean;
   debug: string[];
 }
 
@@ -272,6 +273,7 @@ export async function fetchPdsProducts(
   const debug: string[] = [];
   const seen = new Map<string, PdsCampaign>();
   const isKnown = options.isKnown;
+  let complete = true;
 
   for (const term of SEARCH_TERMS) {
     if (seen.size >= MAX_PRODUCTS) break;
@@ -283,9 +285,15 @@ export async function fetchPdsProducts(
         term,
       )}?match_whole_word=false&page=${page}`;
       const response = await getJsonWithRetry(endpoint, debug);
-      if (!response || !Array.isArray(response.data) || response.data.length === 0) {
+      if (!response) {
+        complete = false;
         break;
       }
+      if (!Array.isArray(response.data)) {
+        complete = false;
+        break;
+      }
+      if (response.data.length === 0) break;
 
       let added = 0;
       let unknown = 0;
@@ -323,5 +331,5 @@ export async function fetchPdsProducts(
     `PDS campaign API returned ${seen.size} campaign(s), ${products.length} new`,
   );
 
-  return { products, hasProducts: seen.size > 0, debug };
+  return { products, hasProducts: seen.size > 0, complete, debug };
 }

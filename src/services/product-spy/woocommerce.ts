@@ -14,6 +14,7 @@ export interface WooFetchOptions {
 export interface WooFetchResult {
   products: RawSpyProduct[];
   hasProducts: boolean;
+  complete: boolean;
 }
 
 interface WCProductPrices {
@@ -58,6 +59,7 @@ export async function fetchWooCommerceProducts(
   const newProducts: RawSpyProduct[] = [];
   const knownProducts: RawSpyProduct[] = [];
   let hasProducts = false;
+  let complete = true;
 
   for (let page = 1; page <= WC_MAX_PAGES; page++) {
     let batch: WCProduct[];
@@ -78,6 +80,7 @@ export async function fetchWooCommerceProducts(
       // A failed first page means the store could not be read at all, so the
       // caller still has to see the error and fall back to the generic crawler.
       if (page === 1) throw err;
+      complete = false;
       break;
     }
 
@@ -111,6 +114,7 @@ export async function fetchWooCommerceProducts(
   return {
     products: [...knownProducts, ...newProducts],
     hasProducts,
+    complete,
   };
 }
 

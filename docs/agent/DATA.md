@@ -147,6 +147,9 @@ refreshes.
 
 - `spy_competitors`: `name`, `url`, `platform` (detected), `enabled`,
   `checkIntervalMinutes`, `lastCheckAt`, `lastStatus`, `lastError`, `createdAt`.
+  New competitors also get `baselineStatus: "new"`; after the first complete
+  crawl it becomes `"active"` and `baselineCompletedAt` (ISO string) is set.
+  Missing `baselineStatus` means a legacy competitor that is already active.
   `createdAt`/`lastCheckAt` are ISO **strings**. While a crawl runs the checker
   also sets `checkLockOwner` (string), `checkLockUntil` (real `Date`, 15-minute
   lease renewed every minute), and `checkStartedAt` (ISO string); they are
@@ -157,7 +160,9 @@ refreshes.
   competitor (and its products) once `deadCount >= 2`.
 - `spy_products`: `competitorId` (ObjectId), `dedupeKey`, `externalId`,
   `normalizedUrl`, `title`, `url`, `slug`, `price`, `image`, `images[]`,
-  `dateCreated`, `source` (platform), `firstSeenAt` (ISO string). Written only
+  `dateCreated`, `source` (platform), `firstSeenAt` (ISO string). On a baseline
+  crawl `firstSeenAt` is the product's real historical `dateCreated` when it is
+  safely old, otherwise the `2000-01-01T00:00:00.000Z` sentinel. Written only
   by `checker.ts`; inserts are atomic upserts keyed on
   `dedupeKey`/`externalId`/`normalizedUrl`. Lazy unique indexes:
   `{ competitorId, dedupeKey }`, `{ competitorId, normalizedUrl }`,

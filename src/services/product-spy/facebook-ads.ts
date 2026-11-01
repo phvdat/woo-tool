@@ -102,7 +102,7 @@ export async function fetchFacebookAdsProducts(
 
     if (!hasAdCards) {
       debug.push("No ad cards found — possible login wall, CAPTCHA, or empty results");
-      return { products: [], debug };
+      return { products: [], complete: false, debug };
     }
 
     // Scroll incrementally, collecting ads after each scroll
@@ -310,5 +310,5 @@ export async function fetchFacebookAdsProducts(
     }
   }
 
-  return { products: results, debug };
+  return { products: results, complete: results.length > 0, debug };
 }

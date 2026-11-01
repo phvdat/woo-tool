@@ -209,6 +209,8 @@ Adapter contract: export `is<Platform>Store(url)` and `fetch<Platform>Products(u
 Most return `RawSpyProduct[]` with `source` set to the platform name; the Woo
 and PDS adapters return a result object that also exposes `hasProducts` so the
 router can distinguish "all products already known" from "no products found".
+Adapters that can be interrupted mid-pagination also return `complete: false`;
+the checker refuses to finish a baseline from a partial result.
 
 ### 4.2 Storage, scheduling, UI
 
@@ -216,7 +218,12 @@ router can distinguish "all products already known" from "no products found".
    `checkCompetitor(competitor)` builds a stable `dedupeKey` (via
    `identity.ts`) and does one atomic `updateOne(..., { upsert: true })` per
    product. Existing products are skipped, never updated. `isKnown` is supported
-   for `woocommerce`, `pds`, `shopline`, and `vsf`. A cross-process lease
+   for `woocommerce`, `pds`, `shopline`, and `vsf`. A competitor with
+   `baselineStatus: "new"` is crawled without `isKnown`; its products are stored
+   with a historical `firstSeenAt` (real `dateCreated` or the 2000 sentinel) and
+   the competitor only becomes `"active"` after a non-partial crawl with at
+   least one product. Failed/partial baselines stay `"new"` for retry. A
+   cross-process lease
    on the competitor (`checkLockOwner` / `checkLockUntil`) means overlapping
    scheduler ticks, manual checks, and multiple app instances cannot crawl the
    same competitor at once. Unique indexes on `{ competitorId, dedupeKey }`,

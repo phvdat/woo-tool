@@ -66,6 +66,7 @@ export interface VsfFetchOptions {
 export interface VsfFetchResult {
   products: RawSpyProduct[];
   hasProducts: boolean;
+  complete: boolean;
   debug: string[];
 }
 
@@ -156,6 +157,7 @@ export async function fetchVsFProducts(
   const knownProducts: RawSpyProduct[] = [];
   const newProducts: RawSpyProduct[] = [];
   let total = 0;
+  let complete = true;
 
   for (let page = 0; page < MAX_PAGES; page += 1) {
     const from = page * PAGE_SIZE;
@@ -191,6 +193,7 @@ export async function fetchVsFProducts(
       debug.push(
         `VSF product search failed at offset ${from}: ${lastError || "unknown"}`
       );
+      complete = false;
       break;
     }
 
@@ -230,5 +233,5 @@ export async function fetchVsFProducts(
     `VSF catalog: ${total} product(s), ${newProducts.length} new, ${knownProducts.length} refreshed`
   );
 
-  return { products, hasProducts: total > 0, debug };
+  return { products, hasProducts: total > 0, complete, debug };
 }

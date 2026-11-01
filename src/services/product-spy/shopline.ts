@@ -40,6 +40,7 @@ export interface ShoplineFetchOptions {
 export interface ShoplineFetchResult {
   products: RawSpyProduct[];
   hasProducts: boolean;
+  complete: boolean;
   debug: string[];
 }
 
@@ -463,6 +464,7 @@ export async function fetchShoplineProducts(
     return {
       products,
       hasProducts: entries.size > 0,
+      complete: true,
       debug,
     };
   });

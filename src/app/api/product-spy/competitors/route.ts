@@ -50,6 +50,7 @@ export async function POST(request: Request) {
       platform,
       enabled: true,
       checkIntervalMinutes,
+      baselineStatus: "new",
       createdAt: new Date().toISOString(),
     };
 

@@ -18,6 +18,7 @@ export interface FetchResult {
   products: RawSpyProduct[];
   debug: string[];
   hasProducts?: boolean;
+  complete?: boolean;
 }
 
 function extractDomain(url: string): string {
@@ -32,13 +33,14 @@ async function withFacebookFallback(
   url: string,
   result: FetchResult
 ): Promise<FetchResult> {
-  if (result.products.length > 0) return result;
+  if (result.products.length > 0) return { ...result, complete: false };
   const domain = extractDomain(url);
   const fb = await fetchFacebookAdsProducts(domain);
   return {
     products: fb.products,
     debug: [...result.debug, ...fb.debug],
     hasProducts: fb.products.length > 0,
+    complete: false,
   };
 }
 
@@ -116,7 +118,7 @@ export async function fetchProducts(
 ): Promise<FetchResult> {
   if (platform === "woocommerce") {
     try {
-      const { products, hasProducts } = await fetchWooCommerceProducts(url, {
+      const { products, hasProducts, complete } = await fetchWooCommerceProducts(url, {
         isKnown,
       });
       if (hasProducts) {
@@ -124,6 +126,7 @@ export async function fetchProducts(
           products,
           debug: ["WooCommerce Store API returned products"],
           hasProducts: true,
+          complete,
         };
       }
       const generic = await fetchGenericProducts(url);
@@ -151,7 +154,7 @@ export async function fetchProducts(
     try {
       const products = await fetchShopifyProducts(url);
       if (products.length > 0) {
-        return { products, debug: ["Shopify /products.json returned products"] };
+        return { products, debug: ["Shopify /products.json returned products"], complete: true };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -177,7 +180,7 @@ export async function fetchProducts(
     try {
       const products = await fetchShopBaseProducts(url);
       if (products.length > 0) {
-        return { products, debug: ["ShopBase API returned products"] };
+        return { products, debug: ["ShopBase API returned products"], complete: true };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -203,7 +206,7 @@ export async function fetchProducts(
     try {
       const products = await fetchTeeChipProducts(url);
       if (products.length > 0) {
-        return { products, debug: ["TeeChip page returned products"] };
+        return { products, debug: ["TeeChip page returned products"], complete: true };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -229,7 +232,7 @@ export async function fetchProducts(
     try {
       const products = await fetchMerchizeProducts(url);
       if (products.length > 0) {
-        return { products, debug: ["Merchize page returned products"] };
+        return { products, debug: ["Merchize page returned products"], complete: true };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -255,7 +258,7 @@ export async function fetchProducts(
     try {
       const products = await fetchMerchKingProducts(url);
       if (products.length > 0) {
-        return { products, debug: ["MerchKing page returned products"] };
+        return { products, debug: ["MerchKing page returned products"], complete: true };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -281,7 +284,7 @@ export async function fetchProducts(
     try {
       const products = await fetchLattexProducts(url);
       if (products.length > 0) {
-        return { products, debug: ["Lattex page returned products"] };
+        return { products, debug: ["Lattex page returned products"], complete: true };
       }
       const generic = await fetchGenericProducts(url);
       return withFacebookFallback(url, {
@@ -311,6 +314,7 @@ export async function fetchProducts(
           products: result.products,
           debug: ["PDS campaign API returned products", ...result.debug],
           hasProducts: true,
+          complete: result.complete,
         };
       }
       const generic = await fetchGenericProducts(url);
@@ -338,6 +342,7 @@ export async function fetchProducts(
           products: result.products,
           debug: result.debug,
           hasProducts: true,
+          complete: result.complete,
         };
       }
       const generic = await fetchGenericProducts(url);
@@ -365,6 +370,7 @@ export async function fetchProducts(
           products: result.products,
           debug: result.debug,
           hasProducts: true,
+          complete: result.complete,
         };
       }
       const generic = await fetchGenericProducts(url);
@@ -386,5 +392,17 @@ export async function fetchProducts(
 
   // Generic platform: generic → facebook-ads
   const generic = await fetchGenericProducts(url);
-  return withFacebookFallback(url, generic);
+  if (generic.products.length > 0) {
+    return {
+      products: generic.products,
+      debug: generic.debug,
+      hasProducts: true,
+      complete: generic.complete,
+    };
+  }
+  return withFacebookFallback(url, {
+    products: generic.products,
+    debug: generic.debug,
+    hasProducts: false,
+  });
 }

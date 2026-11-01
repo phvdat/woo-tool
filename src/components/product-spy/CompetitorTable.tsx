@@ -52,6 +52,7 @@ export default function CompetitorTable() {
       if (platformFilter && c.platform !== platformFilter) return false;
       if (statusFilter) {
         if (statusFilter === "none" && c.lastStatus) return false;
+        if (statusFilter === "new" && c.baselineStatus !== "new") return false;
         if (statusFilter === "success" && c.lastStatus !== "success") return false;
         if (statusFilter === "error" && c.lastStatus !== "error") return false;
       }
@@ -205,7 +206,16 @@ export default function CompetitorTable() {
       dataIndex: "lastStatus",
       key: "lastStatus",
       width: 90,
-      render: (status: string) => {
+      render: (status: string, record: SpyCompetitor) => {
+        if (record.baselineStatus === "new") {
+          return (
+            <Tooltip title="Waiting for a successful first crawl to establish the baseline">
+              <Tag color="processing" icon={<LoadingOutlined />}>
+                NEW
+              </Tag>
+            </Tooltip>
+          );
+        }
         if (!status) return <Tag>-</Tag>;
         return (
           <Tag
@@ -349,7 +359,6 @@ export default function CompetitorTable() {
               { value: "pds", label: "PDS" },
               { value: "shopline", label: "Shopline" },
               { value: "vsf", label: "VSF" },
-  { value: "vsf", label: "VSF" },
               { value: "generic", label: "Generic" },
             ]}
           />
@@ -360,6 +369,7 @@ export default function CompetitorTable() {
             value={statusFilter}
             onChange={setStatusFilter}
             options={[
+              { value: "new", label: "New (baseline pending)" },
               { value: "success", label: "Success" },
               { value: "error", label: "Error" },
               { value: "none", label: "Not Checked" },

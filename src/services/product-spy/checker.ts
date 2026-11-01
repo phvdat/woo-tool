@@ -11,6 +11,11 @@ import {
   buildSpyProductIdentity,
   buildSpyProductMatch,
 } from "./identity";
+import {
+  baselineFirstSeenAt,
+  canCompleteBaseline,
+  needsBaseline,
+} from "./baseline";
 
 const CHECK_LOCK_LEASE_MS = 15 * 60 * 1000;
 const CHECK_LOCK_HEARTBEAT_MS = 60 * 1000;
@@ -153,6 +158,17 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
   }
 
   const competitorCol = db.collection(SPY_COMPETITORS_COLLECTION);
+  const savedCompetitor = await competitorCol.findOne({ _id: compId });
+  if (!savedCompetitor) {
+    console.log("[PRODUCT-SPY] Skipped: competitor no longer exists");
+    await releaseCompetitorCheck(db, compId, lockOwner).catch(() => undefined);
+    return;
+  }
+
+  const current = savedCompetitor as unknown as SpyCompetitor;
+  const isBaseline = needsBaseline(current);
+  const crawlStartedAt = new Date();
+
   const heartbeat = setInterval(() => {
     competitorCol
       .updateOne(
@@ -170,10 +186,11 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
 
     let isKnown: ((externalId: string) => boolean) | undefined;
     if (
-      competitor.platform === "woocommerce" ||
-      competitor.platform === "pds" ||
-      competitor.platform === "shopline" ||
-      competitor.platform === "vsf"
+      !isBaseline &&
+      (current.platform === "woocommerce" ||
+        current.platform === "pds" ||
+        current.platform === "shopline" ||
+        current.platform === "vsf")
     ) {
       const knownExternalIds = new Set(
         (
@@ -185,22 +202,25 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
       isKnown = (id: string) => knownExternalIds.has(id);
     }
 
-    const { products, debug, hasProducts } = await fetchProducts(
-      competitor.url,
-      competitor.platform,
+    const { products, debug, hasProducts, complete } = await fetchProducts(
+      current.url,
+      current.platform,
       isKnown,
     );
 
     if (products.length === 0 && !hasProducts) {
       const now = new Date().toISOString();
       const debugInfo = debug.length > 0 ? `\nDebug: ${debug.join("; ")}` : "";
+      const baselineInfo = isBaseline
+        ? "\nThis competitor is still NEW: no baseline has been established yet."
+        : "";
       await competitorCol.updateOne(
         { _id: compId },
         {
           $set: {
             lastCheckAt: now,
             lastStatus: "error",
-            lastError: `No products found from this competitor. The crawler may not be able to detect this site's products.${debugInfo}`,
+            lastError: `No products found from this competitor. The crawler may not be able to detect this site's products.${baselineInfo}${debugInfo}`,
           },
         },
       );
@@ -212,6 +232,9 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
     for (const product of products) {
       const identity = buildSpyProductIdentity(product);
       const now = new Date().toISOString();
+      const firstSeenAt = isBaseline
+        ? baselineFirstSeenAt(product, crawlStartedAt)
+        : now;
 
       const newProduct = {
         competitorId: compId,
@@ -226,7 +249,7 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
         images: product.images,
         dateCreated: product.dateCreated,
         source: product.source,
-        firstSeenAt: now,
+        firstSeenAt,
       };
 
       try {
@@ -244,11 +267,51 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
       }
     }
 
+    const checkedAt = new Date().toISOString();
+
+    if (isBaseline) {
+      if (!canCompleteBaseline(products, complete)) {
+        await competitorCol.updateOne(
+          { _id: compId },
+          {
+            $set: {
+              lastCheckAt: checkedAt,
+              lastStatus: "error",
+              lastError:
+                "Initial baseline crawl was incomplete. It will be retried; " +
+                "products found so far were filed as baseline and are not reported as new.",
+            },
+          },
+        );
+        console.log(
+          `[PRODUCT-SPY] ${current.name}: baseline incomplete, ${products.length} fetched, ${inserted} added to baseline`,
+        );
+        return;
+      }
+
+      await competitorCol.updateOne(
+        { _id: compId },
+        {
+          $set: {
+            lastCheckAt: checkedAt,
+            lastStatus: "success",
+            lastError: null,
+            baselineStatus: "active",
+            baselineCompletedAt: checkedAt,
+          },
+        },
+      );
+      console.log(
+        `[PRODUCT-SPY] ${current.name}: baseline established, ${products.length} existing product(s), ${inserted} added`,
+      );
+      return;
+    }
+
     await competitorCol.updateOne(
       { _id: compId },
       {
         $set: {
-          lastCheckAt: new Date().toISOString(),
+          lastCheckAt: checkedAt,
           lastStatus: "success",
           lastError: null,
         },
@@ -256,7 +319,7 @@ export async function checkCompetitor(competitor: SpyCompetitor): Promise<void> 
     );
 
     console.log(
-      `[PRODUCT-SPY] ${competitor.name}: ${products.length} fetched, ${inserted} new`,
+      `[PRODUCT-SPY] ${current.name}: ${products.length} fetched, ${inserted} new`,
     );
   } catch (err: any) {
     console.error(
