@@ -994,9 +994,8 @@ export function startYoutubeRetryCron(intervalMs = 5 * 60 * 1000) {
 }
 
 function buildTitle(productName: string): string {
-  const prefix = "Link in comment: ";
-  const maxLength = 70 - prefix.length;
-  return `${prefix}${productName.substring(0, maxLength).trim()}`;
+  const maxLength = 100;
+  return `${productName.substring(0, maxLength).trim()}`;
 }
 
 function buildDescription(
