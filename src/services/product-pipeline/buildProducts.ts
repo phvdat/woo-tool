@@ -71,7 +71,8 @@ export async function buildProducts({
         .split('|')
         .map((s) => s.trim())
         .filter(Boolean)
-        .map(Number);
+        .map(Number)
+        .sort((a, b) => a - b);
       for (const idx of styleIndices) {
         if (!Number.isInteger(idx) || idx < 1 || idx > images.length) {
           throw new Error(
@@ -81,7 +82,9 @@ export async function buildProducts({
       }
       processedStyleData = JSON.stringify({
         indices: styleIndices,
-        names: styleIndices.map((i) => `Style ${String(i).padStart(2, '0')}`),
+        names: styleIndices.map(
+          (_, i) => `Style ${String(i + 1).padStart(2, '0')}`,
+        ),
       });
     }
 

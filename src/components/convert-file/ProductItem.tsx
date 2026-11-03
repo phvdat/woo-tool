@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Checkbox,
   Col,
   Flex,
   Image,
@@ -45,7 +46,7 @@ interface ProductItemProps {
     handleChooseStyleChange: (
       productKey: string,
       imageIndex: number,
-      styleIndex: number | null,
+      selected: boolean,
     ) => void;
   };
   index: number;
@@ -202,20 +203,8 @@ const ProductItem = function ProductItem({
                         .split("|")
                         .map(Number)
                         .filter((n) => Number.isInteger(n) && n > 0);
-                      const totalImages =
-                        currentProduct.Images?.split(",").length || 0;
-                      const styleOptions = [
-                        { value: -1, label: "None" },
-                        ...Array.from({ length: totalImages }, (_, i) => ({
-                          value: i + 1,
-                          label: i + 1,
-                        })),
-                      ];
-                      const selectedStyle = currentStyleIndices.includes(
-                        imageIndex,
-                      )
-                        ? imageIndex
-                        : -1;
+                      const isStyleSelected =
+                        currentStyleIndices.includes(imageIndex);
 
                       return (
                         <div
@@ -265,27 +254,18 @@ const ProductItem = function ProductItem({
                             />
                           </div>
                           {styleEnabled && (
-                            <Select
-                              size="small"
-                              allowClear
-                              value={selectedStyle}
-                              options={styleOptions}
-                              onChange={(val) =>
-                                handleChooseStyleChange(
-                                  currentProduct.key,
-                                  imageIndex,
-                                  val === -1 ? null : val,
-                                )
-                              }
-                              onClear={() =>
-                                handleChooseStyleChange(
-                                  currentProduct.key,
-                                  imageIndex,
-                                  null,
-                                )
-                              }
-                              style={{ width: 80, marginTop: 2 }}
-                            />
+                            <Flex justify="center" style={{ marginTop: 2 }}>
+                              <Checkbox
+                                checked={isStyleSelected}
+                                onChange={(e) =>
+                                  handleChooseStyleChange(
+                                    currentProduct.key,
+                                    imageIndex,
+                                    e.target.checked,
+                                  )
+                                }
+                              />
+                            </Flex>
                           )}
                         </div>
                       );

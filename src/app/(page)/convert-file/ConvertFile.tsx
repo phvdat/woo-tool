@@ -175,7 +175,7 @@ function ConvertFile() {
   const handleChooseStyleChange = (
     productKey: string,
     imageIndex: number,
-    styleIndex: number | null,
+    selected: boolean,
   ) => {
     updateBoth((list) =>
       list.map((p) => {
@@ -185,13 +185,14 @@ function ConvertFile() {
           .map(Number)
           .filter((n) => Number.isInteger(n) && n > 0);
         let next: number[];
-        if (styleIndex === null) {
-          next = current.filter((i) => i !== imageIndex);
+        if (selected) {
+          next = current.includes(imageIndex)
+            ? current
+            : [...current, imageIndex];
         } else {
           next = current.filter((i) => i !== imageIndex);
-          next.push(styleIndex);
-          next.sort((a, b) => a - b);
         }
+        next.sort((a, b) => a - b);
         return { ...p, "Choose Your Style": next.join("|") };
       }),
     );
