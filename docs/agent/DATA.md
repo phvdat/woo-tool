@@ -45,6 +45,8 @@ wart, not a pattern to copy.
 | `SPY_COMPETITORS_COLLECTION` | `spy_competitors` | `SpyCompetitor` | `api/product-spy/competitors`, `checker` | spy UI, scheduler |
 | `SPY_PRODUCTS_COLLECTION` | `spy_products` | `SpyProduct` | `checker` only | `api/product-spy/products` |
 | `REVENUE_HISTORY_COLLECTION` | `revenue_history` | `RevenueHistoryRecord` | `revenueHistory.save*` | revenue UI |
+| `REVENUE_NOTIFICATION_STATE_COLLECTION` | `revenue_notification_state` | per-website cursor/baseline | `revenue/orderNotifications` | `revenue/orderNotifications` |
+| `REVENUE_ORDER_NOTIFICATIONS_COLLECTION` | `revenue_order_notifications` | per-order Telegram status | `revenue/orderNotifications` | `revenue/orderNotifications` |
 | `RESEARCH_TOPICS_COLLECTION` | `research_topics` | `ResearchTopic` | `services/research/repository.saveTopic` | `findFreshTopic` (product pipeline), `api/research/topics`, `ResearchPanel` |
 
 ### 2.1 `websites` — the hub
@@ -171,11 +173,13 @@ refreshes.
 
 ### 2.11 `revenue_history` — the durable ledger
 
-Six collections store real `Date` values: `revenue_history` (`createdAt`,
-`updatedAt`), `blog_history`, `global_config`, `videoJobs`, `audioFiles`, and
-`youtubeChannels`. The YouTube quota collections (`youtube_quota_state`,
-`youtube_quota_blocks`) also use real `Date`s (`exhaustedUntil` / `blockedUntil`
-/ `notifiedAt`). Everything else uses ISO strings.
+Several collections store real `Date` values: `revenue_history` (`createdAt`,
+`updatedAt`), `blog_history`, `global_config`, `videoJobs`, `audioFiles`,
+`youtubeChannels`, `revenue_notification_state`, and
+`revenue_order_notifications`. The YouTube quota collections
+(`youtube_quota_state`, `youtube_quota_blocks`) also use real `Date`s
+(`exhaustedUntil` / `blockedUntil` / `notifiedAt`). Everything else uses ISO
+strings.
 
 `revenue_history.date` is the exception *within* that set — it is a **string**
 (the raw WooCommerce `date_created`). This is safe to range-query because
@@ -194,6 +198,18 @@ mirrors `buildOrders` output so `calculateSummary` / `groupRevenue` /
 - **Access control is not here** — it's resolved against `websites` first, then
   the caller passes `websiteIds` in. The `ownerEmail` field exists so rows stay
   readable after a website is deleted.
+
+Two companion collections back the cron's new-order notifications:
+
+- `revenue_notification_state` — one row per website (`websiteId` unique):
+  `cursor` (ISO UTC, latest successfully fetched order time), `baselineAt`,
+  `lastSyncAt`, `createdAt`, `updatedAt`. First activation writes `cursor = now`
+  and skips notifications, so historical orders are never sent.
+- `revenue_order_notifications` — one row per order (`{ websiteId, orderId }`
+  unique): `status` (`pending` | `notified`), `message`, display fields,
+  `attempts`, `lastError`, `lockedUntil`/`lockToken` (atomic send claim),
+  `notifiedAt`, `createdAt`, `updatedAt`. Status becomes `notified` only after
+  Telegram succeeds; failures stay `pending` and retry on the next cron tick.
 
 ### 2.12 `research_topics` — the research cache
 
@@ -291,7 +307,7 @@ Notes:
 - `src/services/telegram/`. `sendTelegram` streams a document;
   `sendTelegramMessage` sends HTML-formatted text.
 - Used by: product pipeline, product spy export, crawl, format-image, revenue
-  (notifies on YouTube failures), auto-blog.
+  new-order alerts, auto-blog.
 
 ### AI providers
 - `src/services/ai/gemini.ts` (default), `chatgpt.ts`, `deepseek.ts`,

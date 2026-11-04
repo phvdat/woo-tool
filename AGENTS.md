@@ -67,8 +67,9 @@ Boot sequence lives in `server.ts` (51 lines) — read it once, it is worth it.
 - **Timestamps are not uniform.** `revenue_history.date` is a *string* (raw
   WooCommerce `date_created`, comparable lexicographically because the format is
   fixed-width ISO-8601). Most other collections write `createdAt` as an ISO
-  *string*; six collections (`revenue_history`, `blog_history`, `global_config`,
-  `videoJobs`, `audioFiles`, `youtubeChannels`) write real `Date`s. **Check the
+  *string*; some collections (`revenue_history`, `blog_history`, `global_config`,
+  `videoJobs`, `audioFiles`, `youtubeChannels`, `revenue_notification_state`,
+  `revenue_order_notifications`) write real `Date`s. **Check the
   target collection before writing a date-range query** — see `DATA.md` §2.
 - **Auth:** `src/middleware.ts` protects everything except `api/auth`, `login`,
   `uploads`, `_next`, `favicon.ico`, `api/youtube/callback`. Only 23 of 40 route

@@ -1,10 +1,17 @@
 import { loadOrders } from "./loadOrders";
 import { buildOrders } from "./buildOrders";
 import { saveRevenueHistory, SaveRevenueHistoryResult } from "./revenueHistory";
+import { processNewOrderNotifications } from "./orderNotifications";
+import { getErrorMessage } from "@/lib/error-utils";
 
 export interface SyncRevenueParams {
   /** Omit to sync every configured website (the cron). */
   userEmail?: string;
+  /**
+   * Cron-only: detect newly created WooCommerce orders and notify Telegram.
+   * Manual page Refresh deliberately leaves this off.
+   */
+  notifyNewOrders?: boolean;
 }
 
 export interface SyncRevenueResult extends SaveRevenueHistoryResult {
@@ -23,11 +30,27 @@ export interface SyncRevenueResult extends SaveRevenueHistoryResult {
  */
 export async function syncRevenue({
   userEmail,
+  notifyNewOrders = false,
 }: SyncRevenueParams = {}): Promise<SyncRevenueResult> {
   const rawOrders = await loadOrders({ userEmail });
 
   const records = buildOrders(rawOrders);
   const saved = await saveRevenueHistory(records);
+
+  if (notifyNewOrders) {
+    try {
+      const result = await processNewOrderNotifications();
+      if (result.discovered || result.notified || result.failed) {
+        console.log(
+          `[REVENUE] New order notifications: ${result.discovered} discovered, ${result.notified} notified, ${result.failed} pending/failed`
+        );
+      }
+    } catch (err) {
+      console.error(
+        `[REVENUE] New order notification run failed: ${getErrorMessage(err)}`
+      );
+    }
+  }
 
   return { ...saved, fetched: rawOrders.length };
 }

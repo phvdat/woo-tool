@@ -27,8 +27,9 @@ A doubled `.ts` extension in `src/lib/blog/`. Don't "fix" the filename as a
 drive-by; fix the import at the same time or not at all.
 
 ### Timestamp types differ per collection, and `revenue_history.date` is a string
-Six collections write real `Date`s (`revenue_history`, `blog_history`,
-`global_config`, `videoJobs`, `audioFiles`, `youtubeChannels`); the rest write
+Several collections write real `Date`s (`revenue_history`, `blog_history`,
+`global_config`, `videoJobs`, `audioFiles`, `youtubeChannels`,
+`revenue_notification_state`, `revenue_order_notifications`); the rest write
 ISO **strings**. Within `revenue_history`, `createdAt`/`updatedAt` are `Date`s
 but `date` is a **string** — the raw WooCommerce `date_created`. That is
 intentional: fixed-width ISO-8601 sorts lexicographically in chronological

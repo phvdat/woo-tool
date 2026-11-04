@@ -10,7 +10,7 @@ async function tick() {
   isRunning = true;
 
   try {
-    const result = await syncRevenue();
+    const result = await syncRevenue({ notifyNewOrders: true });
     console.log(
       `[REVENUE] Cron synced ${result.upserted} new / ${result.modified} updated order(s) from ${result.fetched} fetched`
     );

@@ -5,6 +5,19 @@ import { WooWebsitePayload } from "@/types/woo";
 import { ObjectId } from "mongodb";
 import { buildWebsiteAccessFilter } from "./websiteAccess";
 
+export function createWooClient(
+  website: Pick<WooWebsitePayload, "url" | "wpUsername" | "wpAppPassword">
+) {
+  return axios.create({
+    baseURL: `${website.url}/wp-json/wc/v3`,
+    auth: {
+      username: website.wpUsername,
+      password: website.wpAppPassword,
+    },
+    timeout: 60_000,
+  });
+}
+
 interface LoadOrdersParams {
   websiteId?: string;
   /**
@@ -47,14 +60,7 @@ export async function loadOrders({
 
   for (const website of websites) {
     try {
-      const woo = axios.create({
-        baseURL: `${website.url}/wp-json/wc/v3`,
-        auth: {
-          username: website.wpUsername,
-          password: website.wpAppPassword,
-        },
-        timeout: 60_000,
-      });
+      const woo = createWooClient(website);
 
       let page = 1;
 

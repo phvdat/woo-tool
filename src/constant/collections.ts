@@ -15,4 +15,6 @@ export const BACKGROUND_IMAGES_COLLECTION = 'backgroundImages';
 export const SPY_COMPETITORS_COLLECTION = 'spy_competitors';
 export const SPY_PRODUCTS_COLLECTION = 'spy_products';
 export const REVENUE_HISTORY_COLLECTION = 'revenue_history';
+export const REVENUE_NOTIFICATION_STATE_COLLECTION = 'revenue_notification_state';
+export const REVENUE_ORDER_NOTIFICATIONS_COLLECTION = 'revenue_order_notifications';
 export const RESEARCH_TOPICS_COLLECTION = 'research_topics';

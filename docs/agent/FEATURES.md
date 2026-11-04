@@ -541,7 +541,14 @@ for reads).
 8. `src/services/revenue/{calculateSummary,groupRevenue,groupWebsiteRevenue}.ts`
    — pure, shared by both paths.
 9. `src/services/revenue/scheduler.ts` — `*/30 * * * *`, no args, syncs all sites.
-10. `src/services/revenue/index.ts` — the only public barrel
+   It is the only caller that enables new-order notifications.
+10. `src/services/revenue/orderNotifications.ts` — cursor-based new-order
+    detection + Telegram delivery. Runs at the end of each cron sync; the
+    manual Refresh leaves it off. Per-website state lives in
+    `revenue_notification_state`; pending/notified rows live in
+    `revenue_order_notifications` (unique on `{ websiteId, orderId }`).
+    Pure cursor/message helpers are in `orderNotificationHelpers.ts`.
+11. `src/services/revenue/index.ts` — the only public barrel
     (`loadRevenueHistory`, `syncRevenue`).
 
 **UI:** `src/app/(page)/revenue/page.tsx` owns `useState` + axios directly (no

@@ -92,8 +92,9 @@ Patterns used in the repo:
   `revenueHistory.ts`, `research/repository.ts`, `product-spy/checker.ts`). Add
   indexes explicitly if you introduce a hot query.
 - **Timestamps:** most collections write `createdAt: new Date().toISOString()`
-  (a string). Six write real `Date`s — `revenue_history`, `blog_history`,
-  `global_config`, `videoJobs`, `audioFiles`, `youtubeChannels`. And
+  (a string). Several write real `Date`s — `revenue_history`, `blog_history`,
+  `global_config`, `videoJobs`, `audioFiles`, `youtubeChannels`,
+  `revenue_notification_state`, `revenue_order_notifications`. And
   `revenue_history.date` is a *string* even though its `createdAt` is a `Date`.
   Match the target collection; see `DATA.md` §2.
 
