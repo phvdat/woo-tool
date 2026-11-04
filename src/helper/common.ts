@@ -115,6 +115,7 @@ export function fixEncoding(text = "") {
       .replace(/Ã¢ÂÂ|Ã¢ÂÂ/g, '"')
       .replace(/Ã¢ÂÂ/g, "–")
       .replace(/Ã¢ÂÂ¦/g, "...")
+      .replace(/["“”‘’]/g, "")
       .replace(/\s+[–-]\s+(?=[A-Za-z0-9]*[A-Za-z])(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+$/g, "")
   );
 }
