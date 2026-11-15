@@ -51,6 +51,7 @@ export async function loadRevenueHistory({
     status: record.status,
     date: record.date,
     paymentMethod: record.paymentMethod,
+    products: record.products ?? [],
   }));
 
   return {

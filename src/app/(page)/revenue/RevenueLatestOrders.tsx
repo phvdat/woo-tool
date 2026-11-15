@@ -1,12 +1,29 @@
 "use client";
 
-import { Table, Tag, Grid, Descriptions, Typography } from "antd";
+import {
+  Table,
+  Tag,
+  Grid,
+  Descriptions,
+  Typography,
+  Image,
+  Space,
+  Flex,
+} from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
 const { Text } = Typography;
 
 type PaymentMethod = "stripe" | "paypal";
+
+interface RevenueOrderProduct {
+  productId: number;
+  name: string;
+  image: string;
+  link: string;
+  quantity: number;
+}
 
 interface RevenueLatestOrder {
   id: number;
@@ -21,6 +38,7 @@ interface RevenueLatestOrder {
   status: string;
   date: string;
   paymentMethod: PaymentMethod;
+  products?: RevenueOrderProduct[];
 }
 
 const statusColors: Record<string, string> = {
@@ -52,6 +70,43 @@ const statusFilters = Object.keys(statusLabels).map((value) => ({
 
 function formatAmount(value: number) {
   return `$${Number(value || 0).toFixed(2)}`;
+}
+
+const IMAGE_FALLBACK =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+function ProductLink({ product }: { product: RevenueOrderProduct }) {
+  return product.link ? (
+    <a href={product.link} target="_blank" rel="noopener noreferrer">
+      {product.name.slice(0, 10) + "..." || "View product"}
+    </a>
+  ) : (
+    <Text>{product.name.slice(0, 10)}</Text>
+  );
+}
+
+function ProductList({ products }: { products?: RevenueOrderProduct[] }) {
+  if (!products?.length) return <Text type="secondary">-</Text>;
+
+  return (
+    <Flex vertical gap={4}>
+      {products.map((product, index) => (
+        <Space key={`${product.productId}-${index}`} size={8} align="center">
+          <Image
+            src={product.image || IMAGE_FALLBACK}
+            alt={product.name || "Product image"}
+            width={32}
+            height={32}
+            style={{ objectFit: "cover", borderRadius: 4 }}
+            preview={Boolean(product.image)}
+            fallback={IMAGE_FALLBACK}
+          />
+          <ProductLink product={product} />
+          <Text type="secondary">x{product.quantity}</Text>
+        </Space>
+      ))}
+    </Flex>
+  );
 }
 
 interface RevenueLatestOrdersProps {
@@ -103,6 +158,7 @@ export default function RevenueLatestOrders({
                   <Descriptions.Item label="Website">
                     {record.website}
                   </Descriptions.Item>
+                  <Descriptions.Item label="Id">{record.id}</Descriptions.Item>
 
                   <Descriptions.Item label="Customer">
                     {record.customer}
@@ -133,6 +189,7 @@ export default function RevenueLatestOrders({
         {
           title: "Order",
           dataIndex: "id",
+          responsive: ["md"],
           width: 100,
           render: (id: number) => `#${id}`,
         },
@@ -147,8 +204,40 @@ export default function RevenueLatestOrders({
           responsive: ["md"],
         },
         {
+          title: "Product",
+          dataIndex: "products",
+          render: (products: RevenueOrderProduct[] | undefined) => {
+            if (!products?.length) return <Text type="secondary">-</Text>;
+
+            const first = products[0];
+
+            return (
+              <Space size={8} align="center">
+                <Image
+                  src={first.image || IMAGE_FALLBACK}
+                  alt={first.name || "Product image"}
+                  width={40}
+                  height={40}
+                  style={{ objectFit: "cover", borderRadius: 6 }}
+                  preview={Boolean(first.image)}
+                  fallback={IMAGE_FALLBACK}
+                />
+                <Flex vertical>
+                  <ProductLink product={first} />
+                  {products.length > 1 && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      +{products.length - 1} more
+                    </Text>
+                  )}
+                </Flex>
+              </Space>
+            );
+          },
+        },
+        {
           title: "Gateway",
           dataIndex: "paymentMethod",
+          responsive: ["md"],
           filters: [
             {
               text: "Stripe",
@@ -221,10 +310,10 @@ export default function RevenueLatestOrders({
             <Table.Summary.Cell index={0}>
               <strong>Total</strong>
             </Table.Summary.Cell>
-            <Table.Summary.Cell index={1} />
-            <Table.Summary.Cell index={2} />
 
-            <Table.Summary.Cell index={3} align="right">
+            <Table.Summary.Cell index={4} />
+
+            <Table.Summary.Cell index={7} align="right">
               <strong>${net.toFixed(2)}</strong>
             </Table.Summary.Cell>
           </Table.Summary.Row>
@@ -237,21 +326,22 @@ export default function RevenueLatestOrders({
             <Table.Summary.Cell index={1} />
             <Table.Summary.Cell index={2} />
             <Table.Summary.Cell index={3} />
+            <Table.Summary.Cell index={4} />
 
-            <Table.Summary.Cell index={4} align="right">
+            <Table.Summary.Cell index={5} align="right">
               <strong>${total.toFixed(2)}</strong>
             </Table.Summary.Cell>
 
-            <Table.Summary.Cell index={5} align="right">
+            <Table.Summary.Cell index={6} align="right">
               <strong>${fee.toFixed(2)}</strong>
             </Table.Summary.Cell>
 
-            <Table.Summary.Cell index={6} align="right">
+            <Table.Summary.Cell index={7} align="right">
               <strong>${net.toFixed(2)}</strong>
             </Table.Summary.Cell>
 
-            <Table.Summary.Cell index={7} />
             <Table.Summary.Cell index={8} />
+            <Table.Summary.Cell index={9} />
           </Table.Summary.Row>
         )
       }

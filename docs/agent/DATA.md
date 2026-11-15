@@ -191,7 +191,11 @@ mirrors `buildOrders` output so `calculateSummary` / `groupRevenue` /
 `groupWebsiteRevenue` can re-aggregate it without transformation.
 
 `{ websiteId, ownerEmail, orderId, website, customer, total, refunded, revenue,
-   fee, net, status, date, paymentMethod, createdAt, updatedAt }`.
+   fee, net, status, date, paymentMethod, products, createdAt, updatedAt }`.
+
+`products` is a denormalized `line_items` snapshot: `{ productId, name, image,
+link, quantity }` per item. `image` comes from the WooCommerce line item and
+`link` is rebuilt from the website URL (falling back to `/?p=<productId>`).
 
 - **Unique index**: a lazy unique index on `{ websiteId, orderId }` created by
   `ensureUniqueIndex()` (idempotent upserts, history survives website deletion).

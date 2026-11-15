@@ -71,6 +71,7 @@ export async function saveRevenueHistory(
       status: record.status,
       date: record.date,
       paymentMethod: record.paymentMethod,
+      products: Array.isArray(record.products) ? record.products : [],
     };
 
     return {
