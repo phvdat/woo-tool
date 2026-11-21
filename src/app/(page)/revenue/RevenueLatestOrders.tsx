@@ -215,7 +215,7 @@ function ProductHoverContent({
               <Divider style={{ margin: "6px 0" }} />
               <Flex vertical gap={4}>
                 <Text strong style={{ fontSize: 12 }}>
-                  #{unit.index}
+                  Unit #{unit.index}
                 </Text>
                 <AttributeRows pairs={unit.fields} />
               </Flex>

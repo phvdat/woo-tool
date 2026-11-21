@@ -226,6 +226,7 @@ interface WcpaFieldEntry {
   type: string;
   sectionKey: string;
   formId: string;
+  metaId: number | null;
 }
 
 interface WcpaSection {
@@ -239,14 +240,30 @@ const WCPA_EMPTY_LABEL = "wcpa_empty_label";
 const WCPA_SKIP_TYPES = new Set(["content", "separator", "header", "hidden"]);
 const WCPA_OPTION_TYPES = new Set([
   "select",
+  "radio",
   "radio-group",
   "checkbox-group",
   "multi-select",
   "checkbox",
+  "color",
+  "color-group",
+  "image",
+  "image-group",
+  "switch",
 ]);
 
 function isWcpaEmptyLabel(value: unknown) {
   return sanitizeMetadataText(value).toLowerCase() === WCPA_EMPTY_LABEL;
+}
+
+function isWcpaFieldLike(value: unknown): value is Record<string, any> {
+  if (!isRecord(value)) return false;
+  if ("fields" in value || "extra" in value) return false;
+
+  return (
+    ("label" in value || "name" in value || "elementId" in value) &&
+    ("value" in value || "type" in value || "form_data" in value || "meta_id" in value)
+  );
 }
 
 function parseJsonValue(value: unknown): unknown {
@@ -270,6 +287,8 @@ function parseJsonValue(value: unknown): unknown {
 
 function getWcpaSectionFields(node: Record<string, any>) {
   const rawFields = node?.fields;
+  if (isWcpaFieldLike(rawFields)) return [rawFields];
+
   const rows = Array.isArray(rawFields)
     ? rawFields
     : isRecord(rawFields)
@@ -279,6 +298,11 @@ function getWcpaSectionFields(node: Record<string, any>) {
   const fields: Record<string, any>[] = [];
 
   for (const row of rows) {
+    if (isWcpaFieldLike(row)) {
+      fields.push(row);
+      continue;
+    }
+
     const items = Array.isArray(row) ? row : [row];
     for (const field of items) {
       if (isRecord(field)) fields.push(field);
@@ -297,16 +321,28 @@ function collectWcpaRawSections(value: unknown) {
     [];
 
   if (isRecord(value)) {
-    const values = Object.values(value);
-    const hasSections = values.some(
-      (section) =>
+    const entries = Object.entries(value);
+    const hasSections = entries.some(
+      ([, section]) =>
         isRecord(section) && ("fields" in section || "extra" in section)
     );
 
     if (!hasSections) {
-      sections.push({ key: "", formId: "", fields: [value] });
+      const fieldValues = entries
+        .map(([, entry]) => entry)
+        .filter(isWcpaFieldLike);
+      const fields =
+        fieldValues.length && fieldValues.length === entries.length
+          ? fieldValues
+          : [value];
+
+      sections.push({
+        key: "",
+        formId: getWcpaSectionFormId(value),
+        fields,
+      });
     } else {
-      for (const [key, section] of Object.entries(value)) {
+      for (const [key, section] of entries) {
         if (!isRecord(section)) continue;
         sections.push({
           key,
@@ -322,14 +358,31 @@ function collectWcpaRawSections(value: unknown) {
     );
 
     if (!hasSections) {
+      const fieldValues = value.filter(isWcpaFieldLike);
       sections.push({
         key: "",
         formId: "",
-        fields: value.filter(isRecord),
+        fields: fieldValues.length
+          ? fieldValues
+          : value.filter(isRecord),
       });
     } else {
       value.forEach((section, index) => {
         if (!isRecord(section)) return;
+
+        if (
+          isWcpaFieldLike(section) &&
+          !("fields" in section) &&
+          !("extra" in section)
+        ) {
+          sections.push({
+            key: String(index),
+            formId: "",
+            fields: [section],
+          });
+          return;
+        }
+
         sections.push({
           key: String(index),
           formId: getWcpaSectionFormId(section),
@@ -418,6 +471,8 @@ function toWcpaFieldEntry(
     sanitizeMetadataText(field?.name) ||
     label.toLowerCase();
 
+  const metaIdValue = Number(field?.meta_id);
+
   return {
     index: 0,
     label,
@@ -427,6 +482,8 @@ function toWcpaFieldEntry(
     type,
     sectionKey,
     formId,
+    metaId:
+      Number.isFinite(metaIdValue) && metaIdValue > 0 ? metaIdValue : null,
   };
 }
 
@@ -450,6 +507,24 @@ function dedupePairs(pairs: FormattedMetadataPair[]) {
   return result;
 }
 
+function dedupeWcpaEntries(entries: WcpaFieldEntry[]) {
+  const seen = new Set<string>();
+  const result: WcpaFieldEntry[] = [];
+
+  for (const entry of entries) {
+    const key =
+      entry.metaId !== null
+        ? `${entry.metaId}|${entry.label.toLowerCase()}|${entry.value}`
+        : `${entry.identity}|${entry.type}|${entry.label.toLowerCase()}|${entry.value}`;
+
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(entry);
+  }
+
+  return result;
+}
+
 function labelSignature(entries: WcpaFieldEntry[]) {
   return entries
     .map((entry) => entry.label.toLowerCase())
@@ -465,6 +540,43 @@ function sameLabelSignature(sections: WcpaSection[]) {
   const signature = labelSignature(sections[0].entries);
   return Boolean(signature) &&
     sections.every((section) => labelSignature(section.entries) === signature);
+}
+
+function hasCommonLabels(sections: WcpaSection[]) {
+  if (!sections.length || sections.some((section) => !section.entries.length)) {
+    return false;
+  }
+
+  const labelSets = sections.map(
+    (section) =>
+      new Set(section.entries.map((entry) => entry.label.toLowerCase()))
+  );
+  const common = Array.from(labelSets[0]).filter((label) =>
+    labelSets.every((labels) => labels.has(label))
+  );
+
+  return common.length > 0;
+}
+
+function sectionSignature(section: WcpaSection) {
+  return section.entries
+    .map(
+      (entry) =>
+        `${entry.metaId ?? ""}|${entry.label.toLowerCase()}|${entry.value}`
+    )
+    .sort()
+    .join("||");
+}
+
+function sectionsAreDuplicates(sections: WcpaSection[]) {
+  if (!sections.length) return false;
+
+  const signature = sectionSignature(sections[0]);
+  if (!signature) return false;
+
+  return sections.every(
+    (section) => sectionSignature(section) === signature
+  );
 }
 
 function buildUnits(entryLists: WcpaFieldEntry[][]): MetadataUnit[] {
@@ -505,15 +617,27 @@ function findSectionUnits(
     byForm.set(section.formId, list);
   }
 
-  const candidates = Array.from(byForm.values()).filter(
-    (list) => list.length === quantity && sameLabelSignature(list)
+  const candidateGroups = Array.from(byForm.values()).filter(
+    (list) =>
+      list.length === quantity &&
+      hasCommonLabels(list) &&
+      !sectionsAreDuplicates(list)
   );
 
-  if (candidates.length > 1) return null;
+  if (candidateGroups.length) {
+    const unitKeys = new Set<string>();
+    const unitEntries: WcpaFieldEntry[][] = Array.from(
+      { length: quantity },
+      () => []
+    );
 
-  const unitSections = candidates[0];
-  if (unitSections) {
-    const unitKeys = new Set(unitSections.map((section) => section.key));
+    for (const group of candidateGroups) {
+      group.forEach((section, index) => {
+        unitKeys.add(section.key);
+        unitEntries[index].push(...section.entries);
+      });
+    }
+
     const sharedSections = sections.filter(
       (section) => !unitKeys.has(section.key)
     );
@@ -524,14 +648,15 @@ function findSectionUnits(
           section.entries.map(entryToPair)
         )
       ),
-      units: buildUnits(unitSections.map((section) => section.entries)),
+      units: buildUnits(unitEntries),
     };
   }
 
   if (
     sections.length === quantity &&
     sameLabelSignature(sections) &&
-    hasSameIdentitySignature(sections)
+    hasSameIdentitySignature(sections) &&
+    !sectionsAreDuplicates(sections)
   ) {
     return {
       shared: [],
@@ -542,40 +667,93 @@ function findSectionUnits(
   return null;
 }
 
-function getPerUnitArrayValues(
-  list: WcpaFieldEntry[],
+function formatUnitValueItem(value: unknown): string {
+  if (value === null || value === undefined) return "";
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => formatUnitValueItem(item))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  if (isRecord(value)) {
+    const preferred = getFirstDefined(value, [
+      "value",
+      "display_value",
+      "displayValue",
+      "display",
+      "text",
+      "label",
+    ]);
+
+    if (preferred !== undefined) return formatMetadataValue(preferred);
+
+    return formatMetadataValue(value);
+  }
+
+  return sanitizeMetadataText(value);
+}
+
+function getPerUnitValues(
+  entry: WcpaFieldEntry,
   quantity: number
 ): string[] | null {
-  if (list.length !== 1) return null;
-
-  const entry = list[0];
   if (WCPA_OPTION_TYPES.has(entry.type)) return null;
   if (entry.type === "date" || entry.type === "datetime-local") return null;
-  if (!Array.isArray(entry.rawValue) || entry.rawValue.length !== quantity) {
-    return null;
-  }
-  if (entry.rawValue.some((item) => item !== null && typeof item === "object")) {
-    return null;
+
+  const rawValue = entry.rawValue;
+
+  if (Array.isArray(rawValue)) {
+    if (rawValue.length !== quantity) return null;
+    if (
+      rawValue.some(
+        (item) =>
+          isRecord(item) &&
+          ("i" in item || "start" in item || "end" in item)
+      )
+    ) {
+      return null;
+    }
+
+    const values = rawValue.map((item) => formatUnitValueItem(item));
+    return values.some(Boolean) ? values : null;
   }
 
-  const values = entry.rawValue.map((item) =>
-    sanitizeMetadataText(item)
-  );
+  if (isRecord(rawValue)) {
+    if ("start" in rawValue || "end" in rawValue) return null;
 
-  return values;
+    const keys = Object.keys(rawValue);
+    if (!keys.length || keys.length !== quantity) return null;
+    if (!keys.every((key) => /^\d+$/.test(key))) return null;
+
+    const numericKeys = keys.map(Number).sort((a, b) => a - b);
+    const zeroBased = numericKeys.every((key, index) => key === index);
+    const oneBased = numericKeys.every((key, index) => key === index + 1);
+    if (!zeroBased && !oneBased) return null;
+
+    const items = numericKeys.map((key) => rawValue[String(key)]);
+    if (items.some((item) => isRecord(item) && "i" in item)) return null;
+
+    const values = items.map((item) => formatUnitValueItem(item));
+    return values.some(Boolean) ? values : null;
+  }
+
+  return null;
 }
 
 function findOccurrenceUnits(
   entries: WcpaFieldEntry[],
-  quantity: number
+  quantity: number,
+  getKey: (entry: WcpaFieldEntry) => string
 ): WcpaMetadataGrouping | null {
-  const byIdentity = new Map<string, WcpaFieldEntry[]>();
+  const byKey = new Map<string, WcpaFieldEntry[]>();
 
   for (const entry of entries) {
-    const key = entry.identity || entry.label.toLowerCase();
-    const list = byIdentity.get(key) ?? [];
+    const key = getKey(entry) || entry.label.toLowerCase();
+    const list = byKey.get(key) ?? [];
     list.push(entry);
-    byIdentity.set(key, list);
+    byKey.set(key, list);
   }
 
   const unitEntries: WcpaFieldEntry[][] = Array.from(
@@ -585,12 +763,14 @@ function findOccurrenceUnits(
   const shared: WcpaFieldEntry[] = [];
   let hasUnits = false;
 
-  for (const list of Array.from(byIdentity.values())) {
-    const perUnitValues = getPerUnitArrayValues(list, quantity);
+  for (const list of Array.from(byKey.values())) {
+    const perUnitValues =
+      list.length === 1 ? getPerUnitValues(list[0], quantity) : null;
 
     if (perUnitValues) {
       hasUnits = true;
       perUnitValues.forEach((value, index) => {
+        if (!value) return;
         unitEntries[index].push({ ...list[0], value });
       });
       continue;
@@ -602,9 +782,12 @@ function findOccurrenceUnits(
     }
 
     if (list.length === quantity) {
-      hasUnits = true;
-      list.forEach((entry, index) => unitEntries[index].push(entry));
-      continue;
+      const label = list[0].label.toLowerCase();
+      if (list.every((entry) => entry.label.toLowerCase() === label)) {
+        hasUnits = true;
+        list.forEach((entry, index) => unitEntries[index].push(entry));
+        continue;
+      }
     }
 
     return null;
@@ -653,19 +836,26 @@ export function groupWcpaMetadata(
   let order = 0;
 
   const sections: WcpaSection[] = collectWcpaRawSections(value)
-    .map((section) => ({
-      key: section.key,
-      formId: section.formId,
-      entries: section.fields
-        .map((field) =>
-          toWcpaFieldEntry(field, section.key, section.formId)
-        )
-        .filter((entry): entry is WcpaFieldEntry => entry !== null)
-        .map((entry) => ({ ...entry, index: order++ })),
-    }))
+    .map((section) => {
+      const entries = dedupeWcpaEntries(
+        section.fields
+          .map((field) =>
+            toWcpaFieldEntry(field, section.key, section.formId)
+          )
+          .filter((entry): entry is WcpaFieldEntry => entry !== null)
+      );
+
+      return {
+        key: section.key,
+        formId: section.formId,
+        entries: entries.map((entry) => ({ ...entry, index: order++ })),
+      };
+    })
     .filter((section) => section.entries.length > 0);
 
-  const allEntries = sections.flatMap((section) => section.entries);
+  const allEntries = dedupeWcpaEntries(
+    sections.flatMap((section) => section.entries)
+  );
   const qty = Math.max(1, Math.floor(Number(quantity) || 1));
 
   if (!allEntries.length) return { shared: [], units: [] };
@@ -677,9 +867,14 @@ export function groupWcpaMetadata(
 
   if (qty <= 1) return flat();
 
-  return findSectionUnits(sections, qty) ??
-    findOccurrenceUnits(allEntries, qty) ??
-    flat();
+  return (
+    findSectionUnits(sections, qty) ??
+    findOccurrenceUnits(allEntries, qty, (entry) =>
+      entry.label.toLowerCase()
+    ) ??
+    findOccurrenceUnits(allEntries, qty, (entry) => entry.identity) ??
+    flat()
+  );
 }
 
 export function normalizeMetadataPairs(source: unknown): FormattedMetadataPair[] {

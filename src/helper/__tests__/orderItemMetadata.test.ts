@@ -364,4 +364,260 @@ describe("WCPA order metadata grouping", () => {
       units: [],
     });
   });
+
+  it("groups flat WCPA arrays with repeated fields into units", () => {
+    const value = [
+      wcpaField({
+        label: "Custom name",
+        value: "Julie",
+        elementId: "name",
+        meta_id: 1,
+      }),
+      wcpaField({
+        type: "color-group",
+        label: "Gender",
+        elementId: "gender",
+        meta_id: 2,
+        value: { 0: { i: 0, label: "Women", value: "Women" } },
+      }),
+      wcpaField({
+        type: "color-group",
+        label: "Size (US)",
+        elementId: "size",
+        meta_id: 3,
+        value: { 0: { i: 0, label: "10", value: "10" } },
+      }),
+      wcpaField({
+        label: "Custom name",
+        value: "Kim",
+        elementId: "name",
+        meta_id: 4,
+      }),
+      wcpaField({
+        type: "color-group",
+        label: "Gender",
+        elementId: "gender",
+        meta_id: 5,
+        value: { 0: { i: 0, label: "Women", value: "Women" } },
+      }),
+      wcpaField({
+        type: "color-group",
+        label: "Size (US)",
+        elementId: "size",
+        meta_id: 6,
+        value: { 0: { i: 0, label: "9", value: "9" } },
+      }),
+    ];
+
+    expect(groupWcpaMetadata(value, 2)).toEqual({
+      shared: [],
+      units: [
+        {
+          index: 1,
+          pairs: [
+            { name: "Custom name", value: "Julie" },
+            { name: "Gender", value: "Women" },
+            { name: "Size (US)", value: "10" },
+          ],
+        },
+        {
+          index: 2,
+          pairs: [
+            { name: "Custom name", value: "Kim" },
+            { name: "Gender", value: "Women" },
+            { name: "Size (US)", value: "9" },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("groups repeated labels even when each unit has a different field id", () => {
+    const value = [
+      wcpaField({
+        label: "Custom name",
+        value: "Julie",
+        elementId: "name-1",
+        name: "name_1",
+        meta_id: 1,
+      }),
+      wcpaField({
+        label: "Size (US)",
+        value: "10",
+        elementId: "size-1",
+        name: "size_1",
+        meta_id: 2,
+      }),
+      wcpaField({
+        label: "Custom name",
+        value: "Kim",
+        elementId: "name-2",
+        name: "name_2",
+        meta_id: 3,
+      }),
+      wcpaField({
+        label: "Size (US)",
+        value: "9",
+        elementId: "size-2",
+        name: "size_2",
+        meta_id: 4,
+      }),
+    ];
+
+    expect(groupWcpaMetadata(value, 2).units).toEqual([
+      {
+        index: 1,
+        pairs: [
+          { name: "Custom name", value: "Julie" },
+          { name: "Size (US)", value: "10" },
+        ],
+      },
+      {
+        index: 2,
+        pairs: [
+          { name: "Custom name", value: "Kim" },
+          { name: "Size (US)", value: "9" },
+        ],
+      },
+    ]);
+  });
+
+  it("reads per-unit object maps and arrays without splitting option fields", () => {
+    const value = [
+      wcpaField({
+        label: "Custom name",
+        elementId: "name",
+        meta_id: 1,
+        value: { 1: "Julie", 2: "Kim", 3: "Anna" },
+      }),
+      wcpaField({
+        label: "Size (US)",
+        elementId: "size",
+        meta_id: 2,
+        value: [{ value: "10" }, { value: "9" }, { value: "8" }],
+      }),
+      wcpaField({
+        type: "color-group",
+        label: "Gender",
+        elementId: "gender",
+        meta_id: 3,
+        value: { 0: { i: 0, label: "Women", value: "Women" } },
+      }),
+    ];
+
+    expect(groupWcpaMetadata(value, 3)).toEqual({
+      shared: [{ name: "Gender", value: "Women" }],
+      units: [
+        {
+          index: 1,
+          pairs: [
+            { name: "Custom name", value: "Julie" },
+            { name: "Size (US)", value: "10" },
+          ],
+        },
+        {
+          index: 2,
+          pairs: [
+            { name: "Custom name", value: "Kim" },
+            { name: "Size (US)", value: "9" },
+          ],
+        },
+        {
+          index: 3,
+          pairs: [
+            { name: "Custom name", value: "Anna" },
+            { name: "Size (US)", value: "8" },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("groups three repeated WCPA sections with different custom names and sizes", () => {
+    const value = {
+      sec_unit_1: wcpaSection("form_1", [
+        wcpaField({ label: "Custom name", value: "Julie", elementId: "name", meta_id: 1 }),
+        wcpaField({ label: "Size (US)", value: "10", elementId: "size", meta_id: 2 }),
+        wcpaField({
+          type: "color-group",
+          label: "Gender",
+          elementId: "gender",
+          meta_id: 3,
+          value: { 0: { i: 0, label: "Women", value: "Women" } },
+        }),
+      ]),
+      sec_unit_2: wcpaSection("form_1", [
+        wcpaField({ label: "Custom name", value: "Kim", elementId: "name", meta_id: 4 }),
+        wcpaField({ label: "Size (US)", value: "9", elementId: "size", meta_id: 5 }),
+        wcpaField({
+          type: "color-group",
+          label: "Gender",
+          elementId: "gender",
+          meta_id: 6,
+          value: { 0: { i: 0, label: "Women", value: "Women" } },
+        }),
+      ]),
+      sec_unit_3: wcpaSection("form_1", [
+        wcpaField({ label: "Custom name", value: "Anna", elementId: "name", meta_id: 7 }),
+        wcpaField({ label: "Size (US)", value: "8", elementId: "size", meta_id: 8 }),
+        wcpaField({
+          type: "color-group",
+          label: "Gender",
+          elementId: "gender",
+          meta_id: 9,
+          value: { 0: { i: 0, label: "Women", value: "Women" } },
+        }),
+      ]),
+    };
+
+    expect(groupWcpaMetadata(value, 3)).toEqual({
+      shared: [],
+      units: [
+        {
+          index: 1,
+          pairs: [
+            { name: "Custom name", value: "Julie" },
+            { name: "Size (US)", value: "10" },
+            { name: "Gender", value: "Women" },
+          ],
+        },
+        {
+          index: 2,
+          pairs: [
+            { name: "Custom name", value: "Kim" },
+            { name: "Size (US)", value: "9" },
+            { name: "Gender", value: "Women" },
+          ],
+        },
+        {
+          index: 3,
+          pairs: [
+            { name: "Custom name", value: "Anna" },
+            { name: "Size (US)", value: "8" },
+            { name: "Gender", value: "Women" },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("does not turn duplicate WCPA sections into fake units", () => {
+    const section = () =>
+      wcpaSection("form_1", [
+        wcpaField({ label: "Custom name", value: "Julie", elementId: "name", meta_id: 1 }),
+        wcpaField({ label: "Size (US)", value: "10", elementId: "size", meta_id: 2 }),
+      ]);
+    const value = {
+      sec_a: section(),
+      sec_b: section(),
+    };
+
+    expect(groupWcpaMetadata(value, 2)).toEqual({
+      shared: [
+        { name: "Custom name", value: "Julie" },
+        { name: "Size (US)", value: "10" },
+      ],
+      units: [],
+    });
+  });
 });

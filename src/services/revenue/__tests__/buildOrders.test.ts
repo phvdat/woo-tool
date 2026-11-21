@@ -297,4 +297,203 @@ describe("buildOrderProducts", () => {
     ]);
     expect(product.units).toBeUndefined();
   });
+
+  it("maps quantity-two flat WCPA fields onto their units", () => {
+    const wcpa = [
+      {
+        type: "text",
+        label: "Custom name",
+        elementId: "name",
+        value: "Julie",
+        meta_id: 101,
+      },
+      {
+        type: "color-group",
+        label: "Gender",
+        elementId: "gender",
+        value: { 0: { i: 0, label: "Women", value: "Women" } },
+        meta_id: 102,
+      },
+      {
+        type: "color-group",
+        label: "Size (US)",
+        elementId: "size",
+        value: { 0: { i: 0, label: "10", value: "10" } },
+        meta_id: 103,
+      },
+      {
+        type: "text",
+        label: "Custom name",
+        elementId: "name",
+        value: "Kim",
+        meta_id: 104,
+      },
+      {
+        type: "color-group",
+        label: "Gender",
+        elementId: "gender",
+        value: { 0: { i: 0, label: "Women", value: "Women" } },
+        meta_id: 105,
+      },
+      {
+        type: "color-group",
+        label: "Size (US)",
+        elementId: "size",
+        value: { 0: { i: 0, label: "9", value: "9" } },
+        meta_id: 106,
+      },
+    ];
+
+    const [product] = buildOrderProducts({
+      line_items: [
+        {
+          product_id: 10,
+          variation_id: 0,
+          name: "Custom Shoes",
+          quantity: 2,
+          meta_data: [
+            { key: "_WCPA_order_meta_data", value: JSON.stringify(wcpa) },
+            { id: 101, key: "Custom name", display_value: "Julie" },
+            { id: 102, key: "Gender", display_value: "Women" },
+            { id: 103, key: "Size (US)", display_value: "10" },
+            { id: 104, key: "Custom name", display_value: "Kim" },
+            { id: 105, key: "Gender", display_value: "Women" },
+            { id: 106, key: "Size (US)", display_value: "9" },
+            {
+              id: 107,
+              key: "wcpa_empty_label",
+              display_value: "Order Insurance",
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(product.quantity).toBe(2);
+    expect(product.options).toBeUndefined();
+    expect(product.units).toEqual([
+      {
+        index: 1,
+        fields: [
+          { name: "Custom name", value: "Julie" },
+          { name: "Gender", value: "Women" },
+          { name: "Size (US)", value: "10" },
+        ],
+      },
+      {
+        index: 2,
+        fields: [
+          { name: "Custom name", value: "Kim" },
+          { name: "Gender", value: "Women" },
+          { name: "Size (US)", value: "9" },
+        ],
+      },
+    ]);
+  });
+
+  it("maps quantity-three WCPA sections onto their units", () => {
+    const section = (name: string, size: string, id: number) => ({
+      extra: { form_id: "form_1" },
+      fields: [
+        [
+          {
+            type: "text",
+            label: "Custom name",
+            elementId: "name",
+            value: name,
+            meta_id: id,
+          },
+          {
+            type: "color-group",
+            label: "Size (US)",
+            elementId: "size",
+            value: { 0: { i: 0, label: size, value: size } },
+            meta_id: id + 1,
+          },
+        ],
+      ],
+    });
+    const wcpa = {
+      sec_unit_1: section("Julie", "10", 201),
+      sec_unit_2: section("Kim", "9", 203),
+      sec_unit_3: section("Anna", "8", 205),
+    };
+
+    const [product] = buildOrderProducts({
+      line_items: [
+        {
+          product_id: 10,
+          variation_id: 0,
+          name: "Custom Shoes",
+          quantity: 3,
+          meta_data: [
+            { key: "_WCPA_order_meta_data", value: JSON.stringify(wcpa) },
+          ],
+        },
+      ],
+    });
+
+    expect(product.units).toEqual([
+      {
+        index: 1,
+        fields: [
+          { name: "Custom name", value: "Julie" },
+          { name: "Size (US)", value: "10" },
+        ],
+      },
+      {
+        index: 2,
+        fields: [
+          { name: "Custom name", value: "Kim" },
+          { name: "Size (US)", value: "9" },
+        ],
+      },
+      {
+        index: 3,
+        fields: [
+          { name: "Custom name", value: "Anna" },
+          { name: "Size (US)", value: "8" },
+        ],
+      },
+    ]);
+  });
+
+  it("falls back to options when WCPA units cannot be matched to the quantity", () => {
+    const wcpa = [
+      {
+        type: "text",
+        label: "Custom name",
+        elementId: "name",
+        value: "Julie",
+        meta_id: 301,
+      },
+      {
+        type: "text",
+        label: "Custom name",
+        elementId: "name",
+        value: "Kim",
+        meta_id: 302,
+      },
+    ];
+
+    const [product] = buildOrderProducts({
+      line_items: [
+        {
+          product_id: 10,
+          variation_id: 0,
+          name: "Custom Shoes",
+          quantity: 3,
+          meta_data: [
+            { key: "_WCPA_order_meta_data", value: JSON.stringify(wcpa) },
+          ],
+        },
+      ],
+    });
+
+    expect(product.units).toBeUndefined();
+    expect(product.options).toEqual([
+      { name: "Custom name", value: "Julie" },
+      { name: "Custom name", value: "Kim" },
+    ]);
+  });
 });
