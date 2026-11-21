@@ -40,6 +40,7 @@ export default function RevenuePage() {
     },
     chart: [],
     websiteStats: [],
+    productStats: [],
     latestOrders: [],
   });
 
@@ -122,7 +123,11 @@ export default function RevenuePage() {
           </Card>
 
           <Card title="Latest Orders">
-            <RevenueLatestOrders data={data.latestOrders} loading={loading} />
+            <RevenueLatestOrders
+              data={data.latestOrders}
+              productStats={data.productStats}
+              loading={loading}
+            />
           </Card>
         </Flex>
       </Spin>

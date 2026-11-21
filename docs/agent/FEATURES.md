@@ -540,22 +540,37 @@ for reads).
    aggregation helpers as write time.
 8. `src/services/revenue/{calculateSummary,groupRevenue,groupWebsiteRevenue}.ts`
    — pure, shared by both paths.
-9. `src/services/revenue/scheduler.ts` — `*/30 * * * *`, no args, syncs all sites.
-   It is the only caller that enables new-order notifications.
-10. `src/services/revenue/orderNotifications.ts` — cursor-based new-order
+9. `src/services/revenue/aggregateProducts.ts` — pure. Rolls `products` line
+   items up by website + product (and by full variant combination), deduping
+   orders and line items. `loadRevenueHistory` returns the result as
+   `productStats` for the Revenue table's product hover popover.
+10. `src/services/revenue/scheduler.ts` — `*/30 * * * *`, no args, syncs all sites.
+    It is the only caller that enables new-order notifications.
+11. `src/services/revenue/orderNotifications.ts` — cursor-based new-order
     detection + Telegram delivery. Runs at the end of each cron sync; the
     manual Refresh leaves it off. Per-website state lives in
     `revenue_notification_state`; pending/notified rows live in
     `revenue_order_notifications` (unique on `{ websiteId, orderId }`).
     Pure cursor/message helpers are in `orderNotificationHelpers.ts`.
-11. `src/services/revenue/index.ts` — the only public barrel
+12. `src/services/revenue/index.ts` — the only public barrel
     (`loadRevenueHistory`, `syncRevenue`).
 
 **UI:** `src/app/(page)/revenue/page.tsx` owns `useState` + axios directly (no
 SWR here). Two distinct actions: **Search** (POST `/api/revenue`, reads the
 ledger) and **Refresh** (POST `/api/revenue/refresh`, hits WooCommerce).
 Children: `RevenueFilter.tsx`, `RevenueChart.tsx`, `RevenueSummary.tsx`,
-`RevenueWebsiteTable.tsx`, `RevenueLatestOrders.tsx`.
+`RevenueWebsiteTable.tsx`, `RevenueLatestOrders.tsx`. The Latest Orders Product
+cell wraps its thumbnail/name in a Popover fed by `productStats`. The popover
+shows quantity, variant attributes, shared line-item options, and — when
+WooCommerce Custom Product Addons (WCPA) data maps reliably to units — one
+compact section per physical unit (`#1`, `#2`, …) instead of one flat list.
+Raw metadata is normalized by `src/helper/orderItemMetadata.ts` (HTML entities,
+decorative symbols, technical keys, arrays, nested objects). WCPA parsing lives
+there too: `extractWcpaOrderMeta` reads `_WCPA_order_meta_data` (v1 flat and v2
+section/row shapes), and `groupWcpaMetadata` groups by repeated form sections or
+repeated field identities. Ambiguous occurrences fall back to a flat list, so
+unit relationships are never invented. Flattened WCPA entries are deduped by
+`meta_id`.
 
 **Types:** `src/types/revenue.ts` — the `revenue_history` record shape, which
 deliberately mirrors `buildOrders`' output.

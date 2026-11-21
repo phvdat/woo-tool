@@ -194,8 +194,17 @@ mirrors `buildOrders` output so `calculateSummary` / `groupRevenue` /
    fee, net, status, date, paymentMethod, products, createdAt, updatedAt }`.
 
 `products` is a denormalized `line_items` snapshot: `{ productId, name, image,
-link, quantity }` per item. `image` comes from the WooCommerce line item and
-`link` is rebuilt from the website URL (falling back to `/?p=<productId>`).
+link, quantity }` per item, plus optional `lineItemId`, `variationId`, `sku`,
+`unitPrice`, `lineTotal`, `attributes: [{ name, value }]`,
+`options: [{ name, value }]` and `units: [{ index, fields: [{ name, value }] }]`
+when WooCommerce exposed them. `attributes` are variation attributes; `options`
+are shared additional line-item metadata such as Order Insurance. `units` holds
+WooCommerce Custom Product Addons fields that map to a specific physical unit
+(`index` is 1-based); it is only written when the mapping is unambiguous.
+`image` comes from the WooCommerce line item and `link` is rebuilt from the
+website URL (falling back to `/?p=<productId>`). Rows written before the extra
+fields existed remain readable; `aggregateProductStats` tolerates the missing
+values.
 
 - **Unique index**: a lazy unique index on `{ websiteId, orderId }` created by
   `ensureUniqueIndex()` (idempotent upserts, history survives website deletion).

@@ -1,6 +1,7 @@
 import { calculateSummary } from "./calculateSummary";
 import { groupRevenue, RevenueGroupBy } from "./groupRevenue";
 import { groupWebsiteRevenue } from "./groupWebsiteRevenue";
+import { aggregateProductStats } from "./aggregateProducts";
 import { findRevenueHistory } from "./revenueHistory";
 import { getAccessibleWebsiteIds } from "./websiteAccess";
 
@@ -58,6 +59,7 @@ export async function loadRevenueHistory({
     summary: calculateSummary(orders),
     chart: groupRevenue(orders, groupBy),
     websiteStats: groupWebsiteRevenue(orders),
+    productStats: aggregateProductStats(orders),
     latestOrders: orders,
   };
 }

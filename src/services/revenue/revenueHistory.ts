@@ -162,6 +162,6 @@ export async function findRevenueHistory({
   return db
     .collection<RevenueHistoryRecord>(REVENUE_HISTORY_COLLECTION)
     .find(filter)
-    .sort({ date: 1 })
+    .sort({ date: -1 })
     .toArray();
 }
