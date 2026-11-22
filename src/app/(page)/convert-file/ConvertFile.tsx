@@ -126,7 +126,7 @@ function ConvertFile() {
       const product: Product = {
         ...row,
         key: `${file.uid}${i}`,
-        Name: toCapitalizedCase(fixEncoding(String(row.Name))),
+        Name: toCapitalizedCase(fixEncoding(String(row.Name))).trim(),
         Images: upscaleImage(String(row.Images).replace(/,+$/, "")),
         Categories: row.Categories || detectCategory(row.Name, cateKeyword),
       };
