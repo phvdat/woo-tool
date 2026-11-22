@@ -1,6 +1,9 @@
 import { addMetadata } from '@/helper/add-metadata-image';
 import { deleteFolderRecursive } from '@/helper/delete-folder-recursive';
-import axios from 'axios';
+import {
+  downloadRemoteImage,
+  RemoteImageDownloadError,
+} from '@/helper/downloadRemoteImage';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import sharp from 'sharp';
 import path from 'path';
@@ -68,16 +71,7 @@ export async function addWatermark({
       if (!imageUrl) continue;
 
       try {
-        // Download
-        const { data: imageResponse } = await axios.get(imageUrl, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          },
-          responseType: 'arraybuffer',
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        });
+        const { buffer: imageResponse } = await downloadRemoteImage(imageUrl);
 
         // Lấy metadata ảnh gốc
         const imageSharp = sharp(imageResponse);
@@ -125,8 +119,21 @@ export async function addWatermark({
 
         list.push(finalUrl);
       } catch (error) {
-        console.error(`[WATERMARK] Image error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        throw error;
+        const statusLabel =
+          error instanceof RemoteImageDownloadError
+            ? error.forbidden
+              ? 'HTTP 403 Forbidden'
+              : error.status
+                ? `HTTP ${error.status}`
+                : 'network error'
+            : error instanceof Error
+              ? error.message
+              : 'Unknown error';
+
+        console.error(
+          `[WATERMARK] Image failed (${statusLabel}) for ${imageUrl}; keeping original URL`,
+        );
+        list.push(imageUrl);
       }
     }
     return list;
