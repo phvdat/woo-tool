@@ -11,6 +11,7 @@ export interface LoadRevenueHistoryParams {
   from: string;
   to: string;
   groupBy: RevenueGroupBy;
+  search?: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export async function loadRevenueHistory({
   from,
   to,
   groupBy,
+  search,
 }: LoadRevenueHistoryParams) {
   const websiteIds = await getAccessibleWebsiteIds(userEmail);
 
@@ -37,6 +39,7 @@ export async function loadRevenueHistory({
     websiteIds,
     from,
     to,
+    search,
   });
 
   const orders = records.map((record) => ({

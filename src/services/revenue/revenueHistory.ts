@@ -104,6 +104,12 @@ export interface FindRevenueHistoryParams {
   websiteIds: string[];
   from?: string;
   to?: string;
+  /** Partial, case-insensitive product name search across order line items. */
+  search?: string;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -129,6 +135,7 @@ export async function findRevenueHistory({
   websiteIds,
   from,
   to,
+  search,
 }: FindRevenueHistoryParams): Promise<RevenueHistoryRecord[]> {
   const accessible = websiteIds ?? [];
   const isSingleWebsite = Boolean(websiteId) && websiteId !== "all";
@@ -154,6 +161,14 @@ export async function findRevenueHistory({
     filter.date = {
       ...(from ? { $gte: from } : {}),
       ...(to ? { $lte: to } : {}),
+    };
+  }
+
+  const searchTerm = search?.trim();
+  if (searchTerm) {
+    filter["products.name"] = {
+      $regex: escapeRegExp(searchTerm),
+      $options: "i",
     };
   }
 

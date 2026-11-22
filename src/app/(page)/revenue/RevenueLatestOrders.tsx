@@ -302,6 +302,7 @@ export default function RevenueLatestOrders({
       rowKey={(record) => `${record.websiteId}-${record.id}`}
       loading={loading}
       pagination={false}
+      locale={{ emptyText: "No orders match your filters." }}
       dataSource={data}
       onChange={(_, __, ___, extra) => {
         setFilteredData(extra.currentDataSource as RevenueLatestOrder[]);

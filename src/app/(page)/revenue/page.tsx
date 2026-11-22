@@ -18,6 +18,7 @@ const DEFAULT_FILTER: RevenueFilterValue = {
   groupBy: "day",
   range: [dayjs().subtract(7, "day"), dayjs()],
   websiteId: "all",
+  search: "",
 };
 
 export default function RevenuePage() {
@@ -59,6 +60,7 @@ export default function RevenuePage() {
         groupBy: values.groupBy,
         from: values.range[0].format("YYYY-MM-DDTHH:mm:ssZ"),
         to: values.range[1].format("YYYY-MM-DDTHH:mm:ssZ"),
+        search: values.search?.trim() || undefined,
       });
 
       setData(data);

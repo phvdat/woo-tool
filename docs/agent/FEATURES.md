@@ -561,7 +561,10 @@ for reads).
 **UI:** `src/app/(page)/revenue/page.tsx` owns `useState` + axios directly (no
 SWR here). Two distinct actions: **Search** (POST `/api/revenue`, reads the
 ledger) and **Refresh** (POST `/api/revenue/refresh`, hits WooCommerce).
-Children: `RevenueFilter.tsx`, `RevenueChart.tsx`, `RevenueSummary.tsx`,
+`RevenueFilter.tsx` also has a debounced product-name search; the backend applies
+an escaped, case-insensitive regex to `products.name`, so the whole matching
+order (all line items) feeds every summary/chart. Children:
+`RevenueFilter.tsx`, `RevenueChart.tsx`, `RevenueSummary.tsx`,
 `RevenueWebsiteTable.tsx`, `RevenueLatestOrders.tsx`. The Latest Orders Product
 cell wraps its thumbnail/name in a Popover fed by `productStats`. The popover
 shows quantity, variant attributes, shared line-item options, and — when

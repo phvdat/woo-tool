@@ -1,8 +1,9 @@
 "use client";
 
 import { WooWebsitePayload } from "@/types/woo";
-import { DatePicker, Form, Select, Spin } from "antd";
+import { DatePicker, Form, Input, Select, Spin } from "antd";
 import dayjs from "dayjs";
+import { useEffect, useRef } from "react";
 
 const { RangePicker } = DatePicker;
 
@@ -10,6 +11,7 @@ export interface RevenueFilterValue {
   websiteId?: string;
   groupBy: "hour" | "day";
   range: [dayjs.Dayjs, dayjs.Dayjs];
+  search?: string;
 }
 
 interface RevenueFilterProps {
@@ -24,10 +26,9 @@ export default function RevenueFilter({
   onChange,
 }: RevenueFilterProps) {
   const [form] = Form.useForm<RevenueFilterValue>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleValuesChange = () => {
-    const values = form.getFieldsValue(true);
-
+  const emitChange = (values: RevenueFilterValue) => {
     if (
       values.websiteId !== undefined &&
       values.groupBy &&
@@ -36,6 +37,30 @@ export default function RevenueFilter({
       onChange(values);
     }
   };
+
+  const handleValuesChange = (changedValues: Partial<RevenueFilterValue>) => {
+    if (Object.prototype.hasOwnProperty.call(changedValues, "search")) {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+      searchTimer.current = setTimeout(() => {
+        searchTimer.current = null;
+        emitChange(form.getFieldsValue(true));
+      }, 400);
+      return;
+    }
+
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+      searchTimer.current = null;
+    }
+    emitChange(form.getFieldsValue(true));
+  };
+
+  useEffect(
+    () => () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    },
+    [],
+  );
 
   return (
     <Spin spinning={loading}>
@@ -49,9 +74,18 @@ export default function RevenueFilter({
           websiteId: "all",
           groupBy: "day",
           range: [dayjs().subtract(7, "day"), dayjs()],
+          search: "",
         }}
         onValuesChange={handleValuesChange}
       >
+        <Form.Item name="search">
+          <Input
+            allowClear
+            placeholder="Search by product name..."
+            style={{ width: 240 }}
+          />
+        </Form.Item>
+
         <Form.Item name="websiteId">
           <Select
             loading={loading}
