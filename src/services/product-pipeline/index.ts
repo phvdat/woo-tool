@@ -6,12 +6,14 @@ import { sendTelegramMessage } from '../telegram/sendTelegramMessage';
 import { buildProducts } from './buildProducts';
 import { enrichProducts } from './enrichProducts';
 import { exportExcel } from './exportExcel';
+import { resolvePipelineProcesses } from './options';
 import { ProductPipelineContext } from "./types";
 import { uploadProducts } from './uploadProducts';
 import { CATEGORIES_COLLECTION, USERS_COLLECTION, WEBSITES_COLLECTION } from '@/constant/collections';
 import { createVideoJobsFromPipeline } from '../video/createVideoJobsFromPipeline';
 
 export async function runProductPipeline(context: ProductPipelineContext) {
+    const processes = resolvePipelineProcesses(context.processes);
     const { db } = await connectToDatabase();
 
     const user: any = await db.collection(USERS_COLLECTION).findOne({
@@ -27,32 +29,46 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         .find({ shopID: website._id.toString() })
         .toArray();
 
-    const products = await buildProducts({
-        file: context.file,
-        website,
-        categories,
-        socketId: context.socketId,
-    });
+    const builtProducts = processes.buildProducts
+        ? await buildProducts({
+            file: context.file,
+            website,
+            categories,
+            socketId: context.socketId,
+        })
+        : [];
 
-    const aiProducts = await enrichProducts({
-        products,
-        website: website.shopName,
-        apiKey: user.apiKey,
-        geminiApiKey: user.geminiApiKey,
-        socketId: context.socketId,
-        mixed: user.mixed === true,
-        aiProvider: website.product?.aiProvider,
-        promptDescriptionProduct: website.product.promptDescriptionProduct,
-        promptTagsProduct: website.product.promptTagsProduct,
-        researchEnabled: website.product?.researchEnabled === true,
-    });
+    const processedProducts = processes.enrichProducts
+        ? await enrichProducts({
+            products: builtProducts,
+            website: website.shopName,
+            apiKey: user.apiKey,
+            geminiApiKey: user.geminiApiKey,
+            socketId: context.socketId,
+            mixed: user.mixed === true,
+            aiProvider: website.product?.aiProvider,
+            promptDescriptionProduct: website.product.promptDescriptionProduct,
+            promptTagsProduct: website.product.promptTagsProduct,
+            researchEnabled: website.product?.researchEnabled === true,
+        })
+        : builtProducts;
 
     const scheduledProducts = publishedTimeHelper({
-        products: aiProducts,
+        products: processedProducts,
         publicTime: website.product.publicTime,
         gapFrom: website.product.gapFrom,
         gapTo: website.product.gapTo,
     });
+
+    let productIds: number[] = [];
+    if (processes.uploadProducts) {
+        const uploadResult = await uploadProducts({
+            products: scheduledProducts,
+            website,
+            socketId: context.socketId,
+        });
+        productIds = uploadResult.productIds;
+    }
 
     const excel = await exportExcel({
         products: scheduledProducts,
@@ -65,13 +81,7 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         filePath: excel.filePath,
     });
 
-    const { productIds } = await uploadProducts({
-        products: scheduledProducts,
-        website,
-        socketId: context.socketId,
-    });
-
-    if (website.autoVideo?.enabled && productIds.length > 0) {
+    if (processes.uploadProducts && website.autoVideo?.enabled && productIds.length > 0) {
         try {
             await createVideoJobsFromPipeline({
                 websiteId: context.websiteId,
@@ -89,5 +99,5 @@ export async function runProductPipeline(context: ProductPipelineContext) {
         }
     }
 
-    return aiProducts;
+    return processedProducts;
 }

@@ -6,6 +6,14 @@ import {
 } from "@/services/product-pipeline/socket";
 import { getServerSession } from "next-auth";
 
+function parseProcessFlag(value: FormDataEntryValue | null, fallback = true) {
+    if (value === null) return fallback;
+    const normalized = String(value).trim().toLowerCase();
+    if (["true", "1", "on", "yes"].includes(normalized)) return true;
+    if (["false", "0", "off", "no"].includes(normalized)) return false;
+    return fallback;
+}
+
 export async function POST(request: Request) {
     const formData = await request.formData();
     const socketId = String(formData.get("websiteId"));
@@ -20,6 +28,11 @@ export async function POST(request: Request) {
             websiteId: String(formData.get("websiteId")),
             userEmail: String(userEmail),
             socketId,
+            processes: {
+                buildProducts: parseProcessFlag(formData.get("buildProducts")),
+                enrichProducts: parseProcessFlag(formData.get("enrichProducts")),
+                uploadProducts: parseProcessFlag(formData.get("uploadProducts")),
+            },
         });
 
         emitPipelineFinished(socketId);

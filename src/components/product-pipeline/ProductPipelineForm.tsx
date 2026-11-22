@@ -8,6 +8,7 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
   Col,
   Form,
   Progress,
@@ -27,6 +28,9 @@ const { Link } = Typography;
 export interface ProductPipelineFormValue {
   websiteId: string;
   file: FileList;
+  buildProducts?: boolean;
+  enrichProducts?: boolean;
+  uploadProducts?: boolean;
 }
 
 interface PipelineProgress {
@@ -47,6 +51,8 @@ export default function ProductPipelineForm() {
     step: "",
   });
   const websiteId = Form.useWatch("websiteId", form);
+  const buildProducts = Form.useWatch("buildProducts", form);
+  const dependentsDisabled = buildProducts === false;
 
   const [pipelineError, setPipelineError] = useState("");
   const websiteOptions = useMemo(() => {
@@ -69,6 +75,32 @@ export default function ProductPipelineForm() {
   const handleRunPipeline = async (values: ProductPipelineFormValue) => {
     const file = _get(values.file[0], "originFileObj");
     if (!file) return;
+
+    const processes = {
+      buildProducts: values.buildProducts ?? true,
+      enrichProducts: values.enrichProducts ?? true,
+      uploadProducts: values.uploadProducts ?? true,
+    };
+
+    if (
+      !processes.buildProducts &&
+      (processes.enrichProducts || processes.uploadProducts)
+    ) {
+      setPipelineError(
+        "Enrich Products and Upload Products require Build Products.",
+      );
+      return;
+    }
+
+    if (
+      !processes.buildProducts &&
+      !processes.enrichProducts &&
+      !processes.uploadProducts
+    ) {
+      setPipelineError("Select at least one process to run.");
+      return;
+    }
+
     setProcessing(true);
     setPipelineError("");
 
@@ -81,6 +113,9 @@ export default function ProductPipelineForm() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("websiteId", values.websiteId);
+      formData.append("buildProducts", String(processes.buildProducts));
+      formData.append("enrichProducts", String(processes.enrichProducts));
+      formData.append("uploadProducts", String(processes.uploadProducts));
       await axios.post(endpoint.productPipeline, formData);
       setProgress((prev) => ({
         ...prev,
@@ -127,6 +162,19 @@ export default function ProductPipelineForm() {
         form={form}
         layout="vertical"
         onFinish={handleRunPipeline}
+        initialValues={{
+          buildProducts: true,
+          enrichProducts: true,
+          uploadProducts: true,
+        }}
+        onValuesChange={(changedValues) => {
+          if (changedValues.buildProducts === false) {
+            form.setFieldsValue({
+              enrichProducts: false,
+              uploadProducts: false,
+            });
+          }
+        }}
       >
         <Card title="Product Pipeline">
           <Row gutter={16}>
@@ -179,6 +227,42 @@ export default function ProductPipelineForm() {
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item label="Processes" style={{ marginTop: 16 }}>
+            <Row gutter={16}>
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="buildProducts"
+                  valuePropName="checked"
+                  noStyle
+                >
+                  <Checkbox>Build Products</Checkbox>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="enrichProducts"
+                  valuePropName="checked"
+                  noStyle
+                >
+                  <Checkbox disabled={dependentsDisabled}>
+                    Enrich Products
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="uploadProducts"
+                  valuePropName="checked"
+                  noStyle
+                >
+                  <Checkbox disabled={dependentsDisabled}>
+                    Upload Products
+                  </Checkbox>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
 
           {progress.percent > 0 && (
             <>

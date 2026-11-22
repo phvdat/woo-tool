@@ -62,12 +62,15 @@ selected site — with an optional auto-video step afterwards.
 **Read in this order:**
 
 1. `src/services/product-pipeline/index.ts` — **the orchestrator, read this first.**
-   `runProductPipeline(context)` fixes the stage order:
+   `runProductPipeline(context)` runs the selected stages in order:
    `load user + website + categories` → `buildProducts` → `enrichProducts` →
-   `publishedTimeHelper` → `exportExcel` (Telegram CSV) → `uploadProducts` →
-   optional `createVideoJobsFromPipeline`.
+   `publishedTimeHelper` → `uploadProducts` → `exportExcel` (one Telegram CSV) →
+   optional `createVideoJobsFromPipeline`. `processes` can skip stages; missing
+   flags default to `true`. Enrich/upload require build.
 2. `src/services/product-pipeline/types.ts` — `ProductPipelineContext`
-   `{ file, websiteId, userEmail, socketId }`. 5 lines.
+   `{ file, websiteId, userEmail, socketId, processes? }` and
+   `ProductPipelineProcesses`. `options.ts` resolves defaults and rejects
+   build-less combinations.
 3. `src/services/product-pipeline/buildProducts.ts` — XLSX parse, `Choose Your
    Style` index parsing, watermarking, `createWooRecord` per row.
 4. `src/services/product-pipeline/enrichProducts.ts` — long description, SEO meta,
