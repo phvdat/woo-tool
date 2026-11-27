@@ -239,7 +239,7 @@ function ProductHoverCard({
   return (
     <Popover
       trigger={isMobile ? "click" : "hover"}
-      placement="rightTop"
+      placement="top"
       mouseEnterDelay={0.15}
       mouseLeaveDelay={0.1}
       content={<ProductHoverContent product={product} stat={stat} />}
