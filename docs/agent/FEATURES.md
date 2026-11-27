@@ -546,7 +546,11 @@ for reads).
 9. `src/services/revenue/aggregateProducts.ts` — pure. Rolls `products` line
    items up by website + product (and by full variant combination), deduping
    orders and line items. `loadRevenueHistory` returns the result as
-   `productStats` for the Revenue table's product hover popover.
+   `productStats` for the Revenue table's product hover popover. Its `quantity`
+   is a cross-order total for the filtered result set, so the popover must show
+   the single line item's `quantity` instead, via
+   `src/services/revenue/orderProductQuantity.ts` — otherwise a product-name
+   search changes the displayed quantity of an order.
 10. `src/services/revenue/scheduler.ts` — `*/30 * * * *`, no args, syncs all sites.
     It is the only caller that enables new-order notifications.
 11. `src/services/revenue/orderNotifications.ts` — cursor-based new-order

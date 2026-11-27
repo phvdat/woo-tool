@@ -92,7 +92,7 @@ export default function ProductList() {
     PLATFORMS[0].value,
   );
 
-  const [apparelOnly, setApparelOnly] = useState(false);
+  const [apparelOnly, setApparelOnly] = useState(true);
   const [page, setPage] = useState(1);
   const pageSize = 50;
 

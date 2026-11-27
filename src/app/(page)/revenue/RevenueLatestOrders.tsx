@@ -2,6 +2,7 @@
 
 import { sanitizeMetadataText } from "@/helper/orderItemMetadata";
 import { buildProductStatKey } from "@/services/revenue/aggregateProducts";
+import { getOrderProductQuantity } from "@/services/revenue/orderProductQuantity";
 import {
   RevenueOrderProduct,
   RevenueProductAttribute,
@@ -161,9 +162,8 @@ function ProductHoverContent({
 }) {
   const units = product.units ?? [];
   const hasUnits = units.length > 0;
-  const quantity = hasUnits
-    ? product.quantity
-    : stat?.quantity ?? product.quantity;
+  // This is one order's line item, not the cross-order product total.
+  const quantity = getOrderProductQuantity(product);
 
   let attributes: RevenueProductAttribute[] = product.attributes ?? [];
   let options: RevenueProductAttribute[] = product.options ?? [];

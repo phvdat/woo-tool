@@ -122,4 +122,28 @@ describe("findRevenueHistory product search", () => {
     expect(result[0].products).toHaveLength(2);
     expect(mocks.sort).toHaveBeenCalledWith({ date: -1 });
   });
+
+  it("returns one order document when several line items match the same name", async () => {
+    const order = {
+      websiteId: "site-a",
+      orderId: 87843,
+      products: [
+        { productId: 60857, name: "Toronto Blue Jays Jersey", quantity: 1 },
+        { productId: 60857, name: "Toronto Blue Jays Jersey", quantity: 1 },
+      ],
+    };
+    mocks.toArray.mockResolvedValue([order]);
+
+    const result = await findRevenueHistory({
+      userEmail: "owner@example.com",
+      websiteIds: ["site-a"],
+      search: "Toronto Blue Jays",
+    });
+
+    expect(result).toEqual([order]);
+    expect(result).toHaveLength(1);
+    expect(result[0].products).toHaveLength(2);
+    expect(mocks.collection).toHaveBeenCalled();
+    expect(mocks.find).toHaveBeenCalledTimes(1);
+  });
 });
