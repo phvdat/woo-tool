@@ -169,9 +169,7 @@ function ProductHoverContent({
   let options: RevenueProductAttribute[] = product.options ?? [];
 
   if (!hasUnits && !attributes.length && !options.length && stat) {
-    attributes = (stat.variants ?? []).flatMap(
-      (variant) => variant.attributes
-    );
+    attributes = (stat.variants ?? []).flatMap((variant) => variant.attributes);
     options = (stat.options ?? []).map((option) => ({
       name: option.name,
       value: option.value,
@@ -365,31 +363,35 @@ export default function RevenueLatestOrders({
           dataIndex: "products",
           render: (
             products: RevenueOrderProduct[] | undefined,
-            record: RevenueLatestOrder
+            record: RevenueLatestOrder,
           ) => {
             if (!products?.length) return <Text type="secondary">-</Text>;
 
             const first = products[0];
             const stat = productStatsMap.get(
-              buildProductStatKey(record.websiteId, first.productId, first.name)
+              buildProductStatKey(
+                record.websiteId,
+                first.productId,
+                first.name,
+              ),
             );
 
             return (
-              <ProductHoverCard
-                product={first}
-                stat={stat}
-                isMobile={isMobile}
-              >
-                <Space size={8} align="center">
-                  <Image
-                    src={first.image || IMAGE_FALLBACK}
-                    alt={first.name || "Product image"}
-                    width={40}
-                    height={40}
-                    style={{ objectFit: "cover", borderRadius: 6 }}
-                    preview={!isMobile && Boolean(first.image)}
-                    fallback={IMAGE_FALLBACK}
-                  />
+              <Space size={8} align="center">
+                <Image
+                  src={first.image || IMAGE_FALLBACK}
+                  alt={first.name || "Product image"}
+                  width={40}
+                  height={40}
+                  style={{ objectFit: "cover", borderRadius: 6 }}
+                  preview={Boolean(first.image)}
+                  fallback={IMAGE_FALLBACK}
+                />
+                <ProductHoverCard
+                  product={first}
+                  stat={stat}
+                  isMobile={isMobile}
+                >
                   <Flex vertical>
                     <ProductLink product={first} isMobile={isMobile} />
                     {products.length > 1 && (
@@ -398,8 +400,8 @@ export default function RevenueLatestOrders({
                       </Text>
                     )}
                   </Flex>
-                </Space>
-              </ProductHoverCard>
+                </ProductHoverCard>
+              </Space>
             );
           },
         },
