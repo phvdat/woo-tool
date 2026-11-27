@@ -2,7 +2,10 @@
 
 import { sanitizeMetadataText } from "@/helper/orderItemMetadata";
 import { buildProductStatKey } from "@/services/revenue/aggregateProducts";
-import { getOrderProductQuantity } from "@/services/revenue/orderProductQuantity";
+import {
+  buildOrderProductHoverGroups,
+  OrderProductHoverGroup,
+} from "@/services/revenue/orderProductHoverGroups";
 import {
   RevenueOrderProduct,
   RevenueProductAttribute,
@@ -18,7 +21,6 @@ import {
   Space,
   Flex,
   Popover,
-  Divider,
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
@@ -100,25 +102,6 @@ function ProductLink({
   );
 }
 
-function dedupeAttributes(pairs: RevenueProductAttribute[]) {
-  const seen = new Set<string>();
-  const result: RevenueProductAttribute[] = [];
-
-  for (const pair of pairs) {
-    const name = sanitizeMetadataText(pair.name);
-    const value = sanitizeMetadataText(pair.value);
-    if (!name || !value) continue;
-
-    const key = `${name.toLowerCase()}|${value}`;
-    if (seen.has(key)) continue;
-
-    seen.add(key);
-    result.push({ name, value });
-  }
-
-  return result;
-}
-
 function AttributeRows({ pairs }: { pairs: RevenueProductAttribute[] }) {
   return (
     <Flex vertical gap={2}>
@@ -153,31 +136,10 @@ function AttributeRows({ pairs }: { pairs: RevenueProductAttribute[] }) {
   );
 }
 
-function ProductHoverContent({
-  product,
-  stat,
-}: {
-  product: RevenueOrderProduct;
-  stat?: RevenueProductStat;
-}) {
-  const units = product.units ?? [];
-  const hasUnits = units.length > 0;
-  // This is one order's line item, not the cross-order product total.
-  const quantity = getOrderProductQuantity(product);
-
-  let attributes: RevenueProductAttribute[] = product.attributes ?? [];
-  let options: RevenueProductAttribute[] = product.options ?? [];
-
-  if (!hasUnits && !attributes.length && !options.length && stat) {
-    attributes = (stat.variants ?? []).flatMap((variant) => variant.attributes);
-    options = (stat.options ?? []).map((option) => ({
-      name: option.name,
-      value: option.value,
-    }));
-  }
-
-  attributes = dedupeAttributes(attributes);
-  options = dedupeAttributes(options);
+function ProductHoverContent({ group }: { group: OrderProductHoverGroup }) {
+  const sections = group.sections;
+  const isGrouped = sections.length > 1;
+  const singleSection = sections[0];
 
   return (
     <Flex vertical gap={10} style={{ width: 300 }}>
@@ -185,39 +147,45 @@ function ProductHoverContent({
         <Text strong style={{ fontSize: 12 }}>
           Quantity:
         </Text>
-        <Text style={{ fontSize: 13 }}>{quantity}</Text>
+        <Text style={{ fontSize: 13 }}>{group.quantity}</Text>
       </Flex>
 
-      {attributes.length > 0 && (
-        <Flex vertical gap={4}>
-          <Text strong style={{ fontSize: 12 }}>
-            Variants
-          </Text>
-          <AttributeRows pairs={attributes} />
-        </Flex>
+      {!isGrouped && singleSection && (
+        <>
+          {singleSection.attributes.length > 0 && (
+            <Flex vertical gap={4}>
+              <Text strong style={{ fontSize: 12 }}>
+                Variants
+              </Text>
+              <AttributeRows pairs={singleSection.attributes} />
+            </Flex>
+          )}
+
+          {singleSection.options.length > 0 && (
+            <Flex vertical gap={4}>
+              <Text strong style={{ fontSize: 12 }}>
+                Options
+              </Text>
+              <AttributeRows pairs={singleSection.options} />
+            </Flex>
+          )}
+        </>
       )}
 
-      {options.length > 0 && (
+      {isGrouped && (
         <Flex vertical gap={4}>
           <Text strong style={{ fontSize: 12 }}>
             Options
           </Text>
-          <AttributeRows pairs={options} />
-        </Flex>
-      )}
-
-      {hasUnits && (
-        <Flex vertical>
-          {units.map((unit) => (
-            <div key={unit.index}>
-              <Divider style={{ margin: "6px 0" }} />
-              <Flex vertical gap={4}>
-                <Text strong style={{ fontSize: 12 }}>
-                  Unit #{unit.index}
-                </Text>
-                <AttributeRows pairs={unit.fields} />
-              </Flex>
-            </div>
+          {sections.map((section) => (
+            <Flex key={section.index} vertical gap={4}>
+              <Text strong style={{ fontSize: 12 }}>
+                #{section.index}
+              </Text>
+              <AttributeRows
+                pairs={[...section.attributes, ...section.options]}
+              />
+            </Flex>
           ))}
         </Flex>
       )}
@@ -226,13 +194,11 @@ function ProductHoverContent({
 }
 
 function ProductHoverCard({
-  product,
-  stat,
+  group,
   isMobile,
   children,
 }: {
-  product: RevenueOrderProduct;
-  stat?: RevenueProductStat;
+  group: OrderProductHoverGroup;
   isMobile?: boolean;
   children: React.ReactNode;
 }) {
@@ -242,7 +208,7 @@ function ProductHoverCard({
       placement="top"
       mouseEnterDelay={0.15}
       mouseLeaveDelay={0.1}
-      content={<ProductHoverContent product={product} stat={stat} />}
+      content={<ProductHoverContent group={group} />}
     >
       <span style={{ display: "inline-flex", cursor: "pointer" }}>
         {children}
@@ -367,36 +333,37 @@ export default function RevenueLatestOrders({
           ) => {
             if (!products?.length) return <Text type="secondary">-</Text>;
 
-            const first = products[0];
-            const stat = productStatsMap.get(
-              buildProductStatKey(
-                record.websiteId,
-                first.productId,
-                first.name,
+            const groups = buildOrderProductHoverGroups(products, (product) =>
+              productStatsMap.get(
+                buildProductStatKey(
+                  record.websiteId,
+                  product.productId,
+                  product.name,
+                ),
               ),
             );
+            if (!groups.length) return <Text type="secondary">-</Text>;
+
+            const first = groups[0];
+            const product = first.product;
 
             return (
               <Space size={8} align="center">
                 <Image
-                  src={first.image || IMAGE_FALLBACK}
-                  alt={first.name || "Product image"}
+                  src={product.image || IMAGE_FALLBACK}
+                  alt={product.name || "Product image"}
                   width={40}
                   height={40}
                   style={{ objectFit: "cover", borderRadius: 6 }}
-                  preview={Boolean(first.image)}
+                  preview={Boolean(product.image)}
                   fallback={IMAGE_FALLBACK}
                 />
-                <ProductHoverCard
-                  product={first}
-                  stat={stat}
-                  isMobile={isMobile}
-                >
+                <ProductHoverCard group={first} isMobile={isMobile}>
                   <Flex vertical>
-                    <ProductLink product={first} isMobile={isMobile} />
-                    {products.length > 1 && (
+                    <ProductLink product={product} isMobile={isMobile} />
+                    {groups.length > 1 && (
                       <Text type="secondary" style={{ fontSize: 12 }}>
-                        +{products.length - 1} more
+                        +{groups.length - 1} more
                       </Text>
                     )}
                   </Flex>

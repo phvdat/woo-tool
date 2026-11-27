@@ -547,10 +547,10 @@ for reads).
    items up by website + product (and by full variant combination), deduping
    orders and line items. `loadRevenueHistory` returns the result as
    `productStats` for the Revenue table's product hover popover. Its `quantity`
-   is a cross-order total for the filtered result set, so the popover must show
-   the single line item's `quantity` instead, via
-   `src/services/revenue/orderProductQuantity.ts` — otherwise a product-name
-   search changes the displayed quantity of an order.
+   is a cross-order total for the filtered result set, so the popover must use
+   the order's own line items via `src/services/revenue/orderProductQuantity.ts`
+   and `src/services/revenue/orderProductHoverGroups.ts` — otherwise a
+   product-name search changes the displayed quantity of an order.
 10. `src/services/revenue/scheduler.ts` — `*/30 * * * *`, no args, syncs all sites.
     It is the only caller that enables new-order notifications.
 11. `src/services/revenue/orderNotifications.ts` — cursor-based new-order
@@ -570,12 +570,15 @@ an escaped, case-insensitive regex to `products.name`, so the whole matching
 order (all line items) feeds every summary/chart. Children:
 `RevenueFilter.tsx`, `RevenueChart.tsx`, `RevenueSummary.tsx`,
 `RevenueWebsiteTable.tsx`, `RevenueLatestOrders.tsx`. The Latest Orders Product
-cell wraps its thumbnail/name in a Popover fed by `productStats`. The popover
-shows quantity, variant attributes, shared line-item options, and — when
-WooCommerce Custom Product Addons (WCPA) data maps reliably to units — one
-compact section per physical unit (`#1`, `#2`, …) instead of one flat list.
-Raw metadata is normalized by `src/helper/orderItemMetadata.ts` (HTML entities,
-decorative symbols, technical keys, arrays, nested objects). WCPA parsing lives
+cell wraps its thumbnail/name in a Popover. `buildOrderProductHoverGroups`
+keeps same-product line items in the same order as one hover card whose quantity
+is the sum of those line items, with one numbered section (`#1`, `#2`, …) per
+line item so customizations are never merged. Distinct products stay separate,
+and WCPA per-unit fields also become numbered sections. Shared line-item
+options, `wcpa_empty_label` and the default Order Insurance metadata are
+filtered out. Raw metadata is normalized by `src/helper/orderItemMetadata.ts`
+(HTML entities, decorative symbols, technical keys, arrays, nested objects).
+WCPA parsing lives
 there too: `extractWcpaOrderMeta` reads `_WCPA_order_meta_data` (v1 flat and v2
 section/row shapes), and `groupWcpaMetadata` groups by repeated form sections or
 repeated field identities. Ambiguous occurrences fall back to a flat list, so
